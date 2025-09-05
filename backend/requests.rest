@@ -1,0 +1,66 @@
+GET http://localhost:5000/api/health
+
+### Register
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jane Donor",
+  "email": "jane@example.com",
+  "password": "Str0ngPass!",
+  "confirmPassword": "Str0ngPass!",
+  "role": "user"
+}
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "jane@example.com",
+  "password": "Str0ngPass!"
+}
+
+### Refresh
+POST http://localhost:5000/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "<paste refresh token>"
+}
+
+### Me
+GET http://localhost:5000/api/users/me
+Authorization: Bearer <paste access token>
+
+### Update Me
+PATCH http://localhost:5000/api/users/me
+Authorization: Bearer <paste access token>
+Content-Type: application/json
+
+{
+  "name": "Jane Updated",
+  "phone": "+1234567890",
+  "address": "123 Main St"
+}
+
+### Donor Register
+POST http://localhost:5000/api/donors/register
+Authorization: Bearer <paste access token>
+Content-Type: application/json
+
+{
+  "bloodGroup": "O+",
+  "availability": true,
+  "city": "City",
+  "state": "State",
+  "pincode": "123456",
+  "contactPreference": "phone"
+}
+
+### Donor Search
+GET http://localhost:5000/api/donors/search?bloodGroup=O+&city=City&page=1&limit=10
+
+
+
+
