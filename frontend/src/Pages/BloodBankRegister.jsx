@@ -1,177 +1,172 @@
-// Pages/BloodBankRegister.jsx
-// Blood bank registration form for authenticated bloodbank users; submits to /auth/bloodbank/register.
-
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
 import api from "../lib/api";
 
-function Navbar({ isDark, toggleTheme }) {
-  return (
-    <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-6">
-      <Link to="/" className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg ring-1 ring-black/10 dark:ring-white/10">
-          <span className="text-xl">🩸</span>
-        </div>
-        <div className="leading-tight">
-          <p className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent dark:from-rose-300 dark:to-amber-200">Blood Donation</p>
-          <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
-        </div>
-      </Link>
-      <button
-        onClick={toggleTheme}
-        className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-gray-900 shadow-sm backdrop-blur-md transition hover:bg-white/90 dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-        aria-label="Toggle dark mode"
-      >
-        <span className="h-4 w-4">{isDark ? "🌙" : "☀️"}</span>
-        <span>{isDark ? "Dark" : "Light"} mode</span>
-      </button>
-    </nav>
-  );
-}
-
 export default function BloodBankRegister() {
-  const [isDark, setIsDark] = useState(false);
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
+    username: "",
+    password: "",
     name: "",
     address: "",
     district: "",
     contactNumber: "",
     licenseNumber: "",
   });
+  const [userId, setUserId] = useState(null);
 
-  // Theme init
-  useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const shouldDark = saved
-      ? saved === "dark"
-      : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setIsDark(shouldDark);
-    document.documentElement.classList.toggle("dark", shouldDark);
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  // Submit blood bank profile linked to logged-in user
-  const handleSubmit = async (e) => {
+  const handleUserRegister = async (e) => {
     e.preventDefault();
+    // Username validation: only letters, numbers, underscores, min 3 chars
+    const usernameRegex = /^[a-zA-Z0-9_]{3,50}$/;
+    if (!usernameRegex.test(formData.username)) {
+      alert("Username must be 3-50 characters and contain only letters, numbers, and underscores.");
+      return;
+    }
     try {
-      const userId = localStorage.getItem('userId');
-      await api.post('/auth/bloodbank/register', { userId, ...formData });
-      alert('✅ Blood bank details saved');
+      // Register blood bank user
+      const res = await api.post("/bloodbank/register", {
+        username: formData.username,
+        password: formData.password,
+      });
+      if (res.data.success) {
+        // Automatically log in the user to get tokens
+        const loginRes = await api.post("/auth/login", {
+          username: formData.username,
+          password: formData.password,
+        });
+        if (loginRes.data.success && loginRes.data.data) {
+          localStorage.setItem("accessToken", loginRes.data.data.accessToken);
+          localStorage.setItem("refreshToken", loginRes.data.data.refreshToken);
+          setUserId(res.data.data.userId);
+          setStep(2);
+        } else {
+          alert(loginRes.data.message || "Login failed after registration");
+        }
+      } else {
+        alert(res.data.message || "Registration failed");
+      }
     } catch (err) {
-      alert('❌ Failed to save blood bank details');
+      alert(err.response?.data?.message || "Registration failed");
     }
   };
 
-  return (
-    <div className="fixed inset-0 min-h-screen w-full overflow-hidden bg-gradient-to-br from-rose-50 via-red-50 to-amber-100 dark:from-slate-900 dark:via-neutral-900 dark:to-black">
-      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-rose-400/40 blur-3xl dark:bg-rose-600/30" />
-      <div className="pointer-events-none absolute top-32 -right-16 h-80 w-80 rounded-full bg-red-500/30 blur-3xl dark:bg-amber-500/20" />
-      <div className="pointer-events-none absolute -bottom-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-pink-400/20 blur-3xl dark:bg-fuchsia-600/20" />
+  const handleDetailsSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post("/bloodbank/submit-details", {
+        userId,
+        name: formData.name,
+        address: formData.address,
+        district: formData.district,
+        contactNumber: formData.contactNumber,
+        licenseNumber: formData.licenseNumber,
+      });
+      if (res.data.success) {
+        alert("Blood bank details submitted for approval");
+        setStep(3);
+      } else {
+        alert(res.data.message || "Submission failed");
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Submission failed");
+    }
+  };
 
-      <header className="relative z-10">
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
-      </header>
+  if (step === 1) {
+    return (
+      <form onSubmit={handleUserRegister} className="max-w-md mx-auto p-4">
+        <h2 className="text-xl font-bold mb-4">Blood Bank User Registration</h2>
+        <input
+          type="text"
+          placeholder="Username (letters, numbers, underscores only)"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "") })}
+          minLength={3}
+          maxLength={50}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+          Register
+        </button>
+      </form>
+    );
+  }
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
-        <section className="grid min-h-[calc(100vh-88px)] place-items-center overflow-y-auto py-8 md:py-12">
-          <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-10">
-            <div className="mb-8 text-center">
-              <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl lg:text-5xl">🏦 Blood Bank Registration</h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base">Register your blood bank to manage donations</p>
-            </div>
+  if (step === 2) {
+    return (
+      <form onSubmit={handleDetailsSubmit} className="max-w-md mx-auto p-4">
+        <h2 className="text-xl font-bold mb-4">Blood Bank Details</h2>
+        <input
+          type="text"
+          placeholder="Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <input
+          type="text"
+          placeholder="Address"
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <input
+          type="text"
+          placeholder="District"
+          value={formData.district}
+          onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <input
+          type="text"
+          placeholder="Contact Number"
+          value={formData.contactNumber}
+          onChange={(e) => {
+            const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+            setFormData({ ...formData, contactNumber: digitsOnly });
+          }}
+          inputMode="numeric"
+          pattern="^[0-9]{10}$"
+          maxLength={10}
+          title="Please enter a 10-digit contact number"
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <input
+          type="text"
+          placeholder="License Number"
+          value={formData.licenseNumber}
+          onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+          required
+          className="w-full mb-2 p-2 border rounded"
+        />
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
+          Submit Details
+        </button>
+      </form>
+    );
+  }
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood bank name</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="City Central Blood Bank"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+  if (step === 3) {
+    return (
+      <div className="max-w-md mx-auto p-4">
+        <h2 className="text-xl font-bold mb-4">Registration Complete</h2>
+        <p>Your blood bank registration is pending admin approval.</p>
+      </div>
+    );
+  }
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">District</label>
-                <input
-                  type="text"
-                  name="district"
-                  placeholder="e.g., Bengaluru Urban"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.district}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Contact number</label>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  placeholder="Primary contact number"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.contactNumber}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Address</label>
-                <textarea
-                  name="address"
-                  placeholder="Enter the full address"
-                  rows={3}
-                  className="w-full resize-none rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.address}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">License number</label>
-                <input
-                  type="text"
-                  name="licenseNumber"
-                  placeholder="Official license / registration number"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.licenseNumber}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] active:scale-[0.99]"
-              >
-                Register Blood Bank 🏦
-              </button>
-            </div>
-
-            <div className="mt-6 text-center">
-              <Link to="/" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-                ← Back to Home
-              </Link>
-            </div>
-          </form>
-        </section>
-      </main>
-    </div>
-  );
+  return null;
 }

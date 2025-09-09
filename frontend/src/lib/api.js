@@ -12,7 +12,12 @@ const api = axios.create({
 // Attach Authorization header from localStorage for every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    // Ensure token is a valid non-empty string
+    if (typeof token === 'string' && token.trim() !== '') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
   return config;
 });
 

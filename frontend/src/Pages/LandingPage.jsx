@@ -82,9 +82,9 @@ export default function LandingPage() {
 						<Link to="/find-blood" className="px-6 py-3 rounded-full bg-gray-800 text-white font-semibold shadow hover:bg-gray-700 flex items-center gap-2">
 							<span>👥</span> Find Blood
 						</Link>
-						<Link to="/bloodbank-register" className="px-6 py-3 rounded-full bg-purple-600 text-white font-semibold shadow hover:bg-purple-700 flex items-center gap-2">
-							<span>📍</span> Register Blood Bank
-						</Link>
+										<Link to="/bloodbank-login" className="px-6 py-3 rounded-full bg-purple-600 text-white font-semibold shadow hover:bg-purple-700 flex items-center gap-2">
+											<span>🏥</span> Blood Bank Login
+										</Link>
 					</div>
 				</section>
 

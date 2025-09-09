@@ -62,24 +62,23 @@ router.get("/", authMiddleware, async (req, res) => {
 });
 
 /**
- * @route   GET /api/patients/:id
- * @desc    Get a single patient by ID
- * @access  Private (BloodBank only)
+ * @route   GET /api/patients/mrid/:mrid
+ * @desc    Get a patient by MRID (only user with matching MRID can view)
+ * @access  Private (User with MRID only)
  */
-router.get("/:id", authMiddleware, async (req, res) => {
+router.get("/mrid/:mrid", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "bloodbank") {
-      return res.status(403).json({ message: "Access denied" });
+    // Only allow users with matching MRID to view their record
+    if (req.user.role !== "user" || req.user.mrid !== req.params.mrid) {
+      return res.status(403).json({ message: "Access denied. Only the patient with this MRID can view their record." });
     }
-
-    const patient = await Patient.findOne({ _id: req.params.id, bloodBankId: req.user._id });
+    const patient = await Patient.findOne({ mrid: req.params.mrid });
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
-
     res.status(200).json(patient);
   } catch (err) {
-    console.error("Get Patient Error:", err);
+    console.error("Get Patient by MRID Error:", err);
     res.status(500).json({ message: "Server error while fetching patient" });
   }
 });

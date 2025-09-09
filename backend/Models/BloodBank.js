@@ -12,6 +12,7 @@ const bloodBankSchema = new mongoose.Schema(
     district: { type: String, required: true },
     contactNumber: { type: String, required: true, match: /^[0-9]{10}$/ },
     licenseNumber: { type: String, required: true, unique: true }, // Example validation
+    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
   },
   { timestamps: true }
 );

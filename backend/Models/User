@@ -15,6 +15,21 @@ const userSchema = new mongoose.Schema({
     maxlength: [50, "Username cannot exceed 50 characters"],
     match: [/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"],
   },
+  name: {
+    type: String,
+    required: [true, "Name is required"],
+    trim: true,
+    minlength: [1, "Name cannot be empty"],
+    maxlength: [100, "Name cannot exceed 100 characters"],
+  },
+  email: {
+    type: String,
+    required: false,
+    unique: false, // Remove unique constraint to allow multiple null values
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
+  },
   password: {
     type: String,
     required: function() {
@@ -25,7 +40,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "donor", "bloodbank"], // Restrict roles
+    enum: ["user", "donor", "bloodbank", "admin"], // Restrict roles
     required: [true, "Role is required"],
   },
   // Fields for password reset flow

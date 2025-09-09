@@ -22,6 +22,7 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
     availability: req.body.availability,
     lastDonatedDate: req.body.lastDonatedDate,
     contactPreference: req.body.contactPreference,
+    phone: req.body.phone,
   };
 
   const existing = await Donor.findOne({ userId: req.user.id });

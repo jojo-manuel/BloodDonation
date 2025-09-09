@@ -46,6 +46,9 @@ const DonorSchema = new mongoose.Schema({
   },
   houseAddress: { type: HouseAddressSchema, required: true },
   workAddress: { type: String, required: true },
+  availability: { type: Boolean, default: true },
+  contactPreference: { type: String, enum: ["phone", "email"], default: "phone" },
+  phone: { type: String },
   lastDonatedDate: { type: Date },
   priorityPoints: { type: Number, default: 0, min: 0 },
   donatedDates: [{ type: Date }]

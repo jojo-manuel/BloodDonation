@@ -89,9 +89,10 @@ export default function Register() {
       const { data } = await api.post("/auth/register", {
         username,
         password: formData.password,
-        email: formData.email,
+        confirmPassword: formData.confirmPassword,
         provider: "local",
       });
+
 
       if (data?.success && data?.data) {
         const { user, accessToken, refreshToken } = data.data;

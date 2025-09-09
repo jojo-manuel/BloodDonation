@@ -45,17 +45,23 @@ export default function Login() {
     const payload = { username, password: formData.password };
     api.post('/auth/login', payload)
       .then(({ data }) => {
-        if (data?.success && data?.data) {
-          const { user, accessToken, refreshToken } = data.data;
-          if (user?.id) localStorage.setItem('userId', user.id);
-          if (user?.role) localStorage.setItem('role', user.role);
-          if (user?.username) localStorage.setItem('username', user.username);
-          if (accessToken) localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          navigate('/dashboard');
-        } else {
-          alert(data?.message || 'Login failed');
-        }
+          if (data?.success && data?.data) {
+            const { user, accessToken, refreshToken } = data.data;
+            if (user?.id) localStorage.setItem('userId', user.id);
+            if (user?.role) localStorage.setItem('role', user.role);
+            if (user?.username) localStorage.setItem('username', user.username);
+            if (accessToken) localStorage.setItem('accessToken', accessToken);
+            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+            if (user?.role === 'admin') {
+              navigate('/admin-dashboard');
+            } else if (user?.role === 'bloodbank') {
+              navigate('/bloodbank-register');
+            } else {
+              navigate('/dashboard');
+            }
+          } else {
+            alert(data?.message || 'Login failed');
+          }
       })
       .catch((err) => {
         const msg = err?.response?.data?.message || 'Login failed';
@@ -108,7 +114,7 @@ export default function Login() {
             <div className="mb-4">
               <button
                 type="button"
-                onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/google`}
+                onClick={() => window.location.href = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/google`}
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 font-semibold text-gray-900 shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-gray-500/30 active:scale-[0.99]"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">

@@ -2,6 +2,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs"); // For password hashing
 const jwt = require("jsonwebtoken"); // For generating authentication tokens
+const Donor = require("../Models/donor"); // Donor model
 const User = require("../Models/User"); // User model
 
 const router = express.Router();
@@ -11,46 +12,37 @@ const router = express.Router();
  * @desc    Register a new user (Blood Bank or User)
  * @access  Public
  */
+const { registerBody } = require('../validators/schemas');
+const { z } = require('zod');
+
 router.post("/register", async (req, res) => {
   try {
-    const { username, password, role } = req.body;
-
-    // 1. Validate required fields
-    if (!username || !password || !role) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    // Validate request body using zod schema
+    const parsed = registerBody.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ success: false, message: "Validation failed", details: parsed.error.errors });
     }
+    const { username, email, password, role, provider, name } = parsed.data;
 
-    // 2. Normalize and validate role
-    const normalizedRole = String(role).toLowerCase();
-    const allowedRoles = ["bloodbank", "user", "donor"];
-    if (!allowedRoles.includes(normalizedRole)) {
-      return res.status(400).json({ success: false, message: "Role must be user, donor, or bloodbank" });
-    }
-
-    // 3. Validate username length and format
-    if (username.length < 3) {
-      return res.status(400).json({ success: false, message: "Username must be at least 3 characters long" });
-    }
-
-    // 4. Validate password length
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
-    }
-
-    // 5. Check if username already exists
-    const existingUser = await User.findOne({ username });
+    // Check if user exists by username or email
+    let existingUser = null;
+    if (username) existingUser = await User.findOne({ username });
+    else if (email) existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Username already exists" });
+      return res.status(400).json({ success: false, message: "User already exists" });
     }
 
-    // 6. Create new user object (password hashing occurs in model pre-save hook)
+    // Create new user object
     const newUser = new User({
       username,
+      email,
       password,
-      role: normalizedRole,
+      role: role || 'user',
+      provider,
+      name,
     });
 
-    // 7. Save user in database
+    // Save user in database
     await newUser.save();
 
     res.status(201).json({ success: true, message: "User registered successfully" });
@@ -89,7 +81,7 @@ router.post("/login", async (req, res) => {
     // 4. Generate JWT token with payload
     const token = jwt.sign(
       { id: user._id, role: user.role, username: user.username },
-      process.env.JWT_SECRET,
+      process.env.JWT_ACCESS_SECRET,
       { expiresIn: "1h" }
     );
 
@@ -103,6 +95,41 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ success: false, message: "Server error during login" });
+  }
+});
+
+/**
+ * @route   POST /api/auth/convert-to-donor
+ * @desc    Convert a user to donor role
+ * @access  Private
+ */
+router.post("/convert-to-donor", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Update role to donor
+    user.role = "donor";
+    await user.save();
+
+    // Create donor profile if not exists
+    const existingDonor = await Donor.findOne({ userId: user._id });
+    if (!existingDonor) {
+      await Donor.create({ userId: user._id, name: user.username });
+    }
+
+    res.status(200).json({ success: true, message: "User converted to donor successfully" });
+  } catch (error) {
+    console.error("Convert to Donor Error:", error);
+    res.status(500).json({ success: false, message: "Server error during role conversion" });
   }
 });
 

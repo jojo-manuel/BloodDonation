@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../lib/api";
 
 function Navbar({ isDark, toggleTheme }) {
   return (
@@ -62,14 +63,31 @@ export default function UserRegister() {
   // Submit user registration to backend using axios instance
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Frontend validation for confirmPassword
+    if (!formData.confirmPassword) {
+      alert('Please enter confirm password');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      alert('Password and confirm password do not match');
+      return;
+    }
+
     try {
       const payload = {
-        name: formData.name,
-        email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
         role: 'user',
+        provider: 'local',
       };
+
+      // Use localByUsername schema (username is required for simplicity)
+      payload.username = formData.username || formData.name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+      // Do not send email or name for localByUsername schema
+
+      console.log('Registration payload:', payload);
+
       const res = await api.post('/auth/register', payload);
       if (res.data.success) {
         alert('User registered successfully');
@@ -78,7 +96,16 @@ export default function UserRegister() {
         alert('Registration failed: ' + res.data.message);
       }
     } catch (err) {
-      alert('Error during registration: ' + (err.response?.data?.message || err.message));
+      const errorMsg = err.response?.data?.message || err.message;
+      const details = err.response?.data?.details;
+      if (details) {
+        const detailMsgs = details.map(d => `${d.path}: ${d.message}`).join('\n');
+        console.log('Registration error details:', details);
+        alert('Error during registration: ' + errorMsg + '\n\nValidation Details:\n' + detailMsgs);
+      } else {
+        console.log('Registration error:', err.response?.data || err.message);
+        alert('Error during registration: ' + errorMsg);
+      }
     }
   };
 
@@ -110,15 +137,33 @@ export default function UserRegister() {
 
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (optional)</label>
+                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter your full name"
+                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required={!formData.username || !formData.username.trim()}
+                  disabled={formData.username && formData.username.trim()}
+                />
+                {formData.username && formData.username.trim() && (
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Name disabled when username is entered</p>
+                )}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username</label>
                 <input
                   type="text"
                   name="username"
-                  placeholder="Choose a username (optional)"
+                  placeholder="Choose a username"
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                   value={formData.username || ""}
                   onChange={handleChange}
+                  required
                 />
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Username will be derived from your name if not entered</p>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Email address</label>
@@ -129,20 +174,25 @@ export default function UserRegister() {
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                   value={formData.email}
                   onChange={handleChange}
-                  required
+                  required={!formData.username || !formData.username.trim()}
+                  disabled={formData.username && formData.username.trim()}
                 />
+                {formData.username && formData.username.trim() && (
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Email disabled when username is entered</p>
+                )}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
                 <input
                   type="password"
                   name="password"
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 8 chars, uppercase, lowercase, number)"
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                   value={formData.password}
                   onChange={handleChange}
                   required
                 />
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Password must be at least 8 characters with uppercase, lowercase, and number</p>
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Confirm password</label>

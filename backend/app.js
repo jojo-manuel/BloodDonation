@@ -25,8 +25,12 @@ const allowedOrigins = [
   'http://127.0.0.1:5174',
   'http://localhost:5175',   // Other dev port
   'http://127.0.0.1:5175',
-  'http://localhost:5176',   // ✅ Add your current frontend port
-  'http://127.0.0.1:5176',  // ✅ Just in case
+  'http://localhost:5176',   // Additional dev ports
+  'http://127.0.0.1:5176',
+  'http://localhost:3000',   // React default
+  'http://127.0.0.1:3000',
+  'http://localhost:8080',   // Common dev port
+  'http://127.0.0.1:8080',
 ];
 
 const corsOptions = {
@@ -69,6 +73,9 @@ app.get('/api/health', (req, res) =>
 app.use('/api/auth', authLimiter, require('./Route/authRoutes'));
 app.use('/api/users', require('./Route/userRoutes'));
 app.use('/api/donors', require('./Route/donorRoutes'));
+app.use('/api/admin', require('./Route/adminRoutes'));
+app.use('/api/bloodbank', require('./Route/bloodBankRoutes'));
+app.use('/api/patients', require('./Route/PatientCURD'));
 
 // 404 fallback for unmatched routes
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));

@@ -13,7 +13,7 @@ const localByEmail = z.object({
   password: strongPassword,
   confirmPassword: z.string(),
   role: z.enum(['user','donor','admin']).optional(),
-  provider: z.literal('local').optional(),
+  provider: z.literal('local').default('local'),
 }).refine((d) => d.password === d.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords do not match',
@@ -24,7 +24,7 @@ const localByUsername = z.object({
   password: strongPassword,
   confirmPassword: z.string(),
   role: z.enum(['user','donor','admin']).optional(),
-  provider: z.literal('local').optional(),
+  provider: z.literal('local').default('local'),
 }).refine((d) => d.password === d.confirmPassword, {
   path: ['confirmPassword'],
   message: 'Passwords do not match',
@@ -49,13 +49,25 @@ const loginBody = z.object({
 });
 
 const donorRegisterBody = z.object({
+  name: z.string().min(3).max(100),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  gender: z.enum(['Male', 'Female', 'Other']),
   bloodGroup: z.string().min(1),
+  contactNumber: z.string().regex(/^[0-9]{10}$/),
+  emergencyContactNumber: z.string().regex(/^[0-9]{10}$/),
+  houseAddress: z.object({
+    houseName: z.string().min(1).max(100),
+    houseAddress: z.string().min(3).max(200),
+    localBody: z.string().min(3).max(100),
+    city: z.string().min(3).max(50),
+    district: z.string().min(3).max(50),
+    pincode: z.string().regex(/^[0-9]{6}$/),
+  }),
+  workAddress: z.string().min(3).max(200),
   availability: z.boolean(),
-  lastDonationDate: z.string().datetime().optional(),
-  city: z.string().min(1),
-  state: z.string().min(1),
-  pincode: z.string().min(3).max(10),
+  lastDonatedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional(),
   contactPreference: z.enum(['phone','email','any']).default('any'),
+  phone: z.string().min(5).max(20).optional(),
 });
 
 const userUpdateBody = z.object({
