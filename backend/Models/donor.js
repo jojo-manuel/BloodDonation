@@ -31,6 +31,7 @@ const DonorSchema = new mongoose.Schema({
   contactNumber: { 
     type: String, 
     required: true, 
+    unique: true,
     match: [/^[0-9]{10}$/, "Contact number must be 10 digits"] 
   },
   emergencyContactNumber: {
@@ -46,15 +47,27 @@ const DonorSchema = new mongoose.Schema({
   },
   houseAddress: { type: HouseAddressSchema, required: true },
   workAddress: { type: String, required: true },
+  weight: { type: Number, required: true, min: [55.1, "Weight must be above 55kg"] },
   availability: { type: Boolean, default: true },
   contactPreference: { type: String, enum: ["phone", "email"], default: "phone" },
   phone: { type: String },
   lastDonatedDate: { type: Date },
   priorityPoints: { type: Number, default: 0, min: 0 },
-  donatedDates: [{ type: Date }]
+  donatedDates: [{ type: Date }],
+  isBlocked: { type: Boolean, default: false },
+  isSuspended: { type: Boolean, default: false },
+  warningMessage: { type: String, default: null }
 }, { timestamps: true });
 
-module.exports = mongoose.model("Donor", DonorSchema);
+// Create unique index on userId to prevent duplicate donor registrations per user
+DonorSchema.index({ userId: 1 }, { unique: true });
 
+// Drop old index on 'user' field if it exists
+const Donor = mongoose.model("Donor", DonorSchema);
+Donor.collection.dropIndex("user_1").catch(err => {
+  if (err.code !== 27) { // 27 is index not found
+    console.log("Old index 'user_1' dropped or not found:", err.message);
+  }
+});
 
-
+module.exports = Donor;

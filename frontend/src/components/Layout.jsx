@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Footer from "./Footer";
 
 function Navbar({ isDark, toggleTheme }) {
   return (
@@ -58,6 +59,8 @@ export default function Layout({ children }) {
       <main className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 md:px-6 md:pb-24">
         {children}
       </main>
+
+      <Footer />
     </div>
   );
 }

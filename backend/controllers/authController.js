@@ -2,6 +2,8 @@
 // Handles user registration, login, token refresh, and logout.
 
 const User = require("../Models/User");
+const Donor = require("../Models/donor");
+const BloodBank = require("../Models/BloodBank");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("../middleware/asyncHandler");
 
@@ -68,6 +70,32 @@ exports.loginUser = asyncHandler(async (req, res) => {
   const ok = await user.comparePassword(password);
   if (!ok) return res.status(400).json({ success: false, message: 'Invalid credentials' });
 
+  // Check status based on role
+  let profile = null;
+  let isBlocked = user.isBlocked;
+  let isSuspended = user.isSuspended;
+  let warningMessage = user.warningMessage;
+
+  if (user.role === 'donor') {
+    profile = await Donor.findOne({ userId: user._id });
+    if (profile) {
+      isBlocked = profile.isBlocked;
+      isSuspended = profile.isSuspended;
+      warningMessage = profile.warningMessage;
+    }
+  } else if (user.role === 'bloodbank') {
+    profile = await BloodBank.findOne({ userId: user._id });
+    if (profile) {
+      isBlocked = profile.isBlocked;
+      isSuspended = profile.isSuspended;
+      warningMessage = profile.warningMessage;
+    }
+  }
+
+  if (isBlocked) {
+    return res.status(403).json({ success: false, message: 'Account is blocked. Contact admin.' });
+  }
+
   const accessToken = signAccessToken(user);
   const refreshToken = signRefreshToken(user);
   refreshStore.set(String(user._id), refreshToken);
@@ -75,7 +103,18 @@ exports.loginUser = asyncHandler(async (req, res) => {
   return res.json({
     success: true,
     message: 'Logged in',
-    data: { user: { id: user._id, name: user.name, email: user.email, role: user.role }, accessToken, refreshToken },
+    data: {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isSuspended,
+        warningMessage
+      },
+      accessToken,
+      refreshToken
+    },
   });
 });
 

@@ -1,0 +1,8 @@
+@echo off
+echo Checking environment variables...
+echo GOOGLE_CLIENT_ID: %GOOGLE_CLIENT_ID%
+echo GOOGLE_CLIENT_SECRET: %GOOGLE_CLIENT_SECRET%
+echo FRONTEND_URL: %FRONTEND_URL%
+echo API_BASE_URL: %API_BASE_URL%
+echo MONGO_URI: %MONGO_URI%
+pause

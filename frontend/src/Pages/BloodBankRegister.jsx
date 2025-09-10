@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import Layout from "../components/Layout";
+
+// Allowed values and regex patterns for client-side validation
+const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]{1,99}$/;              // letters + common name punctuation
+const CITY_DISTRICT_REGEX = /^[A-Za-z\s]{2,50}$/;                 // letters and spaces
+const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9\s.,-]{3,200}$/;       // letters/numbers/spaces with , . -
+const PHONE_IN_REGEX = /^[6-9]\d{9}$/;                            // Indian 10-digit starting 6-9
+const LICENSE_REGEX = /^[A-Za-z0-9\s-]{5,50}$/;                   // license number format
 
 export default function BloodBankRegister() {
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -12,161 +20,239 @@ export default function BloodBankRegister() {
     contactNumber: "",
     licenseNumber: "",
   });
-  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleUserRegister = async (e) => {
+  const validateForm = () => {
+    const errors = [];
+
+    // Common validation for blood bank details
+    if (!NAME_REGEX.test((formData.name || "").trim())) {
+      errors.push("Blood bank name must contain only letters, spaces, and basic punctuation (.'-)");
+    }
+
+    if (!ALNUM_SPACE_ADDR_REGEX.test((formData.address || "").trim())) {
+      errors.push("Address must contain only letters, numbers, spaces or , . -");
+    }
+
+    if (!CITY_DISTRICT_REGEX.test((formData.district || "").trim())) {
+      errors.push("District must contain only letters and spaces");
+    }
+
+    if (!PHONE_IN_REGEX.test(formData.contactNumber)) {
+      errors.push("Contact number must be a valid Indian number (10 digits, starts with 6-9)");
+    }
+
+    if (!LICENSE_REGEX.test((formData.licenseNumber || "").trim())) {
+      errors.push("License number must be 5-50 characters and contain only letters, numbers, spaces, and hyphens");
+    }
+
+    // Required fields
+    const requiredFields = ['name', 'address', 'district', 'contactNumber', 'licenseNumber'];
+
+    requiredFields.forEach(field => {
+      if (!formData[field] || formData[field].toString().trim() === '') {
+        errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+      }
+    });
+
+    // Validate no fields with only spaces
+    Object.entries(formData).forEach(([key, value]) => {
+      if (typeof value === 'string' && value.trim() === '') {
+        errors.push(`${key.charAt(0).toUpperCase() + key.slice(1)} cannot be empty or only spaces`);
+      }
+    });
+
+    return errors;
+  };
+
+  const handleRegister = async (e) => {
     e.preventDefault();
-    // Username validation: only letters, numbers, underscores, min 3 chars
-    const usernameRegex = /^[a-zA-Z0-9_]{3,50}$/;
-    if (!usernameRegex.test(formData.username)) {
-      alert("Username must be 3-50 characters and contain only letters, numbers, and underscores.");
+    setLoading(true);
+
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      alert("❌ Validation Errors:\n" + validationErrors.join("\n"));
+      setLoading(false);
       return;
     }
+
     try {
-      // Register blood bank user
-      const res = await api.post("/bloodbank/register", {
+      // First register the blood bank user
+      const registerRes = await api.post("/bloodbank/register", {
         username: formData.username,
         password: formData.password,
       });
-      if (res.data.success) {
-        // Automatically log in the user to get tokens
-        const loginRes = await api.post("/auth/login", {
-          username: formData.username,
-          password: formData.password,
-        });
-        if (loginRes.data.success && loginRes.data.data) {
-          localStorage.setItem("accessToken", loginRes.data.data.accessToken);
-          localStorage.setItem("refreshToken", loginRes.data.data.refreshToken);
-          setUserId(res.data.data.userId);
-          setStep(2);
-        } else {
-          alert(loginRes.data.message || "Login failed after registration");
-        }
-      } else {
-        alert(res.data.message || "Registration failed");
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
-    }
-  };
 
-  const handleDetailsSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/bloodbank/submit-details", {
-        userId,
+      if (!registerRes.data.success) {
+        throw new Error(registerRes.data.message || "Registration failed");
+      }
+
+      // Blood bank details submission now uses authenticated user context on backend
+      const submitRes = await api.post("/bloodbank/submit-details", {
         name: formData.name,
         address: formData.address,
         district: formData.district,
         contactNumber: formData.contactNumber,
         licenseNumber: formData.licenseNumber,
       });
-      if (res.data.success) {
-        alert("Blood bank details submitted for approval");
-        setStep(3);
-      } else {
-        alert(res.data.message || "Submission failed");
+
+      if (!submitRes.data.success) {
+        throw new Error(submitRes.data.message || "Failed to submit blood bank details");
       }
+
+      alert("✅ Blood bank registered successfully! Please login to continue.");
+      navigate("/bloodbank-login");
     } catch (err) {
-      alert(err.response?.data?.message || "Submission failed");
+      alert(err.response?.data?.message || err.message || "Registration failed");
+    }
+    setLoading(false);
+  };
+
+
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'contactNumber') {
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setFormData({ ...formData, [name]: digitsOnly });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  if (step === 1) {
-    return (
-      <form onSubmit={handleUserRegister} className="max-w-md mx-auto p-4">
-        <h2 className="text-xl font-bold mb-4">Blood Bank User Registration</h2>
-        <input
-          type="text"
-          placeholder="Username (letters, numbers, underscores only)"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "") })}
-          minLength={3}
-          maxLength={50}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-          Register
-        </button>
+  return (
+    <Layout>
+      <form
+        onSubmit={handleRegister}
+        className="mx-auto w-full max-w-3xl rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-10 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-transparent"
+      >
+        <div className="mb-8 text-center">
+          <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">
+            🏥 Register Blood Bank
+          </h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base">
+            Join our network of life-saving blood banks
+          </p>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (Email)</label>
+            <input
+              type="email"
+              name="username"
+              placeholder="Enter your email address"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password (min 6 characters)"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.password}
+              onChange={handleChange}
+              minLength={6}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Bank Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Blood Bank Name"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Contact Number</label>
+            <input
+              type="tel"
+              name="contactNumber"
+              placeholder="Contact Number"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.contactNumber}
+              onChange={handleChange}
+              maxLength={10}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Address</label>
+            <input
+              type="text"
+              name="address"
+              placeholder="Full Address"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.address}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">District</label>
+            <input
+              type="text"
+              name="district"
+              placeholder="District"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.district}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">License Number</label>
+            <input
+              type="text"
+              name="licenseNumber"
+              placeholder="Blood Bank License Number"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.licenseNumber}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50"
+          >
+            {loading ? "⏳ Processing..." : '🏥 Register Blood Bank'}
+          </button>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            By registering, you agree to our terms and conditions for blood bank operations.
+          </p>
+          <div className="mt-2">
+            <Link to="/" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
+              ← Back to Home
+            </Link>
+          </div>
+        </div>
       </form>
-    );
-  }
-
-  if (step === 2) {
-    return (
-      <form onSubmit={handleDetailsSubmit} className="max-w-md mx-auto p-4">
-        <h2 className="text-xl font-bold mb-4">Blood Bank Details</h2>
-        <input
-          type="text"
-          placeholder="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="text"
-          placeholder="Address"
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="text"
-          placeholder="District"
-          value={formData.district}
-          onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="text"
-          placeholder="Contact Number"
-          value={formData.contactNumber}
-          onChange={(e) => {
-            const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
-            setFormData({ ...formData, contactNumber: digitsOnly });
-          }}
-          inputMode="numeric"
-          pattern="^[0-9]{10}$"
-          maxLength={10}
-          title="Please enter a 10-digit contact number"
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <input
-          type="text"
-          placeholder="License Number"
-          value={formData.licenseNumber}
-          onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-          required
-          className="w-full mb-2 p-2 border rounded"
-        />
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
-          Submit Details
-        </button>
-      </form>
-    );
-  }
-
-  if (step === 3) {
-    return (
-      <div className="max-w-md mx-auto p-4">
-        <h2 className="text-xl font-bold mb-4">Registration Complete</h2>
-        <p>Your blood bank registration is pending admin approval.</p>
-      </div>
-    );
-  }
-
-  return null;
+    </Layout>
+  );
 }

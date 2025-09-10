@@ -49,25 +49,42 @@ const loginBody = z.object({
 });
 
 const donorRegisterBody = z.object({
-  name: z.string().min(3).max(100),
-  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  name: z.string().min(3).max(100).refine(val => val.trim().length > 0, "Name cannot be empty or only spaces"),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => {
+    const dob = new Date(val);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    return age >= 18 && age <= 60 && dob <= today;
+  }, "Donor must be between 18 and 60 years old and date of birth cannot be in the future"),
   gender: z.enum(['Male', 'Female', 'Other']),
   bloodGroup: z.string().min(1),
-  contactNumber: z.string().regex(/^[0-9]{10}$/),
-  emergencyContactNumber: z.string().regex(/^[0-9]{10}$/),
+  contactNumber: z.string().regex(/^[0-9]{10}$/).refine(val => val.trim().length === 10, "Contact number cannot be empty or only spaces"),
+  emergencyContactNumber: z.string().regex(/^[0-9]{10}$/).refine(val => val.trim().length === 10, "Emergency contact cannot be empty or only spaces"),
   houseAddress: z.object({
-    houseName: z.string().min(1).max(100),
-    houseAddress: z.string().min(3).max(200),
-    localBody: z.string().min(3).max(100),
-    city: z.string().min(3).max(50),
-    district: z.string().min(3).max(50),
-    pincode: z.string().regex(/^[0-9]{6}$/),
+    houseName: z.string().min(1).max(100).refine(val => val.trim().length > 0, "House name cannot be empty or only spaces"),
+    houseAddress: z.string().min(3).max(200).refine(val => val.trim().length > 0, "House address cannot be empty or only spaces"),
+    localBody: z.string().min(3).max(100).refine(val => val.trim().length > 0, "Local body cannot be empty or only spaces"),
+    city: z.string().min(3).max(50).refine(val => val.trim().length > 0, "City cannot be empty or only spaces"),
+    district: z.string().min(3).max(50).refine(val => val.trim().length > 0, "District cannot be empty or only spaces"),
+    pincode: z.string().regex(/^[0-9]{6}$/).refine(val => val.trim().length === 6, "Pincode cannot be empty or only spaces"),
   }),
-  workAddress: z.string().min(3).max(200),
+  workAddress: z.string().min(3).max(200).refine(val => val.trim().length > 0, "Work address cannot be empty or only spaces"),
+  weight: z.number().min(55.1, "Weight must be above 55kg"),
   availability: z.boolean(),
-  lastDonatedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional(),
+  lastDonatedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => {
+    const date = new Date(val);
+    const today = new Date();
+    return date <= today;
+  }, "Last donation date cannot be in the future").optional(),
   contactPreference: z.enum(['phone','email','any']).default('any'),
   phone: z.string().min(5).max(20).optional(),
+}).refine((data) => data.contactNumber !== data.emergencyContactNumber, {
+  path: ['emergencyContactNumber'],
+  message: 'Emergency contact cannot be same as contact number',
 });
 
 const userUpdateBody = z.object({

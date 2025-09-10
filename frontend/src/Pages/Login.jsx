@@ -8,8 +8,8 @@ import api from "../lib/api";
 function ProgressBar() {
   return (
     <div className="flex items-center justify-between w-full max-w-2xl mx-auto pt-8 pb-4">
-      <Link to="/register" className="flex items-center gap-2 text-gray-400 hover:text-pink-400 text-sm">
-        ← Back to Registration
+      <Link to="/" className="flex items-center gap-2 text-gray-400 hover:text-pink-400 text-sm">
+        ← Back to Home
       </Link>
       <div className="flex gap-4 items-center">
         <span className="flex items-center gap-1 text-pink-400 font-bold">
@@ -37,12 +37,10 @@ export default function Login() {
   // Submit credentials and persist tokens + user; redirect to dashboard
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Derive username from email for unified username-based login
-    const emailLocal = (formData.email || '').split('@')[0] || 'user';
-    const derived = emailLocal.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-    const username = derived.length < 3 ? (derived + '123').slice(0, 3) : derived;
+    // Use email directly as username for login
+    const username = formData.email;
 
-    const payload = { username, password: formData.password };
+    const payload = { email: username, password: formData.password };
     api.post('/auth/login', payload)
       .then(({ data }) => {
           if (data?.success && data?.data) {
@@ -50,12 +48,23 @@ export default function Login() {
             if (user?.id) localStorage.setItem('userId', user.id);
             if (user?.role) localStorage.setItem('role', user.role);
             if (user?.username) localStorage.setItem('username', user.username);
+            if (user?.isSuspended) localStorage.setItem('isSuspended', user.isSuspended);
+            if (user?.isBlocked) localStorage.setItem('isBlocked', user.isBlocked);
+            if (user?.warningMessage) localStorage.setItem('warningMessage', user.warningMessage);
             if (accessToken) localStorage.setItem('accessToken', accessToken);
             if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+            if (user?.warningMessage) {
+              alert(`Warning: ${user.warningMessage}`);
+            }
+            if (user?.isSuspended) {
+              alert('Your account is suspended. Some features may be restricted.');
+            }
+
             if (user?.role === 'admin') {
               navigate('/admin-dashboard');
             } else if (user?.role === 'bloodbank') {
-              navigate('/bloodbank-register');
+              navigate('/bloodbank/dashboard');
             } else {
               navigate('/dashboard');
             }
@@ -144,10 +153,7 @@ export default function Login() {
 
           <div className="mt-8 text-center space-y-2">
             <p className="text-sm text-gray-300">
-              Don't have an account? {""}
-              <Link to="/register" className="font-semibold text-pink-400 underline-offset-4 hover:underline dark:text-pink-300">
-                Sign up here
-              </Link>
+              Don't have an account? Contact admin for registration.
             </p>
             <p className="text-sm">
               <Link to="/forgot-password" className="text-pink-400 underline-offset-4 hover:underline dark:text-pink-300">Forgot your password?</Link>

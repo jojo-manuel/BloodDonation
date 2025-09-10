@@ -13,8 +13,15 @@ const bloodBankSchema = new mongoose.Schema(
     contactNumber: { type: String, required: true, match: /^[0-9]{10}$/ },
     licenseNumber: { type: String, required: true, unique: true }, // Example validation
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    isBlocked: { type: Boolean, default: false },
+    isSuspended: { type: Boolean, default: false },
+    warningMessage: { type: String, default: null },
   },
   { timestamps: true }
 );
+
+// Create unique indexes
+bloodBankSchema.index({ userId: 1 }, { unique: true });
+bloodBankSchema.index({ licenseNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model("BloodBank", bloodBankSchema);

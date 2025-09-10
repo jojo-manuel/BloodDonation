@@ -1,29 +1,30 @@
 const mongoose = require("mongoose");
+const { encrypt, decrypt } = require("../utils/encryption");
 
 const patientSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, "Patient name is required"],
-      trim: true,
-      minlength: [3, "Name must be at least 3 characters long"],
+    bloodBankId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BloodBank",
+      required: true,
     },
-    address: {
+    encryptedName: {
       type: String,
-      required: [true, "Address is required"],
-      trim: true,
-      minlength: [5, "Address must be at least 5 characters long"],
+      required: [true, "Encrypted patient name is required"],
+    },
+    encryptedAddress: {
+      type: String,
+      required: [true, "Encrypted address is required"],
     },
     bloodGroup: {
       type: String,
       required: [true, "Blood group is required"],
       enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
     },
-    mrid: {
+    encryptedMrid: {
       type: String,
-      required: [true, "MRID (Medical Record ID) is required"],
+      required: [true, "Encrypted MRID is required"],
       unique: true,
-      match: [/^[A-Z0-9]+$/, "MRID must be alphanumeric and uppercase"],
     },
     unitsRequired: {
       type: Number,
@@ -44,8 +45,38 @@ const patientSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
+
+// Virtual for decrypted name
+patientSchema.virtual('name').get(function() {
+  return this.encryptedName ? decrypt(this.encryptedName) : '';
+}).set(function(value) {
+  this.encryptedName = encrypt(value);
+});
+
+// Virtual for decrypted address
+patientSchema.virtual('address').get(function() {
+  return this.encryptedAddress ? decrypt(this.encryptedAddress) : '';
+}).set(function(value) {
+  this.encryptedAddress = encrypt(value);
+});
+
+// Virtual for decrypted MRID
+patientSchema.virtual('mrid').get(function() {
+  return this.encryptedMrid ? decrypt(this.encryptedMrid) : '';
+}).set(function(value) {
+  this.encryptedMrid = encrypt(value.toUpperCase());
+});
+
+// Ensure virtual fields are serialized
+patientSchema.set('toJSON', { virtuals: true });
+patientSchema.set('toObject', { virtuals: true });
+
 
 module.exports = mongoose.model("Patient", patientSchema);

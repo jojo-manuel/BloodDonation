@@ -1,6 +1,6 @@
 const BloodBank = require("../Models/BloodBank");
 const User = require("../Models/User");
-const asyncHandler = require("../middleware/asyncHandler");
+const asyncHandler = require("../Middleware/asyncHandler");
 
 /**
  * Register a new blood bank user (username/password)
@@ -30,52 +30,55 @@ exports.registerBloodBankUser = asyncHandler(async (req, res) => {
 
 /**
  * Submit blood bank details for approval
- * Body: { userId, name, address, contactNumber, district, licenseNumber }
+ * Body: { name, address, contactNumber, district, licenseNumber }
  */
 exports.submitBloodBankDetails = asyncHandler(async (req, res) => {
-  const { userId, name, address, contactNumber, district, licenseNumber } = req.body;
+  const { name, address, contactNumber, district, licenseNumber } = req.body;
+
+  console.log("[DEBUG] submitBloodBankDetails called with:", { userId: req.user._id, name, address, contactNumber, district, licenseNumber });
 
   // Validate required fields (model also enforces this)
-  if (!userId || !name || !address || !contactNumber || !district || !licenseNumber) {
-    return res.status(400).json({ success: false, message: "userId, name, address, contactNumber, district, and licenseNumber are required" });
+  if (!name || !address || !contactNumber || !district || !licenseNumber) {
+    console.log("[DEBUG] Validation failed - missing required fields");
+    return res.status(400).json({ success: false, message: "name, address, contactNumber, district, and licenseNumber are required" });
   }
 
-  // Find existing blood bank by userId
-  let bloodBank = await BloodBank.findOne({ userId });
-  if (bloodBank) {
-    // Update existing blood bank details and reset status to pending
-    bloodBank.name = name;
-    bloodBank.address = address;
-    bloodBank.district = district;
-    bloodBank.contactNumber = contactNumber;
-    bloodBank.licenseNumber = licenseNumber;
-    bloodBank.status = "pending";
-  } else {
-    // Create new blood bank document
-    bloodBank = new BloodBank({
-      userId,
-      name,
-      address,
-      district,
-      contactNumber,
-      licenseNumber,
-      status: "pending",
-    });
-  }
-  await bloodBank.save();
+  try {
+    // Use upsert to create or update blood bank details
+    const savedBloodBank = await BloodBank.findOneAndUpdate(
+      { userId: req.user._id },
+      {
+        userId: req.user._id,
+        name,
+        address,
+        district,
+        contactNumber,
+        licenseNumber,
+        status: "pending",
+      },
+      { upsert: true, new: true, runValidators: true }
+    );
+    console.log("[DEBUG] Blood bank saved successfully:", savedBloodBank);
 
-  return res.status(200).json({ success: true, message: "Blood bank details submitted for approval", data: bloodBank });
+    return res.status(200).json({ success: true, message: "Blood bank details submitted for approval", data: savedBloodBank });
+  } catch (error) {
+    console.error("[DEBUG] Error saving blood bank:", error);
+    return res.status(500).json({ success: false, message: "Error saving blood bank details", error: error.message });
+  }
 });
 
 /**
- * Get blood bank details by userId
- * Query param: userId
+ * Get blood bank details for the authenticated user
  */
 exports.getBloodBankByUser = asyncHandler(async (req, res) => {
-  const { userId } = req.query;
-  const bloodBank = await BloodBank.findOne({ userId });
+  // Ensure the user is a bloodbank
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: "Access denied. Bloodbank role required." });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
   if (!bloodBank) {
-    return res.status(404).json({ success: false, message: "Blood bank details not found" });
+    return res.status(404).json({ success: false, message: "Blood bank details not found. Please submit your details for approval." });
   }
   return res.json({ success: true, data: bloodBank });
 });

@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const googleOAuthConfig = require("../config/googleOAuthConfig");
@@ -80,9 +81,8 @@ if (hasGoogleCreds) {
 
           let user = await User.findOne({ googleId: profile.id });
           if (!user) {
-            const usernameBase = deriveUsernameFromEmail(email);
             let existingByUsername = await User.findOne({
-              username: usernameBase,
+              username: email,
             });
 
             if (existingByUsername) {
@@ -91,13 +91,14 @@ if (hasGoogleCreds) {
               user.provider = "google";
               await user.save();
             } else {
-              const uniqueUsername = await ensureUniqueUsername(usernameBase);
               user = new User({
-                username: uniqueUsername,
+                username: email,
+                name: email.split('@')[0], // temporary name
                 password: crypto.randomBytes(16).toString("hex"), // dummy password
                 role: "user",
                 googleId: profile.id,
                 provider: "google",
+                needsProfileCompletion: true,
               });
               await user.save();
             }
@@ -141,6 +142,77 @@ if (hasGoogleCreds) {
     return res.status(503).json({ success: false, message: "Google OAuth not configured" });
   });
 }
+
+// ====== Forgot Password Route ======
+router.post('/forgot-password', async (req, res) => {
+  const { email, username } = req.body;
+  try {
+    const user = await User.findOne({
+      $or: [{ email: email || null }, { username: username || null }]
+    });
+    if (!user) {
+      // Do not reveal user existence for security
+      return res.json({ success: true, message: 'If the account exists, a reset link has been sent' });
+    }
+
+    // Generate reset token and expiry (1 hour)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = Date.now() + 3600000; // 1 hour
+
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expiry;
+    await user.save();
+
+    // Configure nodemailer with Gmail SMTP
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: user.email || user.username,
+      subject: 'Password Reset Request',
+      text: `You requested a password reset. Click the link to reset your password: ${resetUrl}\n\nIf you did not request this, please ignore this email.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return res.json({ success: true, message: 'If the account exists, a reset link has been sent' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to send reset email' });
+  }
+});
+
+// ====== Reset Password Route ======
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    return res.json({ success: true, message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+});
 
 /**
  * @route   GET /api/auth/google/callback
@@ -220,18 +292,15 @@ router.post("/register", async (req, res) => {
     let username, name, email;
 
     if (data.username) {
-      // localByUsername schema
+      // localByUsername schema - username should be in email format
       username = data.username;
-      name = data.username; // Use username as name
-      email = undefined;
+      name = data.name || data.username; // Use provided name or username as name
+      email = data.email || data.username; // Use provided email or username as email
     } else {
-      // localByEmail schema
+      // localByEmail schema - use email as username
       name = data.name;
       email = data.email;
-      // Derive username from name
-      let baseUsername = name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-      if (baseUsername.length < 3) baseUsername = (baseUsername + 'user123').slice(0, 10);
-      username = await ensureUniqueUsername(baseUsername);
+      username = data.email; // Use email as username
     }
 
     const { password, role, provider } = data;
@@ -280,48 +349,49 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     let { username, email, password } = req.body || {};
-    if (!username && email) username = deriveUsernameFromEmail(email);
+    if (!username && email) username = email; // Use email directly as username
     if (!username || !password)
       return res.status(400).json({
         success: false,
         message: "Username and password are required",
       });
 
-    // Special case for admin login
-    if (username === 'admin' && password === 'admin123') {
-      let adminUser = await User.findOne({ username: 'admin' });
-      if (!adminUser) {
-        adminUser = new User({
-          username: 'admin',
-          name: 'Admin',
-          password: 'admin123',
-          role: 'admin',
-          provider: 'local',
-        });
-        await adminUser.save();
+    // Add max retry and catch for admin user existence check
+    let user;
+    let attempts = 0;
+    const maxAttempts = 3;
+    while (attempts < maxAttempts) {
+      try {
+        user = await User.findOne({ username });
+        break;
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          return res.status(500).json({ success: false, message: "Error checking user existence", error: e.message });
+        }
       }
-      const accessToken = signAccessToken(adminUser);
-      const refreshToken = signRefreshToken(adminUser);
-      refreshStore.set(String(adminUser._id), refreshToken);
-
-      return res.json({
-        success: true,
-        message: "Logged in as admin",
-        data: {
-          user: { id: adminUser._id, username: adminUser.username, role: adminUser.role },
-          accessToken,
-          refreshToken,
-        },
-      });
     }
 
-    const user = await User.findOne({ username });
     if (!user)
       return res.status(400).json({ success: false, message: "Invalid credentials" });
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok)
       return res.status(400).json({ success: false, message: "Invalid credentials" });
+
+    // Remove admin login block
+    // if (user.role === 'admin') {
+    //   return res.status(403).json({ success: false, message: 'Admin login is disabled' });
+    // }
+
+    // Check blood bank rejection status if user is a blood bank
+    if (user.role === 'bloodbank') {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank && bloodBank.status === 'rejected') {
+        return res.status(403).json({ success: false, message: "Your blood bank registration has been rejected. Please contact admin." });
+      }
+    }
 
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);

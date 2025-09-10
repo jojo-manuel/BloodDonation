@@ -1,9 +1,22 @@
-// controllers/userController.js
-// User profile endpoints: register, get current user and update own profile.
-
 const User = require('../Models/User');
+const Donor = require('../Models/donor');
 const asyncHandler = require('../middleware/asyncHandler');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+
+// Multer storage for profile images
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Dev-friendly secrets (use .env in production)
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'dev_access_secret';
@@ -35,11 +48,11 @@ async function ensureUniqueUsername(base) {
 
 /**
  * Register a new user
- * Body: username, password, role (optional, defaults to 'user')
+ * Body: username, password, role (optional, defaults to 'user'), name, email, phone
  */
 exports.register = asyncHandler(async (req, res) => {
   try {
-    const { username, password, role = 'user' } = req.body;
+    const { username, password, role = 'user', name, email, phone } = req.body;
 
     // Validate required fields
     if (!username || !password) {
@@ -67,7 +80,14 @@ exports.register = asyncHandler(async (req, res) => {
     const uniqueUsername = await ensureUniqueUsername(username);
 
     // Let the model hash the password in pre-save hook (avoid double hash)
-    const newUser = new User({ username: uniqueUsername, password, role: normalizedRole });
+    const newUser = new User({
+      username: uniqueUsername,
+      password,
+      role: normalizedRole,
+      name: name || uniqueUsername.split('@')[0], // Use part of email as name if not provided
+      email: email || uniqueUsername, // Use username as email if not provided
+      phone: phone || null
+    });
     await newUser.save();
 
     // Issue tokens
@@ -114,5 +134,80 @@ exports.updateMe = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Profile updated', data: user });
 });
 
+/**
+ * Complete profile for Google users
+ * Body: name, phone
+ */
+exports.completeProfile = asyncHandler(async (req, res) => {
+  const { name, phone } = req.body;
+  if (!name || !phone) {
+    return res.status(400).json({ success: false, message: 'Name and phone are required' });
+  }
 
+  const updates = { name, phone, needsProfileCompletion: false };
+  const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password');
+  res.json({ success: true, message: 'Profile completed', data: user });
+});
 
+/**
+ * Update donor availability status
+ */
+exports.updateDonorAvailability = asyncHandler(async (req, res) => {
+  const { id } = req.user; // user id from auth middleware
+  const { availability } = req.body;
+
+  if (typeof availability !== 'boolean') {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid value for availability. Must be boolean."
+    });
+  }
+
+  const donor = await Donor.findOneAndUpdate(
+    { userId: id },
+    { availability },
+    { new: true }
+  );
+
+  if (!donor) {
+    return res.status(404).json({
+      success: false,
+      message: "Donor not found for the current user."
+    });
+  }
+
+  res.json({
+    success: true,
+    message: "Donor availability updated successfully.",
+    data: donor
+  });
+});
+
+/**
+ * Upload profile image
+ */
+exports.uploadProfileImage = [
+  upload.single('profileImage'),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded."
+      });
+    }
+
+    const imagePath = `/uploads/${req.file.filename}`;
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { profileImage: imagePath },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      success: true,
+      message: "Profile image uploaded successfully.",
+      data: user
+    });
+  })
+];

@@ -8,13 +8,27 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('🔄 AuthCallback: Starting callback processing');
+        console.log('🔄 AuthCallback: Current URL:', window.location.href);
+        console.log('🔄 AuthCallback: Search params:', searchParams.toString());
+
         const accessToken = searchParams.get('accessToken');
         const refreshToken = searchParams.get('refreshToken');
         const userId = searchParams.get('userId');
         const role = searchParams.get('role');
         const username = searchParams.get('username');
 
+        console.log('🔄 AuthCallback: Received parameters:', {
+          accessToken: accessToken ? 'present' : 'missing',
+          refreshToken: refreshToken ? 'present' : 'missing',
+          userId,
+          role,
+          username
+        });
+
         if (accessToken && refreshToken && userId) {
+          console.log('✅ AuthCallback: All required parameters present, storing tokens...');
+
           // Store authentication data
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', refreshToken);
@@ -22,15 +36,41 @@ export default function AuthCallback() {
           localStorage.setItem('role', role);
           localStorage.setItem('username', username);
 
-          // Redirect to dashboard
-          navigate('/dashboard');
+          console.log('✅ AuthCallback: Tokens stored successfully');
+
+          // Verify storage
+          const storedToken = localStorage.getItem('accessToken');
+          const storedRole = localStorage.getItem('role');
+          console.log('✅ AuthCallback: Verification - stored token:', storedToken ? 'present' : 'missing');
+          console.log('✅ AuthCallback: Verification - stored role:', storedRole);
+
+          // Redirect based on user role
+          let redirectPath = '/dashboard'; // default for regular users
+          if (role === 'bloodbank') {
+            redirectPath = '/bloodbank/dashboard';
+          } else if (role === 'admin') {
+            redirectPath = '/admin-dashboard';
+          }
+
+          console.log('🚀 AuthCallback: Redirecting to:', redirectPath);
+
+          // Add a small delay to ensure localStorage is updated
+          setTimeout(() => {
+            console.log('🚀 AuthCallback: Executing navigation to:', redirectPath);
+            navigate(redirectPath, { replace: true });
+          }, 100);
+
         } else {
-          // Handle error case
-          console.error('Missing authentication parameters');
+          console.error('❌ AuthCallback: Missing authentication parameters');
+          console.error('❌ AuthCallback: Missing params:', {
+            accessToken: !accessToken,
+            refreshToken: !refreshToken,
+            userId: !userId
+          });
           navigate('/login?error=auth_failed');
         }
       } catch (error) {
-        console.error('Auth callback error:', error);
+        console.error('❌ AuthCallback error:', error);
         navigate('/login?error=auth_failed');
       }
     };
