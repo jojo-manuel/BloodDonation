@@ -1,14 +1,15 @@
 import { initializeApp } from "firebase/app";
 
-// Keep your keys in env for production; this is fine for local/dev
+// Firebase configuration - Replace with your actual Firebase project config
 export const firebaseConfig = {
-  apiKey: "AIzaSyC7dl0bmpFP1Bu059jiSjRKLfQGIVWI7z0",
-  authDomain: "hopeweb-f59cc.firebaseapp.com",
-  projectId: "hopeweb-f59cc",
-  storageBucket: "hopeweb-f59cc.firebasestorage.app",
-  messagingSenderId: "815393238578",
-  appId: "1:815393238578:web:4acf81fd497bacad8c962b",
-  measurementId: "G-QWEZ3W25QX",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key-here",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-ABCDEFGHIJ",
 };
 
+// Initialize Firebase
 export const firebaseApp = initializeApp(firebaseConfig);

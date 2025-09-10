@@ -11,6 +11,10 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       }
+    },
+    // Enable SPA fallback for React Router
+    fs: {
+      strict: false
     }
   }
 })

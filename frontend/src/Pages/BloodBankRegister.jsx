@@ -88,6 +88,20 @@ export default function BloodBankRegister() {
         throw new Error(registerRes.data.message || "Registration failed");
       }
 
+      // Now login the user to get tokens
+      const loginRes = await api.post("/auth/login", {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      if (!loginRes.data.success) {
+        throw new Error(loginRes.data.message || "Login failed after registration");
+      }
+
+      // Store tokens in localStorage
+      localStorage.setItem('accessToken', loginRes.data.data.accessToken);
+      localStorage.setItem('refreshToken', loginRes.data.data.refreshToken);
+
       // Blood bank details submission now uses authenticated user context on backend
       const submitRes = await api.post("/bloodbank/submit-details", {
         name: formData.name,
@@ -101,8 +115,8 @@ export default function BloodBankRegister() {
         throw new Error(submitRes.data.message || "Failed to submit blood bank details");
       }
 
-      alert("✅ Blood bank registered successfully! Please login to continue.");
-      navigate("/bloodbank-login");
+      alert("✅ Blood bank registered successfully! Please wait for admin approval.");
+      navigate("/bloodbank-pending-approval");
     } catch (err) {
       alert(err.response?.data?.message || err.message || "Registration failed");
     }

@@ -3,11 +3,13 @@ const User = require("../Models/User");
 const asyncHandler = require("../Middleware/asyncHandler");
 
 /**
- * Register a new blood bank user (username/password)
- * Body: { username, password }
+ * Register a new blood bank user and optionally create blood bank details
+ * Body (supports both old and new flows):
+ * - Old: { username, password }
+ * - New: { username, password, name, address, contactNumber, district, licenseNumber }
  */
 exports.registerBloodBankUser = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, name, address, contactNumber, district, licenseNumber } = req.body;
 
   // Check if username exists in User collection
   const existingUser = await User.findOne({ username });
@@ -25,7 +27,42 @@ exports.registerBloodBankUser = asyncHandler(async (req, res) => {
   });
   await user.save();
 
-  return res.status(201).json({ success: true, message: "Blood bank user registered", data: { userId: user._id, username: user.username } });
+  // If full blood bank details are provided, create the BloodBank record now
+  let bloodBank = null;
+  const hasFullDetails = name && address && contactNumber && district && licenseNumber;
+  if (hasFullDetails) {
+    try {
+      bloodBank = await BloodBank.findOneAndUpdate(
+        { userId: user._id },
+        {
+          userId: user._id,
+          name,
+          address,
+          district,
+          contactNumber,
+          licenseNumber,
+          status: "pending",
+        },
+        { upsert: true, new: true, runValidators: true }
+      );
+    } catch (err) {
+      // If blood bank creation fails (e.g., duplicate licenseNumber), roll back user and report error
+      await User.findByIdAndDelete(user._id).catch(() => {});
+      return res.status(400).json({ success: false, message: err.message || "Failed to create blood bank details" });
+    }
+  }
+
+  return res.status(201).json({
+    success: true,
+    message: hasFullDetails
+      ? "Blood bank user and details registered"
+      : "Blood bank user registered",
+    data: {
+      userId: user._id,
+      username: user.username,
+      bloodBank,
+    },
+  });
 });
 
 /**

@@ -4,9 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const googleOAuthConfig = require("../config/googleOAuthConfig");
+const admin = require("../utils/firebaseAdmin");
 
 // Import models
 const User = require("../Models/User");
@@ -59,89 +57,17 @@ async function ensureUniqueUsername(base) {
   return `${base}_${Date.now()}`;
 }
 
-// ====== Google OAuth Setup (guarded if env is missing) ======
-const hasGoogleCreds = Boolean(
-  googleOAuthConfig && googleOAuthConfig.clientID && googleOAuthConfig.clientSecret
-);
-
-if (hasGoogleCreds) {
-  passport.use(
-    new GoogleStrategy(
-      {
-        clientID: googleOAuthConfig.clientID,
-        clientSecret: googleOAuthConfig.clientSecret,
-        callbackURL: googleOAuthConfig.callbackURL,
-      },
-      async (accessToken, refreshToken, profile, done) => {
-        try {
-          const email =
-            profile.emails && profile.emails[0] && profile.emails[0].value;
-          if (!email)
-            return done(new Error("No email found in Google profile"));
-
-          let user = await User.findOne({ googleId: profile.id });
-          if (!user) {
-            let existingByUsername = await User.findOne({
-              username: email,
-            });
-
-            if (existingByUsername) {
-              user = existingByUsername;
-              user.googleId = profile.id;
-              user.provider = "google";
-              await user.save();
-            } else {
-              user = new User({
-                username: email,
-                name: email.split('@')[0], // temporary name
-                password: crypto.randomBytes(16).toString("hex"), // dummy password
-                role: "user",
-                googleId: profile.id,
-                provider: "google",
-                needsProfileCompletion: true,
-              });
-              await user.save();
-            }
-          }
-          return done(null, user);
-        } catch (err) {
-          return done(err);
-        }
-      }
-    )
-  );
-} else {
-  console.warn("Google OAuth env vars missing: GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET. Skipping Google strategy setup.");
-}
-
-passport.serializeUser((user, done) => {
-  done(null, user._id);
-});
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err);
-  }
-});
+// Firebase authentication setup - Google OAuth removed
 
 // ====== Routes ======
 
 /**
  * @route   GET /api/auth/google
- * @desc    Start Google OAuth login
+ * @desc    Google OAuth removed - use Firebase instead
  */
-if (hasGoogleCreds) {
-  router.get(
-    "/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
-  );
-} else {
-  router.get("/google", (req, res) => {
-    return res.status(503).json({ success: false, message: "Google OAuth not configured" });
-  });
-}
+router.get("/google", (req, res) => {
+  return res.status(410).json({ success: false, message: "Google OAuth has been replaced with Firebase authentication" });
+});
 
 // ====== Forgot Password Route ======
 router.post('/forgot-password', async (req, res) => {
@@ -216,47 +142,11 @@ router.post('/reset-password', async (req, res) => {
 
 /**
  * @route   GET /api/auth/google/callback
- * @desc    Handle Google OAuth callback
+ * @desc    Google OAuth callback removed - use Firebase instead
  */
-if (hasGoogleCreds) {
-  router.get(
-    "/google/callback",
-    (req, res, next) => {
-      passport.authenticate("google", { session: false }, (err, user) => {
-        if (err || !user) {
-          const fallback = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?oauth=failed`;
-          return res.redirect(fallback);
-        }
-        req.user = user;
-        next();
-      })(req, res, next);
-    },
-    (req, res) => {
-      try {
-        const accessToken = signAccessToken(req.user);
-        const refreshToken = signRefreshToken(req.user);
-        refreshStore.set(String(req.user._id), refreshToken);
-
-        const front = process.env.FRONTEND_URL || "http://localhost:5173";
-        const redirectUrl = new URL(`${front.replace(/\/$/, "")}/auth/callback`);
-        redirectUrl.searchParams.set("accessToken", accessToken);
-        redirectUrl.searchParams.set("refreshToken", refreshToken);
-        redirectUrl.searchParams.set("userId", req.user._id.toString());
-        redirectUrl.searchParams.set("role", req.user.role);
-        redirectUrl.searchParams.set("username", req.user.username);
-
-        res.redirect(redirectUrl.toString());
-      } catch (e) {
-        const fallback = `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?oauth=error`;
-        res.redirect(fallback);
-      }
-    }
-  );
-} else {
-  router.get("/google/callback", (req, res) => {
-    return res.status(503).json({ success: false, message: "Google OAuth not configured" });
-  });
-}
+router.get("/google/callback", (req, res) => {
+  return res.status(410).json({ success: false, message: "Google OAuth has been replaced with Firebase authentication" });
+});
 
 const { registerBody } = require('../validators/schemas');
 const { z } = require('zod');
@@ -449,6 +339,70 @@ router.post("/logout", (req, res) => {
   const { userId } = req.body || {};
   if (userId) refreshStore.delete(String(userId));
   return res.json({ success: true, message: "Logged out" });
+});
+
+/**
+ * @route   POST /api/auth/firebase
+ * @desc    Authenticate with Firebase ID token
+ */
+router.post("/firebase", async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: "ID token is required" });
+    }
+
+    // Verify Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { uid, email, name } = decodedToken;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required from Firebase token" });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ firebaseId: uid });
+    if (!user) {
+      // Check if user exists by email
+      user = await User.findOne({ email });
+      if (user) {
+        // Update existing user with firebaseId
+        user.firebaseId = uid;
+        user.provider = 'firebase';
+        await user.save();
+      } else {
+        // Create new user
+        const username = await ensureUniqueUsername(email.split('@')[0]);
+        user = new User({
+          username,
+          name: name || email.split('@')[0],
+          email,
+          role: "user",
+          firebaseId: uid,
+          provider: 'firebase',
+        });
+        await user.save();
+      }
+    }
+
+    // Generate tokens
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    refreshStore.set(String(user._id), refreshToken);
+
+    return res.json({
+      success: true,
+      message: "Authenticated with Firebase",
+      data: {
+        user: { id: user._id, username: user.username, role: user.role },
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (err) {
+    console.error('Firebase auth error:', err);
+    return res.status(401).json({ success: false, message: "Invalid Firebase token" });
+  }
 });
 
 module.exports = router;

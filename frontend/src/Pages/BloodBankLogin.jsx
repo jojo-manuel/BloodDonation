@@ -110,16 +110,17 @@ export default function BloodBankLogin() {
               <span className="bg-pink-400/20 rounded-full p-4 text-4xl">🏥</span>
             </div>
             <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-white md:text-4xl">Blood Bank Login</h2>
-            <p className="text-sm text-gray-300 md:text-base">Sign in to manage your blood bank operations</p>
+            <p className="text-sm text-gray-300 md:text-base">Login to manage your blood bank operations</p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Username (Email)</label>
+              <label className="mb-2 block text-sm font-medium text-gray-200">Email</label>
               <input
                 type="email"
+                name="username"
                 placeholder="Enter your email address"
-                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
@@ -130,37 +131,32 @@ export default function BloodBankLogin() {
               <label className="mb-2 block text-sm font-medium text-gray-200">Password</label>
               <input
                 type="password"
-                placeholder="••••••••"
-                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                name="password"
+                placeholder="Enter your password"
+                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                minLength={6}
                 required
               />
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-pink-500/30 active:scale-[0.99] disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50"
             >
-              <span className="mr-2">🏥</span>
-              {loading ? "Signing in..." : "Sign in to Blood Bank"}
+              {loading ? "⏳ Processing..." : '🏥 Login to Blood Bank'}
             </button>
           </div>
 
-          <div className="mt-8 text-center space-y-2">
+          <div className="mt-8 text-center">
             <p className="text-sm text-gray-300">
-              Don't have a blood bank account? {""}
-              <Link to="/bloodbank-register" className="font-semibold text-pink-400 underline-offset-4 hover:underline dark:text-pink-300">
+              Don't have a blood bank account?{" "}
+              <Link to="/bloodbank-register" className="text-pink-400 hover:text-pink-300 transition">
                 Register here
               </Link>
             </p>
-            <p className="text-sm">
-              <Link to="/forgot-password" className="text-pink-400 underline-offset-4 hover:underline dark:text-pink-300">Forgot your password?</Link>
-            </p>
-            <div className="pt-2">
-              <Link to="/" className="text-sm text-gray-400 transition hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200">
+            <div className="mt-2">
+              <Link to="/" className="text-sm text-gray-400 transition hover:text-gray-200">
                 ← Back to Home
               </Link>
             </div>

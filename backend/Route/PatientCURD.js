@@ -51,7 +51,11 @@ router.post("/", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Patient Add Error:", err);
     if (err.code === 11000) {
-      return res.status(400).json({ success: false, message: "MRID already exists" });
+      // Duplicate key error, check if it's MRID unique constraint
+      if (err.keyPattern && err.keyPattern.encryptedMrid) {
+        return res.status(400).json({ success: false, message: "MR number already exists" });
+      }
+      return res.status(400).json({ success: false, message: "Duplicate key error" });
     }
     res.status(500).json({ message: "Server error while adding patient" });
   }

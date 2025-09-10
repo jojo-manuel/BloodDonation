@@ -18,6 +18,8 @@ import AdminDashboard from "./Pages/AdminDashboard";
 import AuthCallback from "./Pages/AuthCallback";
 import RequireAuth from "./components/RequireAuth";
 import AdminRegister from "./Pages/AdminRegister";
+import PatientRegister from "./Pages/PatientRegister";
+import PatientCRUD from "./Pages/PatientCRUD";
 
 import ThemeToggle from './components/ThemeToggle';
 
@@ -44,6 +46,8 @@ function App() {
             {/* Protected routes: require access token */}
             <Route path="/donor-register" element={<RequireAuth><DonorRegister /></RequireAuth>} />
             <Route path="/donor-crud" element={<RequireAuth><DonorCRUD /></RequireAuth>} />
+            <Route path="/patient-register" element={<RequireAuth><PatientRegister /></RequireAuth>} />
+            <Route path="/patient-crud" element={<RequireAuth><PatientCRUD /></RequireAuth>} />
             <Route path="/user-register" element={<RequireAuth><UserRegister /></RequireAuth>} />
             <Route path="/bloodbank/dashboard" element={<RequireAuth><BloodBankDashboard /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
