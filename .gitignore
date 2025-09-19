@@ -11,6 +11,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Firebase service account keys
+backend/config/firebase-service-account.json
+
 # Logs
 logs
 *.log
