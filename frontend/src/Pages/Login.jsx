@@ -1,13 +1,13 @@
 // Pages/Login.jsx
 // Login page: collects email/password, calls /auth/login, stores tokens and user, and redirects by role.
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
-import { firebaseApp } from '../firebase';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { app } from '../firebase';
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
 
-const auth = getAuth(firebaseApp);
+const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 function ProgressBar() {
@@ -37,73 +37,89 @@ function ProgressBar() {
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [firebaseLoading, setFirebaseLoading] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [showReset, setShowReset] = useState(false);
   const navigate = useNavigate();
 
-  // Firebase sign-in with Google provider
-  const handleFirebaseSignIn = async () => {
-    try {
-      // Show loading state
-      const button = document.querySelector('button[type="button"]');
-      if (button) {
-        button.disabled = true;
-        button.textContent = 'Signing in...';
-      }
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const idToken = await result.user.getIdToken();
 
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+          // Send ID token to backend for verification and app token generation
+          const response = await api.post('/auth/firebase', { idToken });
 
-      // Send ID token to backend for verification and app token generation
-      const response = await api.post('/auth/firebase', { idToken });
+          if (response.data.success) {
+            const { user, accessToken, refreshToken } = response.data.data;
 
-      if (response.data.success) {
-        const { user, accessToken, refreshToken } = response.data.data;
+            // Store user data and tokens
+            if (user?.id) localStorage.setItem('userId', user.id);
+            if (user?.role) localStorage.setItem('role', user.role);
+            if (user?.username) localStorage.setItem('username', user.username);
+            if (accessToken) localStorage.setItem('accessToken', accessToken);
+            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-        // Store user data and tokens
-        if (user?.id) localStorage.setItem('userId', user.id);
-        if (user?.role) localStorage.setItem('role', user.role);
-        if (user?.username) localStorage.setItem('username', user.username);
-        if (accessToken) localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-
-        // Redirect based on user role
-        if (user?.role === 'admin') {
-          navigate('/admin-dashboard');
-        } else if (user?.role === 'bloodbank') {
-          navigate('/bloodbank/dashboard');
-        } else {
-          navigate('/dashboard');
+            // Redirect based on user role and suspension/block status
+            if (user?.isSuspended) {
+              alert('Your account is suspended. Some features may be restricted.');
+              navigate('/dashboard');
+            } else if (user?.isBlocked) {
+              alert('Your account is blocked. Please contact support.');
+              navigate('/login');
+            } else if (user?.role === 'admin') {
+              navigate('/admin-dashboard');
+            } else if (user?.role === 'bloodbank') {
+              navigate('/bloodbank/dashboard');
+            } else {
+              navigate('/dashboard');
+            }
+          } else {
+            alert('Authentication failed: ' + response.data.message);
+          }
         }
-      } else {
-        alert('Authentication failed: ' + response.data.message);
+      } catch (error) {
+        console.error('Firebase redirect error:', error);
+        if (error.code === 'auth/user-cancelled') {
+          alert('Sign-in was cancelled.');
+        } else {
+          alert('Firebase sign-in failed. Please try again.');
+        }
       }
-    } catch (error) {
-      console.error('Firebase sign-in error:', error);
+    };
 
-      // Handle specific Firebase errors
-      if (error.code === 'auth/popup-closed-by-user') {
-        alert('Sign-in was cancelled. Please try again.');
-      } else if (error.code === 'auth/popup-blocked') {
-        alert('Pop-up was blocked by browser. Please allow pop-ups and try again.');
-      } else if (error.code === 'auth/network-request-failed') {
-        alert('Network error. Please check your connection and try again.');
-      } else {
-        alert('Firebase sign-in failed. Please try again.');
-      }
-    } finally {
-      // Reset button state
-      const button = document.querySelector('button[type="button"]');
-      if (button) {
-        button.disabled = false;
-        button.innerHTML = `
-          <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continue with Firebase
-        `;
-      }
+    handleRedirectResult();
+  }, [navigate]);
+
+  // Firebase sign-in with Google provider using redirect
+  const handleFirebaseSignIn = async () => {
+    setFirebaseLoading(true);
+    try {
+      await signInWithRedirect(auth, provider);
+      // The page will redirect to Google, then back to the app
+    } catch (error) {
+      console.error('Firebase redirect initiation error:', error);
+      alert('Failed to initiate sign-in. Please try again.');
+      setFirebaseLoading(false);
+    }
+  };
+
+  // Firebase forgot password
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      alert('Please enter your email.');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      alert('Password reset email sent! Check your inbox.');
+      setShowReset(false);
+      setResetEmail('');
+    } catch (error) {
+      console.error('Firebase reset error:', error);
+      alert('Error: ' + error.message);
     }
   };
 
@@ -152,7 +168,7 @@ export default function Login() {
   };
 
   return (
-    <div className="fixed inset-0 min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black">
+    <div className="fixed inset-0 min-h-screen w-full overflow-auto bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black">
       {/* Progress Bar */}
       <ProgressBar />
 
@@ -197,15 +213,22 @@ export default function Login() {
               <button
                 type="button"
                 onClick={handleFirebaseSignIn}
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 font-semibold text-gray-900 shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-gray-500/30 active:scale-[0.99]"
+                disabled={firebaseLoading}
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-5 py-3 font-semibold text-gray-900 shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-gray-500/30 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Firebase
+                {firebaseLoading ? (
+                  <span>Redirecting to Google...</span>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Firebase
+                  </>
+                )}
               </button>
             </div>
 
@@ -222,6 +245,34 @@ export default function Login() {
             >
               <span className="mr-2">🔐</span> Login
             </button>
+
+            {showReset && (
+              <div className="mt-4 space-y-4">
+                <input
+                  type="email"
+                  placeholder="Enter your email for password reset"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none focus:ring-2 focus:ring-pink-400"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="flex-1 rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-pink-500/30 active:scale-[0.99]"
+                  >
+                    Send Reset Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReset(false)}
+                    className="rounded-2xl border border-gray-300 bg-white px-5 py-3 font-semibold text-gray-900 shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-gray-500/30 active:scale-[0.99]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 text-center space-y-2">
@@ -229,7 +280,13 @@ export default function Login() {
               Don't have an account? Contact admin for registration.
             </p>
             <p className="text-sm">
-              <Link to="/forgot-password" className="text-pink-400 underline-offset-4 hover:underline dark:text-pink-300">Forgot your password?</Link>
+              <button
+                type="button"
+                onClick={() => setShowReset(true)}
+                className="text-pink-400 underline-offset-4 hover:underline dark:text-pink-300"
+              >
+                Forgot your password?
+              </button>
             </p>
             <div className="pt-2">
               <Link to="/" className="text-sm text-gray-400 transition hover:text-gray-200 dark:text-gray-400 dark:hover:text-gray-200">

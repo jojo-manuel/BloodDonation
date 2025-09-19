@@ -5,7 +5,12 @@ const express = require('express');
 const auth = require('../Middleware/auth');
 const validate = require('../Middleware/validate');
 const { userUpdateBody } = require('../validators/schemas');
-const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile } = require('../controllers/userController');
+const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks } = require('../controllers/userController');
+
+console.log('directBookSlot:', typeof directBookSlot);
+console.log('getApprovedBloodBanks:', typeof getApprovedBloodBanks);
+console.log('directBookSlot value:', directBookSlot);
+console.log('All destructured:', { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks });
 
 const router = express.Router();
 
@@ -39,7 +44,20 @@ router.patch('/me/profile-image', auth(true), upload.single('profileImage'), upl
 // Complete profile for Google users
 router.post('/me/complete-profile', auth(true), completeProfile);
 
+ 
+
+// Donation request routes
+// router.post('/donation-requests', auth(true), requestDonation);
+// router.get('/donation-requests', auth(true), getMyRequests);
+// router.put('/donation-requests/:id', auth(true), cancelRequest);
+
+// Book donation slot
+// router.post('/book-slot', auth(true), bookSlot);
+
+// Direct book slot
+router.post('/direct-book-slot', auth(true), directBookSlot);
+
+// Get all approved blood banks (public endpoint)
+router.get('/bloodbanks/approved', getApprovedBloodBanks);
+
 module.exports = router;
-
-
-

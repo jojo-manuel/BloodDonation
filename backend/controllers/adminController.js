@@ -2,6 +2,8 @@ const User = require("../Models/User");
 const Donor = require("../Models/donor");
 const BloodBank = require("../Models/BloodBank");
 const Patient = require("../Models/Patient");
+const DonationRequest = require("../Models/DonationRequest");
+const { sendEmail } = require("../utils/email");
 const asyncHandler = require("../middleware/asyncHandler");
 
 /**
@@ -172,4 +174,41 @@ exports.setBloodBankStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Bloodbank not found' });
   }
   res.json({ success: true, message: 'Bloodbank status updated', data: bloodbank });
+});
+
+/**
+ * Request donation from a donor
+ */
+exports.requestDonation = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { message } = req.body;
+
+  const donor = await Donor.findById(id).populate('userId', 'name email username');
+  if (!donor) {
+    return res.status(404).json({ success: false, message: 'Donor not found' });
+  }
+
+  if (!donor.userId.email) {
+    return res.status(400).json({ success: false, message: 'Donor does not have an email address' });
+  }
+
+  // Create donation request
+  const request = await DonationRequest.create({
+    requesterId: req.user.id,
+    donorId: id,
+    message: message || "We urgently need your blood donation. Please consider donating.",
+  });
+
+  // Send email to donor
+  try {
+    const subject = "Blood Donation Request";
+    const text = `Dear ${donor.userId.name},\n\n${request.message}\n\nPlease log in to your dashboard to respond.\n\nThank you,\nBlood Donation Team`;
+
+    await sendEmail(donor.userId.email, subject, text);
+  } catch (emailError) {
+    console.error('Email sending failed:', emailError);
+    // Don't fail the request if email fails, but log it
+  }
+
+  res.json({ success: true, message: 'Donation request sent successfully', data: request });
 });

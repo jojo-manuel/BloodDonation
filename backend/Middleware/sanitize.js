@@ -5,6 +5,22 @@ function sanitizeString(value) {
   return value.trim();
 }
 
+function escapeHtml(text) {
+  if (typeof text !== 'string') return text;
+  return text.replace(/[&<>"'`=\/]/g, function (s) {
+    return ({
+      '&': '&amp;',
+      '<': '<',
+      '>': '>',
+      '"': '"',
+      "'": '&#39;',
+      '`': '&#x60;',
+      '=': '&#x3D;',
+      '/': '&#x2F;'
+    })[s];
+  });
+}
+
 module.exports = function sanitize(keys = []) {
   return (req, res, next) => {
     keys.forEach((key) => {
@@ -12,6 +28,7 @@ module.exports = function sanitize(keys = []) {
         let v = String(req.body[key]);
         v = v.replace(/<[^>]*>?/gm, '');
         v = sanitizeString(v);
+        v = escapeHtml(v);
         if (key === 'email') {
           v = v.toLowerCase();
           if (!isEmail(v)) {

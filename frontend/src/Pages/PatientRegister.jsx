@@ -13,6 +13,7 @@ export default function PatientRegister() {
     address: '',
     bloodGroup: '',
     mrid: '',
+    phoneNumber: '',
     requiredUnits: '',
     requiredDate: '',
   });
@@ -38,6 +39,12 @@ export default function PatientRegister() {
 
     if (!formData.mrid.trim()) {
       errors.push('MRID is required');
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      errors.push('Phone number is required');
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      errors.push('Phone number must be exactly 10 digits');
     }
 
     if (!formData.requiredUnits || formData.requiredUnits < 1) {
@@ -154,6 +161,21 @@ export default function PatientRegister() {
                 onChange={handleInputChange}
                 className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                 placeholder="Medical Record ID"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Phone Number *
+              </label>
+              <input
+                type="text"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                placeholder="10-digit phone number"
                 required
               />
             </div>

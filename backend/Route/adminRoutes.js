@@ -14,6 +14,9 @@ router.use(allowRoles("admin"));
 // Get all donors
 router.get("/donors", adminController.getAllDonors);
 
+// Request donation from donor
+router.post("/donors/:id/request-donation", adminController.requestDonation);
+
 // Get all users
 router.get("/users", adminController.getAllUsers);
 

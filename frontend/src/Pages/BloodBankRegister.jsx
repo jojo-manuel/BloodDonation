@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import Layout from "../components/Layout";
@@ -9,8 +9,20 @@ const CITY_DISTRICT_REGEX = /^[A-Za-z\s]{2,50}$/;                 // letters and
 const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9\s.,-]{3,200}$/;       // letters/numbers/spaces with , . -
 const PHONE_IN_REGEX = /^[6-9]\d{9}$/;                            // Indian 10-digit starting 6-9
 const LICENSE_REGEX = /^[A-Za-z0-9\s-]{5,50}$/;                   // license number format
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  // quick length checks
+  if (email.length > 320) return false; // 64 + 1 (@) + 255 = 320
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return false;
+  if (local.length > 64 || domain.length > 255) return false;
+  return EMAIL_REGEX.test(email);
+}
 
 export default function BloodBankRegister() {
+  const [isRegister, setIsRegister] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -20,11 +32,56 @@ export default function BloodBankRegister() {
     contactNumber: "",
     licenseNumber: "",
   });
+  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Check if user is already logged in and has blood bank details
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const role = localStorage.getItem('role');
+    const userId = localStorage.getItem('userId');
+
+    if (token && role === 'bloodbank' && userId) {
+      setUserId(userId);
+      setIsRegister(false);
+      fetchBloodBankDetails(userId);
+    }
+  }, []);
+
+  const fetchBloodBankDetails = async (userId) => {
+    try {
+      const { data } = await api.get(`/bloodbank/details?userId=${userId}`);
+      if (data.success) {
+        const bb = data.data;
+        setFormData({
+          username: "",
+          password: "",
+          name: bb.name || "",
+          address: bb.address || "",
+          district: bb.district || "",
+          contactNumber: bb.contactNumber || "",
+          licenseNumber: bb.licenseNumber || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching blood bank details:", error);
+    }
+  };
+
   const validateForm = () => {
     const errors = [];
+
+    if (isRegister) {
+      // Registration validation
+      if (!isValidEmail((formData.username || "").trim())) {
+        errors.push("Username must be a valid email address.");
+      }
+
+      if (!formData.password || formData.password.length < 6) {
+        errors.push("Password must be at least 6 characters long.");
+      }
+    }
 
     // Common validation for blood bank details
     if (!NAME_REGEX.test((formData.name || "").trim())) {
@@ -48,7 +105,9 @@ export default function BloodBankRegister() {
     }
 
     // Required fields
-    const requiredFields = ['name', 'address', 'district', 'contactNumber', 'licenseNumber'];
+    const requiredFields = isRegister
+      ? ['username', 'password', 'name', 'address', 'district', 'contactNumber', 'licenseNumber']
+      : ['name', 'address', 'district', 'contactNumber', 'licenseNumber'];
 
     requiredFields.forEach(field => {
       if (!formData[field] || formData[field].toString().trim() === '') {
@@ -78,52 +137,84 @@ export default function BloodBankRegister() {
     }
 
     try {
-      // First register the blood bank user
-      const registerRes = await api.post("/bloodbank/register", {
+      // Register blood bank user
+      const res = await api.post("/bloodbank/register", {
         username: formData.username,
         password: formData.password,
       });
 
-      if (!registerRes.data.success) {
-        throw new Error(registerRes.data.message || "Registration failed");
+      if (res.data.success) {
+        // Automatically log in the user to get tokens
+        const loginRes = await api.post("/auth/login", {
+          username: formData.username,
+          password: formData.password,
+        });
+
+        if (loginRes.data.success && loginRes.data.data) {
+          localStorage.setItem("accessToken", loginRes.data.data.accessToken);
+          localStorage.setItem("refreshToken", loginRes.data.data.refreshToken);
+          localStorage.setItem("userId", loginRes.data.data.user.id);
+          localStorage.setItem("role", loginRes.data.data.user.role);
+          localStorage.setItem("username", loginRes.data.data.user.username);
+
+          const newUserId = res.data.data.userId;
+          setUserId(newUserId);
+
+          // Submit blood bank details
+          await submitBloodBankDetails(newUserId);
+        } else {
+          alert(loginRes.data.message || "Login failed after registration");
+        }
+      } else {
+        alert(res.data.message || "Registration failed");
       }
-
-      // Now login the user to get tokens
-      const loginRes = await api.post("/auth/login", {
-        username: formData.username,
-        password: formData.password,
-      });
-
-      if (!loginRes.data.success) {
-        throw new Error(loginRes.data.message || "Login failed after registration");
-      }
-
-      // Store tokens in localStorage
-      localStorage.setItem('accessToken', loginRes.data.data.accessToken);
-      localStorage.setItem('refreshToken', loginRes.data.data.refreshToken);
-
-      // Blood bank details submission now uses authenticated user context on backend
-      const submitRes = await api.post("/bloodbank/submit-details", {
-        name: formData.name,
-        address: formData.address,
-        district: formData.district,
-        contactNumber: formData.contactNumber,
-        licenseNumber: formData.licenseNumber,
-      });
-
-      if (!submitRes.data.success) {
-        throw new Error(submitRes.data.message || "Failed to submit blood bank details");
-      }
-
-      alert("✅ Blood bank registered successfully! Please wait for admin approval.");
-      navigate("/bloodbank-pending-approval");
     } catch (err) {
-      alert(err.response?.data?.message || err.message || "Registration failed");
+      alert(err.response?.data?.message || "Registration failed");
     }
     setLoading(false);
   };
 
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      alert("❌ Validation Errors:\n" + validationErrors.join("\n"));
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await submitBloodBankDetails(userId);
+    } catch (err) {
+      alert(err.response?.data?.message || "Update failed");
+    }
+    setLoading(false);
+  };
+
+  const submitBloodBankDetails = async (userId) => {
+    const res = await api.post("/bloodbank/submit-details", {
+      userId,
+      name: formData.name,
+      address: formData.address,
+      district: formData.district,
+      contactNumber: formData.contactNumber,
+      licenseNumber: formData.licenseNumber,
+    });
+
+    if (res.data.success) {
+      if (isRegister) {
+        alert("✅ Blood bank registration submitted for approval!");
+        navigate("/bloodbank-pending-approval");
+      } else {
+        alert("✅ Blood bank details updated successfully!");
+        navigate("/bloodbank/dashboard");
+      }
+    } else {
+      alert(res.data.message || "Submission failed");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -131,6 +222,8 @@ export default function BloodBankRegister() {
     if (name === 'contactNumber') {
       const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
       setFormData({ ...formData, [name]: digitsOnly });
+    } else if (name === 'username') {
+      setFormData({ ...formData, [name]: value });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -138,46 +231,71 @@ export default function BloodBankRegister() {
 
   return (
     <Layout>
+      <div className="flex justify-center mb-6">
+        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+          <button
+            onClick={() => setIsRegister(true)}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              isRegister ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+            }`}
+          >
+            Register Blood Bank
+          </button>
+          <button
+            onClick={() => setIsRegister(false)}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              !isRegister ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+            }`}
+          >
+            Update Details
+          </button>
+        </div>
+      </div>
+
       <form
-        onSubmit={handleRegister}
+        onSubmit={isRegister ? handleRegister : handleUpdate}
         className="mx-auto w-full max-w-3xl rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-10 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-transparent"
       >
         <div className="mb-8 text-center">
           <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">
-            🏥 Register Blood Bank
+            {isRegister ? "🏥 Register Blood Bank" : "🔄 Update Blood Bank Details"}
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base">
-            Join our network of life-saving blood banks
+            {isRegister ? "Join our network of life-saving blood banks" : "Update your blood bank information"}
           </p>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (Email)</label>
-            <input
-              type="email"
-              name="username"
-              placeholder="Enter your email address"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          {isRegister && (
+            <>
+              <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (Email)</label>
+              <input
+                type="email"
+                name="username"
+                placeholder="Enter your email address"
+                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password (min 6 characters)"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.password}
-              onChange={handleChange}
-              minLength={6}
-              required
-            />
-          </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password (min 6 characters)"
+                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                  value={formData.password}
+                  onChange={handleChange}
+                  minLength={6}
+                  required
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Bank Name</label>
@@ -252,13 +370,13 @@ export default function BloodBankRegister() {
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50"
           >
-            {loading ? "⏳ Processing..." : '🏥 Register Blood Bank'}
+            {loading ? "⏳ Processing..." : (isRegister ? '🏥 Register Blood Bank' : '🔄 Update Details')}
           </button>
         </div>
 
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            By registering, you agree to our terms and conditions for blood bank operations.
+            {isRegister ? 'By registering, you agree to our terms and conditions for blood bank operations.' : 'Update your details to keep your information current.'}
           </p>
           <div className="mt-2">
             <Link to="/" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">

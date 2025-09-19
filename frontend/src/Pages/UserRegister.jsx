@@ -5,6 +5,18 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../lib/api";
 
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return false;
+  // quick length checks
+  if (email.length > 320) return false; // 64 + 1 (@) + 255 = 320
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return false;
+  if (local.length > 64 || domain.length > 255) return false;
+  return EMAIL_REGEX.test(email);
+}
+
 function Navbar({ isDark, toggleTheme }) {
   return (
     <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-6">
@@ -32,7 +44,8 @@ function Navbar({ isDark, toggleTheme }) {
 export default function UserRegister() {
   const [isDark, setIsDark] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -64,6 +77,12 @@ export default function UserRegister() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Frontend validation for email
+    if (!isValidEmail(formData.email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     // Frontend validation for confirmPassword
     if (!formData.confirmPassword) {
       alert('Please enter confirm password');
@@ -75,16 +94,20 @@ export default function UserRegister() {
     }
 
     try {
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
       const payload = {
+        name: fullName,
+        email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
+        phone: formData.phone,
+        address: formData.address,
+        emergencyContact: formData.emergencyContact,
+        bloodTypeNeeded: formData.bloodTypeNeeded,
+        urgencyLevel: formData.urgencyLevel,
         role: 'user',
         provider: 'local',
       };
-
-      // Use localByUsername schema (username is required for simplicity)
-      payload.username = formData.username || formData.name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
-      // Do not send email or name for localByUsername schema
 
       console.log('Registration payload:', payload);
 
@@ -110,7 +133,14 @@ export default function UserRegister() {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === 'firstName' || e.target.name === 'lastName') {
+      // Only allow letters a-z (lowercase and uppercase)
+      value = value.replace(/[^a-zA-Z]/g, '');
+      // Convert to sentence case: first letter capital, rest lower
+      value = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    }
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   return (
@@ -132,38 +162,33 @@ export default function UserRegister() {
               <button type="button" onClick={() => window.location.href = '/api/auth/google'} className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-fuchsia-600 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-fuchsia-500/30 active:scale-[0.99]">
                 <span className="text-lg">🔗</span> Sign up with Google
               </button>
-              <p className="mt-2 text-xs text-gray-500">Or use username and password below</p>
+              <p className="mt-2 text-xs text-gray-500">Or use the form below</p>
             </div>
 
             <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Full Name</label>
+                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">First Name</label>
                 <input
                   type="text"
-                  name="name"
-                  placeholder="Enter your full name"
+                  name="firstName"
+                  placeholder="Enter your first name"
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required={!formData.username || !formData.username.trim()}
-                  disabled={formData.username && formData.username.trim()}
-                />
-                {formData.username && formData.username.trim() && (
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Name disabled when username is entered</p>
-                )}
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username</label>
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="Choose a username"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.username || ""}
+                  value={formData.firstName}
                   onChange={handleChange}
                   required
                 />
-                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Username will be derived from your name if not entered</p>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Email address</label>
@@ -174,12 +199,8 @@ export default function UserRegister() {
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-blue-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                   value={formData.email}
                   onChange={handleChange}
-                  required={!formData.username || !formData.username.trim()}
-                  disabled={formData.username && formData.username.trim()}
+                  required
                 />
-                {formData.username && formData.username.trim() && (
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Email disabled when username is entered</p>
-                )}
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>

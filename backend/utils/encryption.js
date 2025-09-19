@@ -5,7 +5,7 @@ const key = crypto.scryptSync(process.env.ENCRYPTION_SECRET || 'default_secret_k
 const ivLength = 16;
 
 function encrypt(text) {
-  const iv = crypto.randomBytes(ivLength);
+  const iv = Buffer.from('0123456789abcdef0123456789abcdef', 'hex'); // Fixed IV for deterministic encryption (16 bytes)
   const cipher = crypto.createCipheriv(algorithm, key, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');

@@ -148,7 +148,8 @@ router.get("/google/callback", (req, res) => {
   return res.status(410).json({ success: false, message: "Google OAuth has been replaced with Firebase authentication" });
 });
 
-const { registerBody } = require('../validators/schemas');
+const validate = require('../Middleware/validate');
+const { registerBody, loginBody, forgotPasswordBody, resetPasswordBody, firebaseAuthBody } = require('../validators/schemas');
 const { z } = require('zod');
 
 // ====== Local Auth (Register/Login/Refresh/Logout) ======
@@ -342,6 +343,91 @@ router.post("/logout", (req, res) => {
 });
 
 /**
+ * @route   POST /api/auth/google-login
+ * @desc    Authenticate with Google OAuth via Firebase
+ */
+router.post("/google-login", async (req, res) => {
+  try {
+    const { email, uid, displayName } = req.body;
+    if (!email || !uid) {
+      return res.status(400).json({ success: false, message: "Email and UID are required" });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ firebaseId: uid });
+    if (!user) {
+      // Check if user exists by email
+      user = await User.findOne({ email });
+      if (user) {
+        // Update existing user with firebaseId
+        user.firebaseId = uid;
+        user.provider = 'google';
+        if (displayName && !user.name) {
+          user.name = displayName;
+        }
+        await user.save();
+      } else {
+        // Create new user
+        const username = email; // Use email as username since it must be email format
+        user = new User({
+          username,
+          name: displayName || email.split('@')[0],
+          email,
+          role: "user", // Default role, will be updated if blood bank exists
+          firebaseId: uid,
+          provider: 'google',
+        });
+        await user.save();
+      }
+    }
+
+    // Check if user is a blood bank and update role accordingly
+    if (user.role === "user") {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank) {
+        user.role = "bloodbank";
+        await user.save();
+      }
+    }
+
+    // Check blood bank rejection status if user is a blood bank
+    if (user.role === 'bloodbank') {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank && bloodBank.status === 'rejected') {
+        return res.status(403).json({ success: false, message: "Your blood bank registration has been rejected. Please contact admin." });
+      }
+    }
+
+    // Generate tokens
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    refreshStore.set(String(user._id), refreshToken);
+
+    return res.json({
+      success: true,
+      message: "Authenticated with Google",
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          role: user.role,
+          isSuspended: user.isSuspended || false,
+          isBlocked: user.isBlocked || false,
+          warningMessage: user.warningMessage || null
+        },
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (err) {
+    console.error('Google login error:', err);
+    return res.status(500).json({ success: false, message: "Google login failed", error: err.message });
+  }
+});
+
+/**
  * @route   POST /api/auth/firebase
  * @desc    Authenticate with Firebase ID token
  */
@@ -372,7 +458,7 @@ router.post("/firebase", async (req, res) => {
         await user.save();
       } else {
         // Create new user
-        const username = await ensureUniqueUsername(email.split('@')[0]);
+        const username = email; // Use email as username since it must be email format
         user = new User({
           username,
           name: name || email.split('@')[0],

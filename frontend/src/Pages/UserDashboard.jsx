@@ -9,15 +9,23 @@ export default function UserDashboard() {
     city: "",
     state: "",
     availability: "available", // Added availability filter
+    mrid: "", // Added MRID for patient-based donor search
   });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("findDonors");
-  const [profileDropdown, setProfileDropdown] = useState(false);
-  const [user, setUser] = useState(null);
-  const [availability, setAvailability] = useState(false);
-  const [showProfileCompletion, setShowProfileCompletion] = useState(false);
-  const [profileCompletionData, setProfileCompletionData] = useState({ name: "", phone: "" });
+  const [donors, setDonors] = useState([]);
+  const [bloodBanks, setBloodBanks] = useState([]);
+  const [selectedDonorId, setSelectedDonorId] = useState('');
+  const [selectedBloodBankId, setSelectedBloodBankId] = useState('');
+  const [requestedDate, setRequestedDate] = useState('');
+  const [requestedTime, setRequestedTime] = useState('');
+  const [showDirectBookingModal, setShowDirectBookingModal] = useState(false);
+
+  useEffect(() => {
+    fetchDonors();
+    fetchBloodBanks();
+  }, []);
 
   const handleChange = (e) => {
     setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
@@ -27,7 +35,21 @@ export default function UserDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const query = new URLSearchParams(searchParams).toString();
+      let query = new URLSearchParams(searchParams).toString();
+
+      // If MRID is provided, fetch patient by MRID to get blood group and search donors by that blood group
+      if (searchParams.mrid && searchParams.mrid.trim() !== "") {
+        const patientRes = await api.get(`/patients/mrid/${searchParams.mrid.trim()}`);
+        if (patientRes.data.success && patientRes.data.data) {
+          const patientBloodGroup = patientRes.data.data.bloodGroup;
+          query = new URLSearchParams({ bloodGroup: patientBloodGroup }).toString();
+        } else {
+          alert("No patient found with the provided MRID");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data } = await api.get(`/donors/search?${query}`);
       if (data.success) {
         setResults(data.data.data);
@@ -46,409 +68,270 @@ export default function UserDashboard() {
     window.location.href = "/login";
   };
 
-  const isSuspended = localStorage.getItem('isSuspended') === 'true';
-  const warningMessage = localStorage.getItem('warningMessage');
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data } = await api.get('/users/me');
-        if (data.success) {
-          setUser(data.data);
-          if (data.data.needsProfileCompletion) {
-            setShowProfileCompletion(true);
-          }
-          if (data.data.role === 'donor') {
-            // Fetch donor availability
-            const { data: donorData } = await api.get('/donors/me');
-            if (donorData.success) {
-              setAvailability(donorData.data.availability);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
+  const fetchDonors = async () => {
+    try {
+      const response = await api.get('/donors/search');
+      if (response.data.success) {
+        setDonors(response.data.data.data);
       }
-    };
-    fetchUser();
-  }, []);
+    } catch (error) {
+      console.error('Error fetching donors:', error);
+    }
+  };
+
+  const fetchBloodBanks = async () => {
+    try {
+      const response = await api.get('/users/bloodbanks/approved');
+      if (response.data.success) {
+        setBloodBanks(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching blood banks:', error);
+    }
+  };
+
+  const handleDirectBookingSubmit = async () => {
+    if (!selectedDonorId || !selectedBloodBankId || !requestedDate || !requestedTime) {
+      alert('Please fill all fields');
+      return;
+    }
+    try {
+      const response = await api.post('/users/direct-book-slot', {
+        donorId: selectedDonorId,
+        bloodBankId: selectedBloodBankId,
+        requestedDate,
+        requestedTime,
+      });
+      if (response.data.success) {
+        alert('Slot booked successfully');
+        setShowDirectBookingModal(false);
+        // Reset form
+        setSelectedDonorId('');
+        setSelectedBloodBankId('');
+        setRequestedDate('');
+        setRequestedTime('');
+      } else {
+        alert('Failed to book slot');
+      }
+    } catch (error) {
+      console.error('Error booking slot:', error);
+      alert('Error booking slot');
+    }
+  };
 
   return (
     <Layout>
-      <div>
-        {warningMessage && (
-          <div className="mb-6 text-center bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Warning!</strong>
-            <span className="block sm:inline"> {warningMessage}</span>
-          </div>
-        )}
-        {isSuspended && (
-          <div className="mb-6 text-center bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Account Suspended!</strong>
-            <span className="block sm:inline"> Your account is currently suspended. Some features may be restricted.</span>
-          </div>
-        )}
-
-        {/* Profile Icon and Dropdown */}
-        <div className="absolute top-4 right-4">
-          <div className="relative">
-            <button
-              onClick={() => setProfileDropdown(!profileDropdown)}
-              className="w-12 h-12 rounded-full bg-pink-600 flex items-center justify-center font-bold text-lg text-white shadow-lg hover:bg-pink-700 transition"
-            >
-              {user?.profileImage ? (
-                <img src={`http://localhost:5000${user.profileImage}`} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                user?.username?.slice(0, 2).toUpperCase() || "U"
-              )}
-            </button>
-            {profileDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                <div className="p-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-pink-600 flex items-center justify-center font-bold text-white">
-                      {user?.profileImage ? (
-                        <img src={`http://localhost:5000${user.profileImage}`} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        user?.username?.slice(0, 2).toUpperCase() || "U"
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">{user?.username}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{user?.role}</p>
-                    </div>
-                  </div>
-                  {user?.role === 'donor' && (
-                    <div className="mb-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={availability}
-                          onChange={async () => {
-                            try {
-                              const { data } = await api.patch('/users/me/availability', { availability: !availability });
-                              if (data.success) {
-                                setAvailability(!availability);
-                              }
-                            } catch (error) {
-                              alert('Error updating availability');
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">Available for donation</span>
-                      </label>
-                    </div>
-                  )}
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Profile Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={async (e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const formData = new FormData();
-                          formData.append('profileImage', file);
-                          try {
-                            const { data } = await api.patch('/me/profile-image', formData, {
-                              headers: { 'Content-Type': 'multipart/form-data' }
-                            });
-                            if (data.success) {
-                              setUser(data.data);
-                            }
-                          } catch (error) {
-                            alert('Error uploading image');
-                          }
-                        }
-                      }}
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
-                    />
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">User Dashboard</h1>
+          <button onClick={handleLogout} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Logout</button>
         </div>
-
-        {/* Profile Completion Modal */}
-        {showProfileCompletion && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Complete Your Profile</h2>
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  const res = await api.post('/me/complete-profile', profileCompletionData);
-                  if (res.data.success) {
-                    setUser(res.data.data);
-                    setShowProfileCompletion(false);
-                  } else {
-                    alert("Failed to complete profile");
-                  }
-                } catch (error) {
-                  alert("Error completing profile");
-                }
-              }}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={profileCompletionData.name}
-                    onChange={(e) => setProfileCompletionData({ ...profileCompletionData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={profileCompletionData.phone}
-                    onChange={(e) => setProfileCompletionData({ ...profileCompletionData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowProfileCompletion(false)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        <div className="flex justify-center mb-6">
-        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+        <nav className="mb-6 flex gap-4 bg-black p-2 rounded">
           <button
+            className={`px-4 py-2 rounded ${
+              activeTab === "findDonors" ? "bg-white text-black" : "bg-black text-white"
+            }`}
             onClick={() => setActiveTab("findDonors")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "findDonors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
           >
-            🔍 Find Donors
+            Find Donors
           </button>
           <button
+            className={`px-4 py-2 rounded ${
+              activeTab === "myRequests" ? "bg-white text-black" : "bg-black text-white"
+            }`}
             onClick={() => setActiveTab("myRequests")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "myRequests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
           >
-            📋 My Requests
+            My Requests
           </button>
           <button
-            onClick={() => setActiveTab("leaveReviews")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "leaveReviews" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+            className={`px-4 py-2 rounded ${
+              activeTab === "leaveReviews" ? "bg-white text-black" : "bg-black text-white"
             }`}
+            onClick={() => setActiveTab("leaveReviews")}
           >
-            ⭐ Leave Reviews
+            Leave Reviews
           </button>
-        </div>
-      </div>
+        </nav>
 
-      <div className="mx-auto w-full max-w-4xl overflow-auto max-h-[70vh]">
-        {activeTab === "findDonors" && (
-          <>
-            {/* Search Form */}
-            <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8 mb-8">
-              <div className="mb-6 text-center">
-                <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                  🔍 Find Blood Donors
-                </h2>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Search for available blood donors in your area
-                </p>
-              </div>
-
-              <form onSubmit={handleSearch} className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Type</label>
-                    <select
-                      name="bloodGroup"
-                      value={searchParams.bloodGroup}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                    >
-                      <option value="" className="text-gray-800">All Blood Types</option>
-                      <option value="A+" className="text-gray-800">A+</option>
-                      <option value="A-" className="text-gray-800">A-</option>
-                      <option value="B+" className="text-gray-800">B+</option>
-                      <option value="B-" className="text-gray-800">B-</option>
-                      <option value="AB+" className="text-gray-800">AB+</option>
-                      <option value="AB-" className="text-gray-800">AB-</option>
-                      <option value="O+" className="text-gray-800">O+</option>
-                      <option value="O-" className="text-gray-800">O-</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Location</label>
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="Enter city"
-                      value={searchParams.city}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Availability</label>
-                    <select
-                      name="availability"
-                      value={searchParams.availability}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                    >
-                      <option value="available" className="text-gray-800">Available Only</option>
-                      <option value="all" className="text-gray-800">All Donors</option>
-                    </select>
-                  </div>
+        <main className="w-full">
+          {activeTab === "findDonors" && (
+            <>
+              <h2 className="text-xl font-semibold mb-4">Find Blood Donors</h2>
+              <form onSubmit={handleSearch} className="mb-6 bg-white p-4 rounded shadow flex flex-wrap gap-4 items-center">
+                <div className="flex flex-col flex-grow min-w-[150px]">
+                  <label htmlFor="mrid" className="mb-1 font-semibold">Patient MRID</label>
+                  <input
+                    id="mrid"
+                    type="text"
+                    name="mrid"
+                    placeholder="Enter patient MRID"
+                    value={searchParams.mrid}
+                    onChange={handleChange}
+                    className="rounded px-3 py-2 border"
+                  />
                 </div>
-
-                <div className="flex justify-center">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-8 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-pink-500/30 active:scale-[0.99] disabled:opacity-50"
+                <div className="flex flex-col flex-grow min-w-[150px]">
+                  <label htmlFor="bloodGroup" className="mb-1 font-semibold">Blood Type</label>
+                  <select
+                    id="bloodGroup"
+                    name="bloodGroup"
+                    value={searchParams.bloodGroup}
+                    onChange={handleChange}
+                    className="rounded px-3 py-2 border"
                   >
-                    <span className="mr-2">🔍</span>
-                    {loading ? "Searching..." : "Search Donors"}
-                  </button>
+                    <option value="">All Blood Types</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
                 </div>
+                <div className="flex flex-col flex-grow min-w-[150px]">
+                  <label htmlFor="city" className="mb-1 font-semibold">Location</label>
+                  <input
+                    id="city"
+                    type="text"
+                    name="city"
+                    placeholder="Enter location"
+                    value={searchParams.city}
+                    onChange={handleChange}
+                    className="rounded px-3 py-2 border"
+                  />
+                </div>
+                <div className="flex flex-col flex-grow min-w-[150px]">
+                  <label htmlFor="availability" className="mb-1 font-semibold">Availability</label>
+                  <select
+                    id="availability"
+                    name="availability"
+                    value={searchParams.availability}
+                    onChange={handleChange}
+                    className="rounded px-3 py-2 border"
+                  >
+                    <option value="available">Available Only</option>
+                    <option value="all">All</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-blue-600 px-6 py-3 rounded text-white font-semibold hover:bg-blue-700 disabled:opacity-50 self-end"
+                >
+                  {loading ? "Searching..." : "Search"}
+                </button>
               </form>
-            </div>
 
-            {/* Search Results */}
-            <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-              <div className="mb-6 text-center">
-                <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                  🩸 Available Donors ({results.length})
-                </h2>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Donors matching your search criteria
-                </p>
-              </div>
+              <button onClick={() => setShowDirectBookingModal(true)} className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Direct Book Slot
+              </button>
 
-              {results.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-                  <p className="mt-2 text-gray-600 dark:text-gray-400">No donors found. Try adjusting your search criteria.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {results.map((donor) => (
-                    <div key={donor._id} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-pink-600 flex items-center justify-center font-bold text-lg text-white">
-                            {donor.userId?.username?.slice(0, 2).toUpperCase() || "NA"}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.userId?.username || "N/A"}</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                              <p>🩸 Blood Type: {donor.bloodGroup}</p>
-                              <p>📍 Location: {donor.houseAddress?.city || "N/A"}</p>
-                              <p>⭐ Rating: 4.8/5</p>
-                              <p>📅 Last Donation: {donor.lastDonatedDate ? new Date(donor.lastDonatedDate).toLocaleDateString() : "N/A"}</p>
-                            </div>
-                          </div>
+              <div>
+                <h3 className="font-semibold mb-2">Available Donors ({results.length})</h3>
+                {results.length === 0 ? (
+                  <p>No donors found.</p>
+                ) : (
+                  results.map((donor) => (
+                    <div key={donor._id} className="mb-4 p-4 bg-white rounded shadow flex flex-col md:flex-row items-center justify-between">
+                      <div className="flex items-center gap-4 mb-4 md:mb-0">
+                        <div className="w-12 h-12 rounded-full bg-pink-600 flex items-center justify-center font-bold text-lg text-white">
+                          {donor.name ? donor.name.charAt(0).toUpperCase() : 'D'}
                         </div>
-                        <div className="flex gap-2">
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-600 to-gray-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
-                            <span className="mr-1">📞</span>
-                            Contact
-                          </button>
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
-                            <span className="mr-1">❤️</span>
-                            Request
-                          </button>
+                        <div>
+                          <h4 className="font-bold text-lg">{donor.name}</h4>
+                          <p className="text-sm text-gray-600">{donor.email}</p>
+                          <p className="text-sm text-gray-600">{donor.phone}</p>
+                          <p className="text-sm text-gray-600">Blood Group: {donor.bloodGroup}</p>
+                          <p className="text-sm text-gray-600">Address: {donor.address}</p>
                         </div>
                       </div>
+                      <div className="flex gap-2">
+                        <button className="bg-blue-600 text-white px-4 py-2 rounded">Contact</button>
+                        <button onClick={() => { setSelectedDonorId(donor._id); setShowDirectBookingModal(true); }} className="bg-green-600 text-white px-4 py-2 rounded">Book Slot</button>
+                      </div>
                     </div>
-                  ))}
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {activeTab === "myRequests" && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">My Requests</h2>
+              <p>Here you can view your donation requests and their status.</p>
+              {/* Placeholder for actual requests list */}
+            </div>
+          )}
+
+          {activeTab === "leaveReviews" && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Leave Reviews</h2>
+              <p>Share your feedback about blood banks and donors.</p>
+              {/* Placeholder for review form */}
+            </div>
+          )}
+        </main>
+
+        {showDirectBookingModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-bold mb-4">Direct Book Slot</h3>
+              <form onSubmit={handleDirectBookingSubmit}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Select Donor</label>
+                  <select
+                    value={selectedDonorId}
+                    onChange={(e) => setSelectedDonorId(e.target.value)}
+                    required
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Donor</option>
+                    {donors.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                  </select>
                 </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {activeTab === "myRequests" && (
-          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-            <div className="mb-6 text-center">
-              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                📋 My Requests
-              </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                View and manage your blood donation requests
-              </p>
-            </div>
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">Feature coming soon...</p>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Select Blood Bank</label>
+                  <select
+                    value={selectedBloodBankId}
+                    onChange={(e) => setSelectedBloodBankId(e.target.value)}
+                    required
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Blood Bank</option>
+                    {bloodBanks.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Requested Date</label>
+                  <input
+                    type="date"
+                    value={requestedDate}
+                    onChange={(e) => setRequestedDate(e.target.value)}
+                    required
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1">Requested Time</label>
+                  <input
+                    type="time"
+                    value={requestedTime}
+                    onChange={(e) => setRequestedTime(e.target.value)}
+                    required
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Book Slot</button>
+                  <button type="button" onClick={() => setShowDirectBookingModal(false)} className="bg-gray-600 text-white px-4 py-2 rounded">Cancel</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
-
-        {activeTab === "leaveReviews" && (
-          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-            <div className="mb-6 text-center">
-              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                ⭐ Leave Reviews
-              </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Share your experience and help others
-              </p>
-            </div>
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">Feature coming soon...</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-8 text-center">
-        <Link
-          to="/donor-register"
-          className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-green-500/30 active:scale-[0.99] mr-4"
-        >
-          <span className="mr-2">🩸</span>
-          Become a Donor
-        </Link>
-        <button
-          onClick={handleLogout}
-          className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-rose-500/30 active:scale-[0.99]"
-        >
-          🚪 Logout
-        </button>
-        <div className="mt-4">
-          <Link to="/" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
       </div>
     </Layout>
   );

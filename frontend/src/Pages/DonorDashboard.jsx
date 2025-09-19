@@ -36,7 +36,7 @@ export default function DonorDashboard() {
 
   const fetchDonors = async (filters = {}) => {
     setLoading(true);
-    try {
+     try {
       const params = new URLSearchParams();
       if (filters.bloodType) params.append("bloodGroup", filters.bloodType);
       if (filters.location) params.append("location", filters.location);
@@ -391,5 +391,15 @@ export default function DonorDashboard() {
                     <option value="AB+">AB+</option>
                     <option value="AB-">AB-</option>
                   </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">MR Number</label>
+                  <input
+                    type="text"
+                    placeholder="Enter MR Number"
+                    value={patientFormData.mrid}
+                    onChange={(e) => setPatientFormData({ ...patientFormData, mrid: e.target.value })}
+                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                  />
                 </div>
                 <div>

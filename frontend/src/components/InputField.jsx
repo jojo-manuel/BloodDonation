@@ -11,7 +11,8 @@ export default function InputField({ label, name, type = "text", value, onChange
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`mt-1 w-full px-4 py-2 rounded-lg glass focus:outline-none focus:ring-2 
+        title={error || ""}
+        className={`mt-1 w-full px-4 py-2 rounded-lg glass focus:outline-none focus:ring-2
           ${error ? "border border-red-500 focus:ring-red-500" : "focus:ring-purple-500"}`}
       />
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}

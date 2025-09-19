@@ -12,7 +12,7 @@ const router = express.Router();
  */
 router.post("/", authMiddleware, async (req, res) => {
   try {
-    const { patientName, address, bloodGroup, mrid, requiredUnits, requiredDate, bloodBankId } = req.body;
+  const { patientName, address, bloodGroup, mrid, requiredUnits, requiredDate, bloodBankId } = req.body;
 
     // Role check
     if (req.user.role !== "bloodbank" && req.user.role !== "admin") {
@@ -28,6 +28,8 @@ router.post("/", authMiddleware, async (req, res) => {
     if (!mrid || mrid === null || mrid === undefined || mrid.trim() === '') {
       return res.status(400).json({ success: false, message: "MRID is required and cannot be empty" });
     }
+
+  // Removed phone number validation
 
     // Determine blood bank ID
     let finalBloodBankId = req.user._id;
@@ -51,10 +53,11 @@ router.post("/", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Patient Add Error:", err);
     if (err.code === 11000) {
-      // Duplicate key error, check if it's MRID unique constraint
+      // Duplicate key error, check if it's MRID or phone number unique constraint
       if (err.keyPattern && err.keyPattern.encryptedMrid) {
         return res.status(400).json({ success: false, message: "MR number already exists" });
       }
+  // Removed phone number duplicate key error
       return res.status(400).json({ success: false, message: "Duplicate key error" });
     }
     res.status(500).json({ message: "Server error while adding patient" });
@@ -126,15 +129,15 @@ router.get("/mrid/:mrid", authMiddleware, async (req, res) => {
 
 /**
  * @route   GET /api/patients/search/:mrid
- * @desc    Get patient details by MRID for donor search (users can search)
- * @access  Private (User)
+ * @desc    Get patient details by MRID for donor search (users, donors, and admins can search)
+ * @access  Private (User, Donor, Admin)
  */
-router.get("/search/:mrid", authMiddleware, async (req, res) => {
+router.get("/search/:mrid", async (req, res) => {
   try {
-    if (req.user.role !== "user") {
-      return res.status(403).json({ success: false, message: "Access denied. Only users can search patients." });
-    }
-    const patient = await Patient.findOne({ mrid: req.params.mrid });
+    // Remove role check to allow public access for fetching patient data by MRID
+    const { encrypt } = require('../utils/encryption');
+    const encryptedMrid = encrypt(req.params.mrid.toUpperCase());
+    const patient = await Patient.findOne({ encryptedMrid });
     if (!patient) {
       return res.status(404).json({ success: false, message: "Patient not found" });
     }
@@ -156,17 +159,20 @@ router.put("/:id", authMiddleware, async (req, res) => {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
-    const { patientName, address, bloodGroup, requiredUnits, requiredDate } = req.body;
+  const { patientName, address, bloodGroup, requiredUnits, requiredDate } = req.body;
+
+    // Removed phone number validation and update
+    const updateData = {
+      name: patientName,
+      address,
+      bloodGroup,
+      unitsRequired: requiredUnits,
+      dateNeeded: requiredDate
+    };
 
     const updatedPatient = await Patient.findOneAndUpdate(
       { _id: req.params.id, bloodBankId: req.user._id }, // Ensure only the user who added can edit
-      {
-        name: patientName,
-        address,
-        bloodGroup,
-        unitsRequired: requiredUnits,
-        dateNeeded: requiredDate
-      },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -178,7 +184,11 @@ router.put("/:id", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Update Patient Error:", err);
     if (err.code === 11000) {
-      return res.status(400).json({ success: false, message: "MRID already exists" });
+      if (err.keyPattern && err.keyPattern.encryptedMrid) {
+        return res.status(400).json({ success: false, message: "MRID already exists" });
+      }
+  // Removed phone number duplicate key error
+      return res.status(400).json({ success: false, message: "Duplicate key error" });
     }
     res.status(500).json({ success: false, message: "Server error while updating patient" });
   }

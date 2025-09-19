@@ -5,7 +5,7 @@ const express = require('express');
 const authMiddleware = require('../Middleware/authMiddleware');
 const validate = require('../Middleware/validate');
 const { donorRegisterBody } = require('../validators/schemas');
-const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe } = require('../controllers/donorController');
+const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, getIncomingRequests, respondToRequest, bookSlot } = require('../controllers/donorController');
 
 const router = express.Router();
 
@@ -21,11 +21,23 @@ router.delete('/delete', authMiddleware, deleteDonor);
 // Public donor search with filters
 router.get('/search', searchDonors);
 
+// New route: search donors by MR number
+router.get('/searchByMrid/:mrid', authMiddleware, searchDonorsByMrid);
+
 // Get a single donor by id
 router.get('/:id', getOne);
 
 // Get the authenticated user's donor profile
 router.get('/me', authMiddleware, getMe);
+
+// Get incoming donation requests for the authenticated donor
+router.get('/requests', authMiddleware, getIncomingRequests);
+
+// Respond to a donation request (accept or reject)
+router.put('/requests/:requestId/respond', authMiddleware, respondToRequest);
+
+// Book a slot for an accepted donation request
+router.put('/requests/:requestId/book-slot', authMiddleware, bookSlot);
 
 module.exports = router;
 

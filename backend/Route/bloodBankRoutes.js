@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const bloodBankController = require("../controllers/bloodBankController");
 const authMiddleware = require("../Middleware/authMiddleware");
+const allowRoles = require("../Middleware/roles");
 
 // Blood bank user registration
 router.post("/register", (req, res, next) => {
@@ -23,5 +24,24 @@ router.get(
   authMiddleware,
   bloodBankController.getBloodBankByUser
 );
+
+// All routes below require authentication and bloodbank role
+router.use(authMiddleware);
+router.use(allowRoles("bloodbank"));
+
+// Get all users
+router.get("/users", bloodBankController.getAllUsers);
+
+// Get all donors
+router.get("/donors", bloodBankController.getAllDonors);
+
+// Set status for a user
+router.put("/users/:id/status", bloodBankController.setUserStatus);
+
+// Set status for a donor
+router.put("/donors/:id/status", bloodBankController.setDonorStatus);
+
+// Get donation requests for patients uploaded by the bloodbank
+router.get("/donation-requests", bloodBankController.getDonationRequests);
 
 module.exports = router;

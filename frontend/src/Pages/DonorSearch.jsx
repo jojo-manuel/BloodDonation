@@ -10,6 +10,7 @@ export default function DonorSearch() {
     city: "",
     state: "",
     pincode: "",
+    mrnumber: "",
     page: 1,
     limit: 10,
   });
@@ -21,15 +22,29 @@ export default function DonorSearch() {
   const fetchDonors = async () => {
     setLoading(true);
     try {
-      const params = {
-        bloodGroup: filters.bloodGroup || undefined,
-        city: filters.city || undefined,
-        state: filters.state || undefined,
-        pincode: filters.pincode || undefined,
-        page: filters.page,
-        limit: filters.limit,
-      };
-      const response = await api.get("/donors/search", { params });
+      let response;
+      if (filters.mrnumber && filters.mrnumber.trim() !== "") {
+        // Search donors by MR number
+        const params = {
+          city: filters.city || undefined,
+          state: filters.state || undefined,
+          pincode: filters.pincode || undefined,
+          page: filters.page,
+          limit: filters.limit,
+        };
+        response = await api.get(`/donors/searchByMrid/${filters.mrnumber}`, { params });
+      } else {
+        // Normal donor search
+        const params = {
+          bloodGroup: filters.bloodGroup || undefined,
+          city: filters.city || undefined,
+          state: filters.state || undefined,
+          pincode: filters.pincode || undefined,
+          page: filters.page,
+          limit: filters.limit,
+        };
+        response = await api.get("/donors/search", { params });
+      }
       if (response.data.success) {
         setDonors(response.data.data.data);
         setTotalPages(response.data.data.pages);

@@ -1,5 +1,9 @@
+
 const BloodBank = require("../Models/BloodBank");
 const User = require("../Models/User");
+const Donor = require("../Models/donor");
+const Patient = require("../Models/Patient");
+const DonationRequest = require("../Models/DonationRequest");
 const asyncHandler = require("../Middleware/asyncHandler");
 
 /**
@@ -118,4 +122,89 @@ exports.getBloodBankByUser = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Blood bank details not found. Please submit your details for approval." });
   }
   return res.json({ success: true, data: bloodBank });
+});
+
+/**
+ * Get all users (excluding admins)
+ */
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ role: { $ne: 'admin' } }).select('-password');
+  res.json({ success: true, data: users });
+});
+
+/**
+ * Get all donors
+ */
+exports.getAllDonors = asyncHandler(async (req, res) => {
+  const donors = await Donor.find().populate('userId', 'name email username');
+  res.json({ success: true, data: donors });
+});
+
+/**
+ * Set status for a user
+ */
+exports.setUserStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isBlocked, isSuspended, warningMessage } = req.body;
+
+  const user = await User.findByIdAndUpdate(id, { isBlocked, isSuspended, warningMessage }, { new: true });
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+  res.json({ success: true, message: 'User status updated', data: user });
+});
+
+/**
+ * Set status for a donor
+ */
+exports.setDonorStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isBlocked, isSuspended, warningMessage } = req.body;
+
+  const donor = await Donor.findByIdAndUpdate(id, { isBlocked, isSuspended, warningMessage }, { new: true });
+  if (!donor) {
+    return res.status(404).json({ success: false, message: 'Donor not found' });
+  }
+  res.json({ success: true, message: 'Donor status updated', data: donor });
+});
+
+/**
+ * Get donation requests for patients uploaded by the bloodbank
+ */
+exports.getDonationRequests = asyncHandler(async (req, res) => {
+  // Find the bloodbank for the current user
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  // Find patients uploaded by this bloodbank
+  const patients = await Patient.find({ bloodBankId: bloodBank._id }).select('_id');
+
+  // Get donation requests for these patients
+  const requests = await DonationRequest.find({ patientId: { $in: patients.map(p => p._id) } })
+    .populate('donorId', 'userId bloodGroup phone address')
+    .populate('donorId.userId', 'username name email')
+    .populate('patientId', 'name bloodGroup address')
+    .populate('requesterId', 'username name')
+    .sort({ createdAt: -1 });
+
+  // Transform the data to match frontend expectations
+  const transformedRequests = requests.map(request => ({
+    _id: request._id,
+    donorName: request.donorId?.userId?.name || request.donorId?.userId?.username || 'Unknown',
+    name: request.donorId?.userId?.name || request.donorId?.userId?.username || 'Unknown',
+    email: request.donorId?.userId?.email || 'N/A',
+    phone: request.donorId?.phone || 'N/A',
+    bloodGroup: request.donorId?.bloodGroup || 'N/A',
+    address: request.donorId?.address || 'N/A',
+    donationDate: request.requestedDate ? new Date(request.requestedDate).toISOString().split('T')[0] : 'N/A',
+    timeSlot: request.requestedTime || 'N/A',
+    bloodBankName: bloodBank.name || 'N/A',
+    status: request.status || 'pending',
+    createdAt: request.createdAt,
+    updatedAt: request.updatedAt
+  }));
+
+  res.json({ success: true, data: transformedRequests });
 });

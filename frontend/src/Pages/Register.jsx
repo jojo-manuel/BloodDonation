@@ -7,7 +7,8 @@ import api from "../lib/api";
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -18,7 +19,11 @@ export default function Register() {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
+    const nameRegex = /^[A-Za-z]+$/;
+    if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
+    else if (!nameRegex.test(formData.firstName)) newErrors.firstName = "First name must contain only letters without spaces or symbols";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    else if (!nameRegex.test(formData.lastName)) newErrors.lastName = "Last name must contain only letters without spaces or symbols";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/^\S+@\S+\.\S+$/.test(formData.email)) newErrors.email = "Invalid email format";
     if (!formData.password) newErrors.password = "Password is required";
@@ -34,8 +39,9 @@ export default function Register() {
     setLoading(true);
 
     try {
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
       const response = await api.post("/auth/register", {
-        name: formData.name,
+        name: fullName,
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
@@ -65,102 +71,107 @@ export default function Register() {
     <div className="fixed inset-0 min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black">
       {/* Progress Bar */}
       <div className="flex items-center justify-between w-full max-w-2xl mx-auto pt-8 pb-4">
-        <Link to="/" className="flex items-center gap-2 text-gray-400 hover:text-pink-400 text-sm">
-          ← Back to Home
+        <Link to="/" className="flex items-center gap-2 text-white">
+          <span className="text-2xl">🩸</span>
+          <span className="font-bold">Blood Donation</span>
         </Link>
-        <div className="flex gap-4 items-center">
-          <span className="flex items-center gap-1 text-gray-400">
-            <span className="bg-gray-400/20 rounded-full p-2"><span className="text-xl">🔐</span></span>
-            Login
-          </span>
-          <span className="h-1 w-8 bg-pink-400 rounded-full" />
-          <span className="flex items-center gap-1 text-pink-400 font-bold">
-            <span className="bg-pink-400/20 rounded-full p-2"><span className="text-xl">📝</span></span>
-            Register
-          </span>
-        </div>
-        <span className="flex items-center gap-2 text-pink-400 font-bold">
-          <span className="bg-pink-400/20 rounded-full p-2"><span className="text-xl">❤️</span></span>
-          Hope Web
-        </span>
+        <div className="text-white text-sm">Step 1 of 2</div>
       </div>
 
-      {/* Registration Card */}
-      <main className="relative z-10 mx-auto flex w-full max-w-2xl flex-col items-center px-4 pb-24 pt-4 md:px-6 md:pb-24 md:pt-8">
-        <form onSubmit={handleSubmit} className="w-full rounded-2xl border border-white/30 bg-white/10 p-8 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5">
+      <main className="mx-auto w-full max-w-2xl px-4">
+        <div className="rounded-2xl border border-white/30 bg-white/10 p-8 shadow-2xl backdrop-blur-2xl">
           <div className="mb-8 text-center">
-            <div className="flex justify-center mb-2">
-              <span className="bg-pink-400/20 rounded-full p-4 text-4xl">📝</span>
-            </div>
-            <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-white md:text-4xl">Join Hope Web</h2>
-            <p className="text-sm text-gray-300 md:text-base">Create your account to start making a difference</p>
+            <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+              Create Your Account
+            </h1>
+            <p className="text-sm text-gray-300 md:text-base">
+              Join our community of life savers
+            </p>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                placeholder="Enter your full name"
-                className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                  errors.name ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white">First Name</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  placeholder="Enter your first name"
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
+                    errors.firstName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
+              </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                  errors.email ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white">Last Name</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
+                    errors.lastName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
+              </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Password</label>
-              <input
-                type="password"
-                name="password"
-                placeholder="••••••••"
-                className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                  errors.password ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
-                value={formData.password}
-                onChange={handleChange}
-                minLength={8}
-                required
-              />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-            </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
+                    errors.email ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-200">Confirm Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="••••••••"
-                className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                  errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                minLength={8}
-                required
-              />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="••••••••"
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
+                    errors.password ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  value={formData.password}
+                  onChange={handleChange}
+                  minLength={8}
+                  required
+                />
+                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-white">Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
+                    errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  minLength={8}
+                  required
+                />
+                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              </div>
             </div>
 
             <button
@@ -170,7 +181,7 @@ export default function Register() {
             >
               {loading ? "⏳ Creating Account..." : "📝 Create Account"}
             </button>
-          </div>
+          </form>
 
           <div className="mt-8 text-center space-y-2">
             <p className="text-sm text-gray-300">
@@ -185,7 +196,7 @@ export default function Register() {
               </Link>
             </div>
           </div>
-        </form>
+        </div>
       </main>
     </div>
   );

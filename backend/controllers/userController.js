@@ -211,3 +211,32 @@ exports.uploadProfileImage = [
     });
   })
 ];
+const DonationRequest = require('../Models/DonationRequest');
+const BloodBank = require('../Models/BloodBank');
+  
+/**  
+ * Direct book slot  
+ */  
+exports.directBookSlot = asyncHandler(async (req, res) => {
+  const { donorId, bloodBankId, requestedDate, requestedTime } = req.body;  
+  const request = await DonationRequest.create({  
+    requesterId: req.user.id,  
+    donorId,  
+    bloodBankId,  
+    status: 'booked',  
+    requestedDate: new Date(requestedDate),  
+    requestedTime,  
+  });  
+  res.json({ success: true, message: 'Slot booked successfully', data: request });  
+}); 
+  
+/**  
+ * Get approved blood banks  
+ */  
+exports.getApprovedBloodBanks = asyncHandler(async (req, res) => {
+  const bloodBanks = await BloodBank.find({ status: 'approved' }).select('name address');
+  res.json({ success: true, data: bloodBanks });
+});
+
+console.log('directBookSlot:', typeof exports.directBookSlot);
+console.log('getApprovedBloodBanks:', typeof exports.getApprovedBloodBanks);

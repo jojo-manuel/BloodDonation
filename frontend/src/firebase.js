@@ -1,15 +1,23 @@
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Firebase configuration - Replace with your actual Firebase project config
-export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "your-api-key-here",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-ABCDEFGHIJ",
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCk3v62Pnd5McivPIohkWuE5vAQ-q40L-o",
+  authDomain: "hopeweb-ad3cc.firebaseapp.com",
+  projectId: "hopeweb-ad3cc",
+  storageBucket: "hopeweb-ad3cc.firebasestorage.app",
+  messagingSenderId: "923820133734",
+  appId: "1:923820133734:web:8606393d44cab05c3fcca7",
+  measurementId: "G-6XNQH5PT6M"
 };
 
 // Initialize Firebase
-export const firebaseApp = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+export { app, analytics };

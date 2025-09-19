@@ -6,7 +6,8 @@ import Layout from "../components/Layout";
 export default function AdminRegister() {
   const [formData, setFormData] = useState({
     username: "",
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
   });
@@ -22,8 +23,15 @@ export default function AdminRegister() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
+    const payload = {
+      username: formData.username,
+      name: fullName,
+      email: formData.email,
+      password: formData.password,
+    };
     try {
-      const response = await api.post("/admin/register", formData);
+      const response = await api.post("/admin/register", payload);
       if (response.data.success) {
         setSuccess("Admin registered successfully. You can now login.");
         setTimeout(() => {
@@ -72,13 +80,26 @@ export default function AdminRegister() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Full Name</label>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">First Name</label>
             <input
               type="text"
-              name="name"
-              placeholder="Full Name"
+              name="firstName"
+              placeholder="First Name"
               className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.name}
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.lastName}
               onChange={handleChange}
               required
             />

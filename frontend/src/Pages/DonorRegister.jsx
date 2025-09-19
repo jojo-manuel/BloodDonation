@@ -10,7 +10,7 @@ function Navbar({ isDark, toggleTheme }) {
     <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-6">
       <Link to="/" className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg ring-1 ring-black/10 dark:ring-white/10">
-          <span className="text-xl">🩸</span>
+          <span className="text-xl" role="img" aria-label="Blood drop">🩸</span>
         </div>
         <div className="leading-tight">
           <p className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent dark:from-rose-300 dark:to-amber-200">Blood Donation</p>
@@ -22,7 +22,7 @@ function Navbar({ isDark, toggleTheme }) {
         className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-gray-900 shadow-sm backdrop-blur-md transition hover:bg-white/90 dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
         aria-label="Toggle dark mode"
       >
-        <span className="h-4 w-4">{isDark ? "🌙" : "☀️"}</span>
+        <span className="h-4 w-4" aria-hidden="true">{isDark ? "🌙" : "☀️"}</span>
         <span>{isDark ? "Dark" : "Light"} mode</span>
       </button>
     </nav>
@@ -33,7 +33,7 @@ import Layout from "../components/Layout";
 
 // Allowed values and regex patterns for client-side validation
 const BLOOD_GROUPS = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
-const NAME_REGEX = /^[A-Za-z][A-Za-z\s'.-]{1,99}$/;              // letters + common name punctuation
+const NAME_REGEX = /^[A-Za-z\s]*$/;                               // letters and spaces only
 const CITY_DISTRICT_REGEX = /^[A-Za-z\s]{2,50}$/;                 // letters and spaces
 const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9\s.,-]{3,200}$/;       // letters/numbers/spaces with , . -
 const PHONE_IN_REGEX = /^[6-9]\d{9}$/;                            // Indian 10-digit starting 6-9
@@ -43,8 +43,11 @@ export default function DonorRegister() {
   const navigate = useNavigate();
   const [isDonor, setIsDonor] = React.useState(true);
   const [isAlreadyDonor, setIsAlreadyDonor] = React.useState(false);
+  const [errors, setErrors] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
   const [formData, setFormData] = React.useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     dob: "",
     gender: "",
     bloodGroup: "",
@@ -67,13 +70,35 @@ export default function DonorRegister() {
     const fetchUserAndDonorData = async () => {
       try {
         // Fetch user data
-        const { data: userData } = await api.get('/users/me');
-        if (userData.success) {
-          setFormData(prev => ({
-            ...prev,
-            name: userData.data.name || "",
-            contactNumber: userData.data.phone || "",
-          }));
+        try {
+          const { data: userData } = await api.get('/users/me');
+          if (userData.success) {
+            setFormData(prev => {
+              const fullName = userData.data.name || "";
+              const [firstName, ...lastNameParts] = fullName.split(" ");
+              const lastName = lastNameParts.join(" ");
+              return {
+                ...prev,
+                firstName,
+                lastName,
+                contactNumber: userData.data.phone || "",
+              };
+            });
+          } else {
+            throw new Error('Failed to fetch user profile data');
+          }
+        } catch (userError) {
+          console.error('Error fetching user data:', userError);
+          if (userError.response?.status === 401) {
+            setErrors(['Authentication failed. Please log in again.']);
+          } else if (userError.response?.status === 403) {
+            setErrors(['Access denied. You do not have permission to access this resource.']);
+          } else if (userError.response?.status >= 500) {
+            setErrors(['Server error occurred while fetching user data. Please try again later.']);
+          } else {
+            setErrors(['Failed to load user profile. Please refresh the page and try again.']);
+          }
+          return;
         }
 
         // Fetch existing donor data if available
@@ -83,33 +108,54 @@ export default function DonorRegister() {
             setIsAlreadyDonor(true);
             // Populate form with existing donor data
             const donor = donorData.data;
-            setFormData(prev => ({
-              ...prev,
-              name: donor.name || prev.name,
-              dob: donor.dob ? donor.dob.split('T')[0] : prev.dob,
-              gender: donor.gender || prev.gender,
-              bloodGroup: donor.bloodGroup || prev.bloodGroup,
-              contactNumber: donor.contactNumber || prev.contactNumber,
-              emergencyContactNumber: donor.emergencyContactNumber || prev.emergencyContactNumber,
-              houseName: donor.houseAddress?.houseName || prev.houseName,
-              houseAddress: donor.houseAddress?.houseAddress || prev.houseAddress,
-              localBody: donor.houseAddress?.localBody || prev.localBody,
-              city: donor.houseAddress?.city || prev.city,
-              district: donor.houseAddress?.district || prev.district,
-              pincode: donor.houseAddress?.pincode || prev.pincode,
-              workAddress: donor.workAddress || prev.workAddress,
-              weight: donor.weight || prev.weight,
-              availability: donor.availability ? "available" : "unavailable",
-              lastDonationDate: donor.lastDonatedDate ? donor.lastDonatedDate.split('T')[0] : prev.lastDonationDate,
-              contactPreference: donor.contactPreference || prev.contactPreference,
-            }));
+            setFormData(prev => {
+              const fullName = donor.name || "";
+              const [firstName, ...lastNameParts] = fullName.split(" ");
+              const lastName = lastNameParts.join(" ");
+              return {
+                ...prev,
+                firstName,
+                lastName,
+                dob: donor.dob ? donor.dob.split('T')[0] : prev.dob,
+                gender: donor.gender || prev.gender,
+                bloodGroup: donor.bloodGroup || prev.bloodGroup,
+                contactNumber: donor.contactNumber || prev.contactNumber,
+                emergencyContactNumber: donor.emergencyContactNumber || prev.emergencyContactNumber,
+                houseName: donor.houseAddress?.houseName || prev.houseName,
+                houseAddress: donor.houseAddress?.houseAddress || prev.houseAddress,
+                localBody: donor.houseAddress?.localBody || prev.localBody,
+                city: donor.houseAddress?.city || prev.city,
+                district: donor.houseAddress?.district || prev.district,
+                pincode: donor.houseAddress?.pincode || prev.pincode,
+                workAddress: donor.workAddress || prev.workAddress,
+                weight: donor.weight || prev.weight,
+                availability: donor.availability ? "available" : "unavailable",
+                lastDonationDate: donor.lastDonatedDate ? donor.lastDonatedDate.split('T')[0] : prev.lastDonationDate,
+                contactPreference: donor.contactPreference || prev.contactPreference,
+              };
+            });
+          } else {
+            throw new Error('Failed to fetch donor profile data');
           }
         } catch (donorError) {
-          // User is not a donor, which is fine
+          // User is not a donor, which is fine - don't show error for this
+          if (donorError.response?.status !== 404) {
+            console.error('Error fetching donor data:', donorError);
+            if (donorError.response?.status === 401) {
+              setErrors(['Authentication failed while fetching donor data. Please log in again.']);
+            } else if (donorError.response?.status === 403) {
+              setErrors(['Access denied while fetching donor data.']);
+            } else if (donorError.response?.status >= 500) {
+              setErrors(['Server error occurred while fetching donor data. Please try again later.']);
+            } else {
+              setErrors(['Failed to load donor profile. Please refresh the page and try again.']);
+            }
+          }
           setIsAlreadyDonor(false);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Unexpected error in fetchUserAndDonorData:', error);
+        setErrors(['An unexpected error occurred while loading your data. Please refresh the page and try again.']);
       }
     };
     fetchUserAndDonorData();
@@ -123,9 +169,12 @@ export default function DonorRegister() {
       errors.push("Invalid blood group. Allowed: " + BLOOD_GROUPS.join(", "));
     }
 
-    // Name: only letters/spaces/common punctuation
-    if (!NAME_REGEX.test((formData.name || "").trim())) {
-      errors.push("Name must contain only letters, spaces, and basic punctuation (.'-)");
+    // First and last name: only letters/spaces
+    if (!NAME_REGEX.test((formData.firstName || "").trim())) {
+      errors.push("First name must contain only letters and spaces");
+    }
+    if (!NAME_REGEX.test((formData.lastName || "").trim())) {
+      errors.push("Last name must contain only letters and spaces");
     }
 
     // Phone numbers: Indian range (10 digits starting with 6-9)
@@ -167,7 +216,7 @@ export default function DonorRegister() {
     }
 
     // Required fields
-    const requiredFields = ['name', 'dob', 'gender', 'bloodGroup', 'contactNumber', 'emergencyContactNumber', 'houseName', 'houseAddress', 'localBody', 'city', 'district', 'pincode', 'workAddress', 'weight'];
+    const requiredFields = ['firstName', 'lastName', 'dob', 'gender', 'bloodGroup', 'contactNumber', 'emergencyContactNumber', 'houseName', 'houseAddress', 'localBody', 'city', 'district', 'pincode', 'workAddress', 'weight'];
     requiredFields.forEach(field => {
       if (!formData[field] || formData[field].toString().trim() === '') {
         errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
@@ -220,23 +269,36 @@ export default function DonorRegister() {
       }
     }
 
-    // Validate weight > 55kg
+    // Validate weight > 55kg and < 140kg
     if (formData.weight) {
       const weightNum = Number(formData.weight);
-      if (isNaN(weightNum) || weightNum <= 55) {
-        errors.push("Weight must be above 55kg");
+      if (isNaN(weightNum) || weightNum <= 55 || weightNum >= 140) {
+        errors.push("Weight must be between 56kg and 139kg");
       }
     }
 
     return errors;
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return dateStr;
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
+    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+      const [dd, mm, yyyy] = dateStr.split('-');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return dateStr;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors([]);
+    setLoading(true);
 
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
-      alert("❌ Validation Errors:\n" + validationErrors.join("\n"));
+      setErrors(validationErrors);
+      setLoading(false);
       return;
     }
 
@@ -253,8 +315,8 @@ export default function DonorRegister() {
             },
           };
           const payload = {
-            name: formData.name,
-            dob: formData.dob,
+            name: getFullName(),
+            dob: formatDate(formData.dob),
             gender: formData.gender,
             bloodGroup: formData.bloodGroup,
             contactNumber: formData.contactNumber,
@@ -270,8 +332,8 @@ export default function DonorRegister() {
             workAddress: formData.workAddress,
             weight: parseFloat(formData.weight),
             availability: formData.availability === "available",
-            lastDonatedDate: formData.lastDonationDate || undefined,
             contactPreference: formData.contactPreference,
+            ...(formData.lastDonationDate && { lastDonatedDate: formatDate(formData.lastDonationDate) }),
           };
 
           let res;
@@ -292,31 +354,75 @@ export default function DonorRegister() {
             navigate('/donor-crud');
             break;
           } else {
-            alert("❌ " + (res?.data?.message || errorMsg));
+            setErrors([res?.data?.message || errorMsg]);
             break;
           }
         } catch (err) {
           attempt++;
           if (attempt >= maxAttempts) {
-            const errorMsg = isAlreadyDonor ? "Failed to update donor details" : "Failed to save donor details";
-            let msg = err?.response?.data?.message || errorMsg;
-            // If detailed errors array present, join messages
-            if (err?.response?.data?.errors && Array.isArray(err.response.data.errors)) {
-              msg = err.response.data.errors.map(e => e.message).join("\n");
+            let errorMessages = [];
+
+            if (err?.response?.status === 400) {
+              // Validation errors
+              if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+                errorMessages = err.response.data.errors.map(e => e.message || e);
+              } else {
+                errorMessages = [err.response.data.message || "Invalid data provided. Please check your input."];
+              }
+            } else if (err?.response?.status === 401) {
+              errorMessages = ["Authentication failed. Please log in again."];
+            } else if (err?.response?.status === 403) {
+              errorMessages = ["Access denied. You do not have permission to perform this action."];
+            } else if (err?.response?.status === 409) {
+              errorMessages = ["A donor profile already exists for this user."];
+            } else if (err?.response?.status === 422) {
+              errorMessages = ["Data validation failed. Please check all required fields."];
+            } else if (err?.response?.status >= 500) {
+              errorMessages = ["Server error occurred. Please try again later."];
+            } else if (!err?.response) {
+              errorMessages = ["Network error. Please check your internet connection and try again."];
+            } else {
+              const errorMsg = isAlreadyDonor ? "Failed to update donor details" : "Failed to save donor details";
+              errorMessages = [err?.response?.data?.message || errorMsg];
             }
-            alert("❌ " + msg);
+
+            setErrors(errorMessages);
             break;
           }
         }
       } catch (outerErr) {
-        alert("❌ Unexpected error occurred: " + outerErr.message);
+        setErrors(["Unexpected error occurred: " + outerErr.message]);
         break;
       }
     }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value: inputValue } = e.target;
+    let processedValue = inputValue;
+
+    if (name === 'firstName' || name === 'lastName') {
+      // Only allow letters and spaces
+      processedValue = inputValue.replace(/[^a-zA-Z\s]/g, '');
+      // Convert to sentence case: first letter capital, rest lower
+      processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
+    }
+
+    if (name === 'district' || name === 'city') {
+      // Capitalize first letter for district and city
+      processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
+    }
+
+    setFormData(prevFormData => ({
+      ...prevFormData,
+      [name]: processedValue
+    }));
+  };
+
+  // Combine firstName and lastName into name for backend
+  const getFullName = () => {
+    return `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
   };
 
   const handleDelete = async () => {
@@ -339,7 +445,8 @@ export default function DonorRegister() {
         setIsAlreadyDonor(false);
         // Reset form data
         setFormData({
-          name: "",
+          firstName: "",
+          lastName: "",
           dob: "",
           gender: "",
           bloodGroup: "",
@@ -406,15 +513,46 @@ export default function DonorRegister() {
           </p>
         </div>
 
+        {/* Error Display */}
+        {errors.length > 0 && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl dark:bg-red-900/20 dark:border-red-800">
+            <div className="flex items-center mb-2">
+              <span className="text-red-600 dark:text-red-400 text-lg mr-2">⚠️</span>
+              <h3 className="text-red-800 dark:text-red-200 font-semibold">
+                Please fix the following errors:
+              </h3>
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-red-700 dark:text-red-300 text-sm">
+              {errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
           <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Full Name</label>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">First Name</label>
             <input
               type="text"
-              name="name"
-              placeholder="Full Name"
+              name="firstName"
+              placeholder="First Name"
+              title="Only letters and spaces allowed"
               className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.name}
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.lastName}
               onChange={handleChange}
               required
             />
@@ -594,6 +732,8 @@ export default function DonorRegister() {
                   type="number"
                   name="weight"
                   placeholder="Weight in kg"
+                  min="56"
+                  max="139"
                   className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                   value={formData.weight}
                   onChange={handleChange}
@@ -646,9 +786,20 @@ export default function DonorRegister() {
         <div className="space-y-6">
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99]"
+            disabled={loading}
+            className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            {isDonor ? 'Save Donor Details 🩸' : 'Save User Details 🏥'}
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              isDonor ? 'Save Donor Details 🩸' : 'Save User Details 🏥'
+            )}
           </button>
 
           {isDonor && isAlreadyDonor && (

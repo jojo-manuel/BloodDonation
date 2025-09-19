@@ -26,6 +26,7 @@ const patientSchema = new mongoose.Schema(
       required: [true, "Encrypted MRID is required"],
       unique: true,
     },
+  // Removed phone number field
     unitsRequired: {
       type: Number,
       required: [true, "Units required is mandatory"],
@@ -71,8 +72,10 @@ patientSchema.virtual('address').get(function() {
 patientSchema.virtual('mrid').get(function() {
   return this.encryptedMrid ? decrypt(this.encryptedMrid) : '';
 }).set(function(value) {
-  this.encryptedMrid = encrypt(value.toUpperCase());
+  this.encryptedMrid = encrypt(value);
 });
+
+// Removed phone number virtual
 
 // Ensure virtual fields are serialized
 patientSchema.set('toJSON', { virtuals: true });
