@@ -1,405 +1,230 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
 import Layout from '../components/Layout';
 
 export default function DonorDashboard() {
-  const navigate = useNavigate();
-
-  function getInitials(name) {
-    if (!name) return "?";
-    return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0,2);
-  }
-
-  const [bloodType, setBloodType] = useState("");
-  const [location, setLocation] = useState("");
-  const [availability, setAvailability] = useState("available");
-  const [activeTab, setActiveTab] = useState("find");
-  const [donors, setDonors] = useState([]);
-  const [patients, setPatients] = useState([]);
+  const [availability, setAvailability] = useState(true);
+  const [activeTab, setActiveTab] = useState("requests");
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [patientFormData, setPatientFormData] = useState({
-    patientName: "",
-    address: "",
-    bloodGroup: "",
-    mrid: "",
-    requiredUnits: "",
-    requiredDate: "",
-  });
-  const [editingPatient, setEditingPatient] = useState(null);
+
+  // Fetch donation requests
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/donation-requests");
+      if (res.data.success) {
+        setRequests(res.data.data);
+      } else {
+        setRequests([]);
+      }
+    } catch (err) {
+      setRequests([]);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    fetchDonors();
-    // eslint-disable-next-line
+    fetchRequests();
   }, []);
 
-  const fetchDonors = async (filters = {}) => {
-    setLoading(true);
-     try {
-      const params = new URLSearchParams();
-      if (filters.bloodType) params.append("bloodGroup", filters.bloodType);
-      if (filters.location) params.append("location", filters.location);
-      if (filters.availability === "available") params.append("availability", "true");
-      const { data } = await api.get(`/donors/search?${params.toString()}`);
-      if (data.success) {
-        setDonors(data.data.data || []);
-      } else {
-        setDonors([]);
-      }
-    } catch (err) {
-      setDonors([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchDonors({ bloodType, location, availability });
-  };
-
-  // Fetch patients
-  const fetchPatients = async () => {
-    try {
-      const res = await api.get("/patients");
-      if (res.data.success) setPatients(res.data.data);
-    } catch (err) {
-      console.error("Failed to fetch patients");
-    }
-  };
-
-  // Add patient handler
-  const handleAddPatient = async (e) => {
-    e.preventDefault();
+  const handleAvailabilityToggle = async () => {
     setLoading(true);
     try {
-      const res = await api.post("/patients", {
-        patientName: patientFormData.patientName,
-        address: patientFormData.address,
-        bloodGroup: patientFormData.bloodGroup,
-        mrid: patientFormData.mrid,
-        requiredUnits: Number(patientFormData.requiredUnits),
-        requiredDate: patientFormData.requiredDate,
-      });
+      const res = await api.put("/donors/availability", { available: !availability });
       if (res.data.success) {
-        setPatients([...patients, res.data.patient || res.data.data]);
-        setPatientFormData({
-          patientName: "",
-          address: "",
-          bloodGroup: "",
-          mrid: "",
-          requiredUnits: "",
-          requiredDate: "",
-        });
+        setAvailability(!availability);
       } else {
-        alert(res.data.message || "Failed to add patient");
+        alert("Failed to update availability");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add patient");
+      alert("Failed to update availability");
     }
     setLoading(false);
   };
 
-  // Update patient handler
-  const handleUpdatePatient = async (e) => {
-    e.preventDefault();
+  const handleAcceptRequest = async (id) => {
     setLoading(true);
     try {
-      const res = await api.put(`/patients/${editingPatient._id}`, {
-        patientName: patientFormData.patientName,
-        address: patientFormData.address,
-        bloodGroup: patientFormData.bloodGroup,
-        requiredUnits: Number(patientFormData.requiredUnits),
-        requiredDate: patientFormData.requiredDate,
-      });
+      const res = await api.post(`/donation-requests/${id}/accept`);
       if (res.data.success) {
-        setPatients(patients.map(p => p._id === editingPatient._id ? res.data.updatedPatient : p));
-        setEditingPatient(null);
-        setPatientFormData({
-          patientName: "",
-          address: "",
-          bloodGroup: "",
-          mrid: "",
-          requiredUnits: "",
-          requiredDate: "",
-        });
+        fetchRequests();
       } else {
-        alert(res.data.message || "Failed to update patient");
+        alert("Failed to accept request");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update patient");
+      alert("Failed to accept request");
     }
     setLoading(false);
   };
 
-  // Delete patient handler
-  const handleDeletePatient = async (id) => {
-    if (!confirm("Are you sure you want to delete this patient?")) return;
+  const handleDeclineRequest = async (id) => {
+    setLoading(true);
     try {
-      const res = await api.delete(`/patients/${id}`);
+      const res = await api.post(`/donation-requests/${id}/decline`);
       if (res.data.success) {
-        setPatients(patients.filter(p => p._id !== id));
+        fetchRequests();
       } else {
-        alert(res.data.message || "Failed to delete patient");
+        alert("Failed to decline request");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete patient");
+      alert("Failed to decline request");
     }
-  };
-
-  // Start editing
-  const startEditing = (patient) => {
-    setEditingPatient(patient);
-    setPatientFormData({
-      patientName: patient.name,
-      address: patient.address,
-      bloodGroup: patient.bloodGroup,
-      mrid: patient.mrid,
-      requiredUnits: patient.unitsRequired,
-      requiredDate: patient.dateNeeded ? new Date(patient.dateNeeded).toISOString().split('T')[0] : "",
-    });
-  };
-
-  // Fetch patients when patients tab is active
-  useEffect(() => {
-    if (activeTab === "patients") {
-      fetchPatients();
-    }
-  }, [activeTab]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
+    setLoading(false);
   };
 
   return (
     <Layout>
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="glass-card p-6 mb-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-white">Availability Status</h3>
+            <p className="text-gray-300">You are currently {availability ? "available" : "unavailable"} for donations</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`font-semibold ${availability ? "text-green-400" : "text-gray-400"}`}>
+              {availability ? "Available" : "Unavailable"}
+            </span>
+            <label className="switch">
+              <input type="checkbox" checked={availability} onChange={handleAvailabilityToggle} disabled={loading} />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        </div>
+
+        <div className="mb-4 flex gap-4">
           <button
-            onClick={() => setActiveTab("find")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "find" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Find Donors
-          </button>
-          <button
-            onClick={() => setActiveTab("patients")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "patients" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Patient Details
-          </button>
-          <button
+            className={`px-4 py-2 rounded-md font-semibold ${activeTab === "requests" ? "bg-gray-700 text-white" : "bg-gray-600 text-gray-300"}`}
             onClick={() => setActiveTab("requests")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "requests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
           >
-            My Requests
+            Donation Requests
           </button>
           <button
+            className={`px-4 py-2 rounded-md font-semibold ${activeTab === "bookings" ? "bg-gray-700 text-white" : "bg-gray-600 text-gray-300"}`}
+            onClick={() => setActiveTab("bookings")}
+            disabled
+          >
+            My Bookings
+          </button>
+          <button
+            className={`px-4 py-2 rounded-md font-semibold ${activeTab === "reviews" ? "bg-gray-700 text-white" : "bg-gray-600 text-gray-300"}`}
             onClick={() => setActiveTab("reviews")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "reviews" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            disabled
           >
             Reviews
           </button>
         </div>
-      </div>
 
-      <div className="mx-auto w-full max-w-6xl">
-        {activeTab === "find" && (
-          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-            <div className="mb-6 text-center">
-              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                🩸 Find Blood Donors
-              </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Search for available donors in your area
-              </p>
-            </div>
-
-            {/* Search Filters */}
-            <form onSubmit={handleSearch} className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Type</label>
-                <select
-                  value={bloodType}
-                  onChange={e => setBloodType(e.target.value)}
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                >
-                  <option value="">All Blood Types</option>
-                  <option value="O+">O+</option>
-                  <option value="A+">A+</option>
-                  <option value="B+">B+</option>
-                  <option value="AB+">AB+</option>
-                  <option value="O-">O-</option>
-                  <option value="A-">A-</option>
-                  <option value="B-">B-</option>
-                  <option value="AB-">AB-</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Location</label>
-                <input
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                  placeholder="Enter location"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Availability</label>
-                <select
-                  value={availability}
-                  onChange={e => setAvailability(e.target.value)}
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                >
-                  <option value="available">Available Only</option>
-                  <option value="all">All</option>
-                </select>
-              </div>
-              <div className="flex items-end">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50"
-                >
-                  🔍 {loading ? "Searching..." : "Search"}
-                </button>
-              </div>
-            </form>
-
-            {/* Donor List */}
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-                Available Donors ({donors.length})
-              </h3>
-              <div className="space-y-4">
-                {donors.length === 0 ? (
-                  <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                    No donors found matching your criteria.
-                  </div>
-                ) : (
-                  donors.map((donor, idx) => (
-                    <div key={donor._id || idx} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="bg-pink-400/30 rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold text-gray-900 dark:text-white">
-                            {getInitials(donor.userId?.username || donor.name)}
-                          </div>
-                          {donor.availability && (
-                            <span className="mt-2 px-2 py-1 rounded-full bg-green-500 text-white text-xs font-bold">
-                              Available
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg font-bold text-gray-900 dark:text-white">
-                              {donor.userId?.username || donor.name}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            <span className="flex items-center gap-1">
-                              <span className="text-pink-400">🩸</span> Blood Type: <span className="font-bold text-pink-600">{donor.bloodGroup}</span>
-                            </span>
-                            <span className="flex items-center gap-1">
-                              📍 {donor.houseAddress?.city || donor.location || "N/A"}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              ⭐ Rating: {donor.rating || "4.8"}/5
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500">
-                            Last donation: {donor.lastDonatedDate || donor.lastDonation || "N/A"}
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
-                            📞 Contact
-                          </button>
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-rose-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
-                            ❤️ Request
-                          </button>
-                        </div>
-                      </div>
+        {activeTab === "requests" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4 text-white">Donation Requests</h2>
+            {loading ? (
+              <p className="text-gray-300">Loading...</p>
+            ) : requests.length === 0 ? (
+              <p className="text-gray-400">No donation requests at the moment.</p>
+            ) : (
+              requests.map((request) => (
+                <div key={request._id} className="glass-card p-4 mb-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-lg shadow-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <h3 className="font-semibold text-lg">{request.hospitalName}</h3>
+                      <p className="text-sm text-gray-400">
+                        Patient: {request.patientName} &nbsp;|&nbsp; Location: {request.hospitalLocation}
+                      </p>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        request.priority === "High" ? "bg-red-600" :
+                        request.priority === "Medium" ? "bg-yellow-600" : "bg-gray-600"
+                      }`}
+                    >
+                      {request.priority} Priority
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <p><span className="font-semibold">Blood Type Required:</span> <span className="text-red-400">{request.bloodType}</span></p>
+                    <p><span className="font-semibold">Request Date:</span> {new Date(request.requestDate).toLocaleDateString()}</p>
+                    <p><span className="font-semibold">Additional Notes:</span> {request.notes || "None"}</p>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => handleAcceptRequest(request._id)}
+                      disabled={loading}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition"
+                    >
+                      Accept Request
+                    </button>
+                    <button
+                      onClick={() => handleDeclineRequest(request._id)}
+                      disabled={loading}
+                      className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-semibold transition"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
-        {activeTab === "patients" && (
-          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-            <div className="mb-6 text-center">
-              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                🏥 Patient Details
-              </h2>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Manage patient information and blood requirements
-              </p>
-            </div>
+        {activeTab === "bookings" && (
+          <div className="text-gray-400">My Bookings feature coming soon.</div>
+        )}
 
-            {/* Patient Form */}
-            <form onSubmit={editingPatient ? handleUpdatePatient : handleAddPatient} className="mb-8">
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Patient Name</label>
-                  <input
-                    type="text"
-                    placeholder="Patient Name"
-                    value={patientFormData.patientName}
-                    onChange={(e) => setPatientFormData({ ...patientFormData, patientName: e.target.value })}
-                    required
-                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Address</label>
-                  <input
-                    type="text"
-                    placeholder="Address"
-                    value={patientFormData.address}
-                    onChange={(e) => setPatientFormData({ ...patientFormData, address: e.target.value })}
-                    required
-                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Group</label>
-                  <select
-                    value={patientFormData.bloodGroup}
-                    onChange={(e) => setPatientFormData({ ...patientFormData, bloodGroup: e.target.value })}
-                    required
-                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                  >
-                    <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">MR Number</label>
-                  <input
-                    type="text"
-                    placeholder="Enter MR Number"
-                    value={patientFormData.mrid}
-                    onChange={(e) => setPatientFormData({ ...patientFormData, mrid: e.target.value })}
-                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  />
-                </div>
-                <div>
+        {activeTab === "reviews" && (
+          <div className="text-gray-400">Reviews feature coming soon.</div>
+        )}
+      </div>
+
+      <style>{`
+        .glass-card {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(15px);
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 42px;
+          height: 24px;
+        }
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 24px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: #4ade80;
+        }
+        input:checked + .slider:before {
+          transform: translateX(18px);
+        }
+      `}</style>
+    </Layout>
+  );
+}

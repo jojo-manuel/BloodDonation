@@ -15,7 +15,6 @@ import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AuthCallback from "./Pages/AuthCallback";
-import PatientRegister from "./Pages/PatientRegister";
 import RequireAuth from "./components/RequireAuth";
 
 import ThemeToggle from './components/ThemeToggle';
@@ -45,7 +44,6 @@ function App() {
             <Route path="/bloodbank/dashboard" element={<RequireAuth><BloodBankDashboard /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
             <Route path="/admin-dashboard" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
-            <Route path="/patient-register" element={<PatientRegister />} />
           </Routes>
         </main>
       </div>

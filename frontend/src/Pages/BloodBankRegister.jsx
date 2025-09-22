@@ -9,17 +9,6 @@ const CITY_DISTRICT_REGEX = /^[A-Za-z\s]{2,50}$/;                 // letters and
 const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9\s.,-]{3,200}$/;       // letters/numbers/spaces with , . -
 const PHONE_IN_REGEX = /^[6-9]\d{9}$/;                            // Indian 10-digit starting 6-9
 const LICENSE_REGEX = /^[A-Za-z0-9\s-]{5,50}$/;                   // license number format
-const EMAIL_REGEX = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
-
-function isValidEmail(email) {
-  if (!email || typeof email !== 'string') return false;
-  // quick length checks
-  if (email.length > 320) return false; // 64 + 1 (@) + 255 = 320
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return false;
-  if (local.length > 64 || domain.length > 255) return false;
-  return EMAIL_REGEX.test(email);
-}
 
 export default function BloodBankRegister() {
   const [isRegister, setIsRegister] = useState(true);
@@ -74,7 +63,8 @@ export default function BloodBankRegister() {
 
     if (isRegister) {
       // Registration validation
-      if (!isValidEmail((formData.username || "").trim())) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test((formData.username || "").trim())) {
         errors.push("Username must be a valid email address.");
       }
 

@@ -68,13 +68,7 @@ patientSchema.virtual('address').get(function() {
   this.encryptedAddress = encrypt(value);
 });
 
-// Virtual for decrypted MRID
-patientSchema.virtual('mrid').get(function() {
-  return this.encryptedMrid ? decrypt(this.encryptedMrid) : '';
-}).set(function(value) {
-  this.encryptedMrid = encrypt(value);
-});
-
+  
 // Removed phone number virtual
 
 // Ensure virtual fields are serialized
