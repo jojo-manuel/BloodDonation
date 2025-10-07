@@ -19,6 +19,7 @@ export default function UserDashboard() {
   const [mridError, setMridError] = useState("");
   const [mridSuccess, setMridSuccess] = useState("");
   const navigate = useNavigate();
+  const [requestingId, setRequestingId] = useState(null);
 
   // Handle search form changes
   const handleChange = (e) => {
@@ -108,6 +109,23 @@ export default function UserDashboard() {
       fetchRequests();
     }
   }, [activeTab]);
+
+  const sendRequest = async (donor) => {
+    try {
+      setRequestingId(donor._id);
+      const body = { bloodGroup: donor.bloodGroup };
+      const res = await api.post(`/donors/${donor._id}/requests`, body);
+      if (res.data.success) {
+        alert('Request sent successfully');
+      } else {
+        alert(res.data.message || 'Failed to send request');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to send request');
+    } finally {
+      setRequestingId(null);
+    }
+  };
 
   return (
     <Layout>
@@ -292,9 +310,9 @@ export default function UserDashboard() {
                             <span className="mr-1">📞</span>
                             Contact
                           </button>
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
+                          <button onClick={() => sendRequest(donor)} disabled={requestingId === donor._id} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50">
                             <span className="mr-1">❤️</span>
-                            Request
+                            {requestingId === donor._id ? 'Requesting...' : 'Request'}
                           </button>
                         </div>
                       </div>
