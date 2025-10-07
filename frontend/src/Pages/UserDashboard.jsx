@@ -80,10 +80,10 @@ export default function UserDashboard() {
     }
   };
 
-  // Fetch donation requests for user
+  // Fetch donation requests received by the authenticated donor
   const fetchRequests = async () => {
     try {
-      const res = await api.get("/donation-requests/user");
+      const res = await api.get("/donors/requests");
       if (res.data.success) {
         setRequests(res.data.data);
       }
@@ -338,7 +338,7 @@ export default function UserDashboard() {
               <p className="text-gray-600 dark:text-gray-400">Loading...</p>
             ) : requests.length === 0 ? (
               <p className="text-center py-8 text-gray-600 dark:text-gray-400">
-                No requests found.
+                No requests received yet.
               </p>
             ) : (
               requests.map((request) => (
@@ -348,36 +348,32 @@ export default function UserDashboard() {
                 >
                   <div className="flex justify-between items-center mb-2">
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{request.hospitalName}</h3>
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Blood Request</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="mr-2">👤 Patient: {request.patientName}</span>
-                        <span>📍 {request.hospitalLocation}</span>
+                        <span className="mr-2">🩸 Blood Group: {request.bloodGroup}</span>
+                        <span>Status: {request.status}</span>
                       </p>
                     </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        request.priority === "High"
-                          ? "bg-red-600"
-                          : request.priority === "Medium"
-                          ? "bg-gray-700"
-                          : "bg-gray-600"
+                        request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
                       } text-white`}
                     >
-                      {request.priority} Priority
+                      {request.status}
                     </span>
                   </div>
                   <div className="mb-2 text-gray-700 dark:text-gray-300">
                     <p>
-                      <span className="font-semibold">Blood Type Required:</span>{" "}
-                      <span className="text-red-600">{request.bloodType}</span>
+                      <span className="font-semibold">Requested At:</span>{" "}
+                      <span className="font-bold">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</span>
                     </p>
                     <p>
-                      <span className="font-semibold">Request Date:</span>{" "}
-                      <span className="font-bold">{new Date(request.requestDate).toLocaleDateString()}</span>
+                      <span className="font-semibold">Issued At:</span>{" "}
+                      <span>{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</span>
                     </p>
                     <p>
-                      <span className="font-semibold">Additional Notes:</span>{" "}
-                      {request.notes || "None"}
+                      <span className="font-semibold">Active:</span>{" "}
+                      <span>{request.isActive ? 'Yes' : 'No'}</span>
                     </p>
                   </div>
                   <div className="flex gap-4">
@@ -385,13 +381,13 @@ export default function UserDashboard() {
                       className="inline-flex items-center justify-center rounded-2xl bg-green-600 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
                       // onClick={() => handleAcceptRequest(request._id)}
                     >
-                      Accept Request
+                      Accept
                     </button>
                     <button
                       className="inline-flex items-center justify-center rounded-2xl bg-gray-600 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
                       // onClick={() => handleDeclineRequest(request._id)}
                     >
-                      Decline
+                      Reject
                     </button>
                   </div>
                 </div>
