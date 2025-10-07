@@ -27,4 +27,18 @@ exports.createRequest = asyncHandler(async (req, res) => {
   return res.status(201).json({ success: true, message: 'Request sent', data: request });
 });
 
+exports.listReceived = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const requests = await DonationRequest.find({ receiverId: userId })
+    .sort({ createdAt: -1 });
+  return res.json({ success: true, data: requests });
+});
+
+exports.listSent = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const requests = await DonationRequest.find({ senderId: userId })
+    .sort({ createdAt: -1 });
+  return res.json({ success: true, data: requests });
+});
+
 

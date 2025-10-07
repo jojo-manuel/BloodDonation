@@ -43,6 +43,12 @@ router.put('/requests/:requestId/book-slot', authMiddleware, bookSlot);
 // Create a donation request to a donor (sender is current user)
 router.post('/:donorId/requests', authMiddleware, donationRequestController.createRequest);
 
+// List requests received by current user (as donor)
+router.get('/requests', authMiddleware, donationRequestController.listReceived);
+
+// List requests sent by current user
+router.get('/requests/sent', authMiddleware, donationRequestController.listSent);
+
 
 module.exports = router;
 
