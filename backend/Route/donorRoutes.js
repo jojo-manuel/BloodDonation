@@ -6,6 +6,7 @@ const authMiddleware = require('../Middleware/authMiddleware');
 const validate = require('../Middleware/validate');
 const { donorRegisterBody } = require('../validators/schemas');
 const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, getIncomingRequests, respondToRequest, bookSlot } = require('../controllers/donorController');
+const donationRequestController = require('../controllers/donationRequestController');
 
 const router = express.Router();
 
@@ -38,6 +39,10 @@ router.put('/requests/:requestId/respond', authMiddleware, respondToRequest);
 
 // Book a slot for an accepted donation request
 router.put('/requests/:requestId/book-slot', authMiddleware, bookSlot);
+
+// Create a donation request to a donor (sender is current user)
+router.post('/:donorId/requests', authMiddleware, donationRequestController.createRequest);
+
 
 module.exports = router;
 
