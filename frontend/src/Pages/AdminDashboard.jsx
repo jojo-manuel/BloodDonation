@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState([]);
 
   // Search states for donors
   const [searchBloodGroup, setSearchBloodGroup] = useState("");
@@ -72,6 +73,7 @@ export default function AdminDashboard() {
     else if (activeTab === "bloodbanks") fetchBloodbanks();
     else if (activeTab === "pendingBloodbanks") fetchPendingBloodbanks();
     else if (activeTab === "patients") fetchPatients();
+    else if (activeTab === "requests") fetchRequests();
   }, [activeTab]);
 
   // Filter donors based on search criteria
@@ -218,6 +220,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/admin/donation-requests');
+      if (data.success) setRequests(data.data);
+    } catch (error) {
+      alert('Error fetching requests: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApprove = async (id) => {
     try {
       await api.put(`/admin/bloodbanks/${id}/approve`);
@@ -326,6 +340,14 @@ export default function AdminDashboard() {
           }`}
         >
           Patients
+        </button>
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-6 py-2 rounded-full font-semibold transition ${
+            activeTab === "requests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+          }`}
+        >
+          Requests
         </button>
       </div>
       </div>
@@ -693,6 +715,40 @@ export default function AdminDashboard() {
               </Table>
             </TableContainer>
           </>
+        )}
+        {activeTab === "requests" && (
+          <TableContainer component={Paper} sx={{ maxHeight: '70vh' }}>
+            <Table stickyHeader aria-label="requests table" sx={{ minWidth: 700 }}>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>Request ID</StyledTableCell>
+                  <StyledTableCell>User Name</StyledTableCell>
+                  <StyledTableCell>Donor Name</StyledTableCell>
+                  <StyledTableCell>Date</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <StyledTableRow>
+                    <StyledTableCell colSpan={4} align="center">Loading requests...</StyledTableCell>
+                  </StyledTableRow>
+                ) : requests.length === 0 ? (
+                  <StyledTableRow>
+                    <StyledTableCell colSpan={4} align="center">No requests found.</StyledTableCell>
+                  </StyledTableRow>
+                ) : (
+                  requests.map((r) => (
+                    <StyledTableRow key={r.id}>
+                      <StyledTableCell>{r.id}</StyledTableCell>
+                      <StyledTableCell>{r.userName}</StyledTableCell>
+                      <StyledTableCell>{r.donorName}</StyledTableCell>
+                      <StyledTableCell>{r.date ? new Date(r.date).toLocaleString() : 'N/A'}</StyledTableCell>
+                    </StyledTableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
       </div>
     </Layout>
