@@ -355,34 +355,32 @@ export default function UserDashboard() {
                   {requests.length === 0 ? (
                     <p className="text-sm text-gray-600 dark:text-gray-400">No requests received yet.</p>
                   ) : (
-                    requests.map((request) => (
-                      <div
-                        key={request._id}
-                        className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 mb-4"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Blood Request</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              <span className="mr-2">🩸 {request.bloodGroup}</span>
-                              <span>Status: {request.status}</span>
-                            </p>
-                          </div>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
-                            } text-white`}
-                          >
-                            {request.status}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-700 dark:text-gray-300">
-                          <p>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</p>
-                          <p>Issued: {request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</p>
-                          <p>Active: {request.isActive ? 'Yes' : 'No'}</p>
-                        </div>
-                      </div>
-                    ))
+                    <div className="overflow-auto">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-700 dark:text-gray-300">
+                            <th className="px-2 py-1">From</th>
+                            <th className="px-2 py-1">Blood Group</th>
+                            <th className="px-2 py-1">Status</th>
+                            <th className="px-2 py-1">Requested</th>
+                            <th className="px-2 py-1">Issued</th>
+                            <th className="px-2 py-1">Active</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-gray-800 dark:text-gray-200">
+                          {requests.map((request) => (
+                            <tr key={request._id} className="border-t border-white/10">
+                              <td className="px-2 py-1">{request.senderId?.username || request.senderId?.name || 'N/A'}</td>
+                              <td className="px-2 py-1">{request.bloodGroup}</td>
+                              <td className="px-2 py-1">{request.status}</td>
+                              <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
+                              <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
+                              <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
                 <div>
@@ -390,34 +388,32 @@ export default function UserDashboard() {
                   {sentRequests.length === 0 ? (
                     <p className="text-sm text-gray-600 dark:text-gray-400">No requests sent yet.</p>
                   ) : (
-                    sentRequests.map((request) => (
-                      <div
-                        key={request._id}
-                        className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 mb-4"
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Blood Request</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              <span className="mr-2">🩸 {request.bloodGroup}</span>
-                              <span>Status: {request.status}</span>
-                            </p>
-                          </div>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                              request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
-                            } text-white`}
-                          >
-                            {request.status}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-700 dark:text-gray-300">
-                          <p>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</p>
-                          <p>Issued: {request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</p>
-                          <p>Active: {request.isActive ? 'Yes' : 'No'}</p>
-                        </div>
-                      </div>
-                    ))
+                    <div className="overflow-auto">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-gray-700 dark:text-gray-300">
+                            <th className="px-2 py-1">To</th>
+                            <th className="px-2 py-1">Blood Group</th>
+                            <th className="px-2 py-1">Status</th>
+                            <th className="px-2 py-1">Requested</th>
+                            <th className="px-2 py-1">Issued</th>
+                            <th className="px-2 py-1">Active</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-gray-800 dark:text-gray-200">
+                          {sentRequests.map((request) => (
+                            <tr key={request._id} className="border-t border-white/10">
+                              <td className="px-2 py-1">{request.receiverId?.username || request.receiverId?.name || 'N/A'}</td>
+                              <td className="px-2 py-1">{request.bloodGroup}</td>
+                              <td className="px-2 py-1">{request.status}</td>
+                              <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
+                              <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
+                              <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               </div>
