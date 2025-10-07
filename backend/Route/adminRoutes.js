@@ -44,4 +44,7 @@ router.put("/donors/:id/status", adminController.setDonorStatus);
 // Set status for bloodbank
 router.put("/bloodbanks/:id/status", adminController.setBloodBankStatus);
 
+// Get all donation requests (summary for admin)
+router.get("/donation-requests", adminController.getAllDonationRequests);
+
 module.exports = router;
