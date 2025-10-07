@@ -14,6 +14,7 @@ export default function UserDashboard() {
   const [mrid, setMrid] = useState("");
   const [mridResults, setMridResults] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mridLoading, setMridLoading] = useState(false);
   const [mridError, setMridError] = useState("");
@@ -83,12 +84,23 @@ export default function UserDashboard() {
   // Fetch donation requests received by the authenticated donor
   const fetchRequests = async () => {
     try {
-      const res = await api.get("/donors/requests");
-      if (res.data.success) {
-        setRequests(res.data.data);
+      const [recRes, sentRes] = await Promise.all([
+        api.get("/donors/requests"),
+        api.get("/donors/requests/sent")
+      ]);
+      if (recRes.data.success) {
+        setRequests(recRes.data.data);
+      } else {
+        setRequests([]);
+      }
+      if (sentRes.data.success) {
+        setSentRequests(sentRes.data.data);
+      } else {
+        setSentRequests([]);
       }
     } catch (err) {
       setRequests([]);
+      setSentRequests([]);
     }
     setLoading(false);
   };
@@ -331,67 +343,84 @@ export default function UserDashboard() {
                 📋 My Requests
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                View and manage your blood donation requests
+                View requests you've received and sent
               </p>
             </div>
             {loading ? (
               <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-            ) : requests.length === 0 ? (
-              <p className="text-center py-8 text-gray-600 dark:text-gray-400">
-                No requests received yet.
-              </p>
             ) : (
-              requests.map((request) => (
-                <div
-                  key={request._id}
-                  className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 mb-6"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white">Blood Request</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="mr-2">🩸 Blood Group: {request.bloodGroup}</span>
-                        <span>Status: {request.status}</span>
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
-                      } text-white`}
-                    >
-                      {request.status}
-                    </span>
-                  </div>
-                  <div className="mb-2 text-gray-700 dark:text-gray-300">
-                    <p>
-                      <span className="font-semibold">Requested At:</span>{" "}
-                      <span className="font-bold">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</span>
-                    </p>
-                    <p>
-                      <span className="font-semibold">Issued At:</span>{" "}
-                      <span>{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</span>
-                    </p>
-                    <p>
-                      <span className="font-semibold">Active:</span>{" "}
-                      <span>{request.isActive ? 'Yes' : 'No'}</span>
-                    </p>
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      className="inline-flex items-center justify-center rounded-2xl bg-green-600 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
-                      // onClick={() => handleAcceptRequest(request._id)}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      className="inline-flex items-center justify-center rounded-2xl bg-gray-600 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
-                      // onClick={() => handleDeclineRequest(request._id)}
-                    >
-                      Reject
-                    </button>
-                  </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Received Requests ({requests.length})</h3>
+                  {requests.length === 0 ? (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">No requests received yet.</p>
+                  ) : (
+                    requests.map((request) => (
+                      <div
+                        key={request._id}
+                        className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 mb-4"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">Blood Request</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="mr-2">🩸 {request.bloodGroup}</span>
+                              <span>Status: {request.status}</span>
+                            </p>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
+                            } text-white`}
+                          >
+                            {request.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          <p>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</p>
+                          <p>Issued: {request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</p>
+                          <p>Active: {request.isActive ? 'Yes' : 'No'}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              ))
+                <div>
+                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Sent Requests ({sentRequests.length})</h3>
+                  {sentRequests.length === 0 ? (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">No requests sent yet.</p>
+                  ) : (
+                    sentRequests.map((request) => (
+                      <div
+                        key={request._id}
+                        className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 mb-4"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">Blood Request</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="mr-2">🩸 {request.bloodGroup}</span>
+                              <span>Status: {request.status}</span>
+                            </p>
+                          </div>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              request.status === 'accepted' ? 'bg-green-600' : request.status === 'rejected' ? 'bg-red-600' : 'bg-gray-600'
+                            } text-white`}
+                          >
+                            {request.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-700 dark:text-gray-300">
+                          <p>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</p>
+                          <p>Issued: {request.issuedAt ? new Date(request.issuedAt).toLocaleString() : 'Not issued'}</p>
+                          <p>Active: {request.isActive ? 'Yes' : 'No'}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
