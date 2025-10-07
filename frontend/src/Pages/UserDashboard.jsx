@@ -21,6 +21,7 @@ export default function UserDashboard() {
   const [mridSuccess, setMridSuccess] = useState("");
   const navigate = useNavigate();
   const [requestingId, setRequestingId] = useState(null);
+  const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Handle search form changes
   const handleChange = (e) => {
@@ -360,6 +361,7 @@ export default function UserDashboard() {
                         <thead>
                           <tr className="text-left text-gray-700 dark:text-gray-300">
                             <th className="px-2 py-1">From</th>
+                            <th className="px-2 py-1">To</th>
                             <th className="px-2 py-1">Blood Group</th>
                             <th className="px-2 py-1">Status</th>
                             <th className="px-2 py-1">Requested</th>
@@ -371,6 +373,7 @@ export default function UserDashboard() {
                           {requests.map((request) => (
                             <tr key={request._id} className="border-t border-white/10">
                               <td className="px-2 py-1">{request.senderId?.username || request.senderId?.name || 'N/A'}</td>
+                              <td className="px-2 py-1">{loginUsername || 'Me'}</td>
                               <td className="px-2 py-1">{request.bloodGroup}</td>
                               <td className="px-2 py-1">{request.status}</td>
                               <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
@@ -392,6 +395,7 @@ export default function UserDashboard() {
                       <table className="min-w-full text-sm">
                         <thead>
                           <tr className="text-left text-gray-700 dark:text-gray-300">
+                            <th className="px-2 py-1">From</th>
                             <th className="px-2 py-1">To</th>
                             <th className="px-2 py-1">Blood Group</th>
                             <th className="px-2 py-1">Status</th>
@@ -403,6 +407,7 @@ export default function UserDashboard() {
                         <tbody className="text-gray-800 dark:text-gray-200">
                           {sentRequests.map((request) => (
                             <tr key={request._id} className="border-t border-white/10">
+                              <td className="px-2 py-1">{loginUsername || 'Me'}</td>
                               <td className="px-2 py-1">{request.receiverId?.username || request.receiverId?.name || 'N/A'}</td>
                               <td className="px-2 py-1">{request.bloodGroup}</td>
                               <td className="px-2 py-1">{request.status}</td>
