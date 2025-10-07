@@ -5,10 +5,7 @@ const bloodBankController = require("../controllers/bloodBankController");
 const authMiddleware = require("../Middleware/authMiddleware");
 
 // Blood bank user registration
-router.post("/register", (req, res, next) => {
-  console.log("[DEBUG] Blood bank registration route hit", req.body);
-  return bloodBankController.registerBloodBankUser(req, res, next);
-});
+router.post("/register", bloodBankController.registerBloodBankUser);
 
 // Submit blood bank details for approval (protected route)
 router.post(

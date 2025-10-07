@@ -1,9 +1,9 @@
 // server.js
 // Entry point: loads environment, connects to DB, starts HTTP server.
 
+require('dotenv').config({ path: '../.env' });
 const connectDB = require("./Database/db");
 const app = require('./app');
-require('dotenv').config({ path: '../.env' });
 
 // Connect to MongoDB (logs and exits on failure)
 connectDB();

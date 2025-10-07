@@ -17,14 +17,12 @@ import AdminDashboard from "./Pages/AdminDashboard";
 import AuthCallback from "./Pages/AuthCallback";
 import RequireAuth from "./components/RequireAuth";
 
-import ThemeToggle from './components/ThemeToggle';
-
 function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
-        <header className="p-4 bg-purple-800 text-white flex justify-end">
-          <ThemeToggle />
+        <header className="p-4 flex justify-end">
+          {/* ThemeToggle removed as per user request */}
         </header>
         <main className="flex-grow">
           <Routes>
@@ -34,16 +32,16 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/bloodbank-register" element={<BloodBankRegister />} />
-            <Route path="/bloodbank-login" element={<BloodBankLogin />} />
-            <Route path="/bloodbank-pending-approval" element={<BloodBankPendingApproval />} />
 
             {/* Protected routes: require access token */}
             <Route path="/donor-register" element={<RequireAuth><DonorRegister /></RequireAuth>} />
             <Route path="/user-register" element={<RequireAuth><UserRegister /></RequireAuth>} />
-            <Route path="/bloodbank/dashboard" element={<RequireAuth><BloodBankDashboard /></RequireAuth>} />
+            <Route path="/bloodbank-register" element={<RequireAuth><BloodBankRegister /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
             <Route path="/admin-dashboard" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+            <Route path="/bloodbank/dashboard" element={<RequireAuth><BloodBankDashboard /></RequireAuth>} />
+            <Route path="/bloodbank-login" element={<BloodBankLogin />} />
+            <Route path="/bloodbank-pending-approval" element={<BloodBankPendingApproval />} />
           </Routes>
         </main>
       </div>

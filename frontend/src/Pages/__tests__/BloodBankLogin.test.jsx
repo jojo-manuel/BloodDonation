@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { jest } from '@jest/globals';
 import BloodBankLogin from '../BloodBankLogin';
 
 // Mock Firebase
@@ -11,12 +10,12 @@ jest.mock('firebase/auth', () => ({
   GoogleAuthProvider: jest.fn(() => ({})),
 }));
 
-jest.mock('../firebase', () => ({
+jest.mock('../../firebase', () => ({
   app: {},
 }));
 
 // Mock API
-jest.mock('../lib/api', () => ({
+jest.mock('../../lib/api', () => ({
   post: jest.fn(),
 }));
 
@@ -27,11 +26,19 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-const mockApi = require('../lib/api');
+const mockApi = require('../../lib/api');
 
 describe('BloodBankLogin', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {});
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {});
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {});
+    jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const renderComponent = () => {
@@ -45,7 +52,7 @@ describe('BloodBankLogin', () => {
   test('renders login form correctly', () => {
     renderComponent();
 
-    expect(screen.getByText('Blood Bank Login')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Blood Bank Login/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter your email address')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument();
     expect(screen.getByText('🏥 Login to Blood Bank')).toBeInTheDocument();

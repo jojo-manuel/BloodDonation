@@ -43,16 +43,18 @@ async function createTestData() {
       await user.save();
     }
 
-    // Create test patient
+    // Create test patient using virtual setters
     const patient = new Patient({
       bloodBankId: user._id,
-      name: 'John Doe',
-      address: '123 Hospital St',
       bloodGroup: 'O+',
-      mrid: '222',
       unitsRequired: 2,
       dateNeeded: new Date('2025-12-31')
     });
+
+    // Use virtual setters to set encrypted fields
+    patient.name = 'John Doe';
+    patient.address = '123 Hospital St';
+    patient.mrid = '222';
     await patient.save();
 
     console.log('✅ Test patient created successfully');

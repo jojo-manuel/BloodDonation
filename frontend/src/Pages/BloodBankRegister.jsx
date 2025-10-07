@@ -21,42 +21,36 @@ export default function BloodBankRegister() {
     contactNumber: "",
     licenseNumber: "",
   });
-  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
 
-  // Check if user is already logged in and has blood bank details
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const role = localStorage.getItem('role');
-    const userId = localStorage.getItem('userId');
-
-    if (token && role === 'bloodbank' && userId) {
-      setUserId(userId);
-      setIsRegister(false);
-      fetchBloodBankDetails(userId);
-    }
-  }, []);
-
-  const fetchBloodBankDetails = async (userId) => {
-    try {
-      const { data } = await api.get(`/bloodbank/details?userId=${userId}`);
-      if (data.success) {
-        const bb = data.data;
-        setFormData({
-          username: "",
-          password: "",
-          name: bb.name || "",
-          address: bb.address || "",
-          district: bb.district || "",
-          contactNumber: bb.contactNumber || "",
-          licenseNumber: bb.licenseNumber || "",
-        });
+    const fetchDetails = async () => {
+      if (!isRegister) {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          try {
+            const res = await api.get("/bloodbank/details");
+            if (res.data.success) {
+              const bb = res.data.data;
+              setFormData({
+                username: "",
+                password: "",
+                name: bb.name || "",
+                address: bb.address || "",
+                district: bb.district || "",
+                contactNumber: bb.contactNumber || "",
+                licenseNumber: bb.licenseNumber || "",
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching blood bank details:", error);
+          }
+        }
       }
-    } catch (error) {
-      console.error("Error fetching blood bank details:", error);
-    }
-  };
+    };
+    fetchDetails();
+  }, [isRegister]);
 
   const validateForm = () => {
     const errors = [];

@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { app } from '../firebase';
-import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth';
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, sendPasswordResetEmail, signInWithPopup } from 'firebase/auth';
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -40,6 +40,7 @@ export default function Login() {
   const [firebaseLoading, setFirebaseLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showReset, setShowReset] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,27 +56,17 @@ export default function Login() {
           if (response.data.success) {
             const { user, accessToken, refreshToken } = response.data.data;
 
-            // Store user data and tokens
-            if (user?.id) localStorage.setItem('userId', user.id);
-            if (user?.role) localStorage.setItem('role', user.role);
-            if (user?.username) localStorage.setItem('username', user.username);
-            if (accessToken) localStorage.setItem('accessToken', accessToken);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+            // Construct callback URL with tokens as query parameters
+            const params = new URLSearchParams({
+              accessToken,
+              refreshToken,
+              userId: user.id,
+              role: user.role,
+              username: user.username
+            });
 
-            // Redirect based on user role and suspension/block status
-            if (user?.isSuspended) {
-              alert('Your account is suspended. Some features may be restricted.');
-              navigate('/dashboard');
-            } else if (user?.isBlocked) {
-              alert('Your account is blocked. Please contact support.');
-              navigate('/login');
-            } else if (user?.role === 'admin') {
-              navigate('/admin-dashboard');
-            } else if (user?.role === 'bloodbank') {
-              navigate('/bloodbank/dashboard');
-            } else {
-              navigate('/dashboard');
-            }
+            // Redirect to AuthCallback page for proper handling
+            navigate(`/auth/callback?${params.toString()}`, { replace: true });
           } else {
             alert('Authentication failed: ' + response.data.message);
           }
@@ -93,18 +84,53 @@ export default function Login() {
     handleRedirectResult();
   }, [navigate]);
 
-  // Firebase sign-in with Google provider using redirect
-  const handleFirebaseSignIn = async () => {
-    setFirebaseLoading(true);
-    try {
-      await signInWithRedirect(auth, provider);
-      // The page will redirect to Google, then back to the app
-    } catch (error) {
-      console.error('Firebase redirect initiation error:', error);
-      alert('Failed to initiate sign-in. Please try again.');
-      setFirebaseLoading(false);
+// Firebase sign-in with Google provider using popup (fallback for redirect issues)
+const handleFirebaseSignIn = async () => {
+  setFirebaseLoading(true);
+  try {
+    // Use popup sign-in instead of redirect to avoid sessionStorage issues
+    const result = await signInWithPopup(auth, provider);
+    if (result) {
+      const idToken = await result.user.getIdToken();
+
+      // Send ID token to backend for verification and app token generation
+      const response = await api.post('/auth/firebase', { idToken });
+
+      if (response.data.success) {
+        const { user, accessToken, refreshToken } = response.data.data;
+
+        // Store user data and tokens
+        if (user?.id) localStorage.setItem('userId', user.id);
+        if (user?.role) localStorage.setItem('role', user.role);
+        if (user?.username) localStorage.setItem('username', user.username);
+        if (accessToken) localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+        // Redirect based on user role and suspension/block status
+        if (user?.isSuspended) {
+          alert('Your account is suspended. Some features may be restricted.');
+          navigate('/dashboard');
+        } else if (user?.isBlocked) {
+          alert('Your account is blocked. Please contact support.');
+          navigate('/login');
+        } else if (user?.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else if (user?.role === 'bloodbank') {
+          navigate('/bloodbank/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        alert('Authentication failed: ' + response.data.message);
+      }
     }
-  };
+  } catch (error) {
+    console.error('Firebase popup sign-in error:', error);
+    alert('Failed to sign in with Google. Please try again.');
+  } finally {
+    setFirebaseLoading(false);
+  }
+};
 
   // Firebase forgot password
   const handleForgotPassword = async () => {
@@ -166,6 +192,8 @@ export default function Login() {
         alert(msg);
       });
   };
+
+
 
   return (
     <div className="fixed inset-0 min-h-screen w-full overflow-auto bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black">
@@ -245,6 +273,8 @@ export default function Login() {
             >
               <span className="mr-2">🔐</span> Login
             </button>
+
+
 
             {showReset && (
               <div className="mt-4 space-y-4">

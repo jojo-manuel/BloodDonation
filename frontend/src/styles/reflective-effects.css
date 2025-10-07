@@ -1,0 +1,462 @@
+/* Enhanced Professional Glass Card with Advanced Reflective Effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Enhanced glass reflections */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: topReflection 4s ease-in-out infinite;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.9),
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.4)
+  );
+  animation: sideReflection 4s ease-in-out infinite;
+}
+
+/* Dark mode glass effects */
+.dark .glass-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.dark .glass-card:hover {
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 16px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Enhanced Animated Light Beams */
+.light-beam {
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: lightSweep 3s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.light-beam:nth-child(2) {
+  animation-delay: 1s;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(59, 130, 246, 0.4),
+    rgba(59, 130, 246, 0.8),
+    rgba(59, 130, 246, 0.4),
+    transparent
+  );
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.light-beam:nth-child(3) {
+  animation-delay: 2s;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(147, 197, 253, 0.3),
+    rgba(147, 197, 253, 0.6),
+    rgba(147, 197, 253, 0.3),
+    transparent
+  );
+  box-shadow: 0 0 8px rgba(147, 197, 253, 0.2);
+}
+
+/* Edge-travelling reflections */
+.edge-reflection {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+  border-radius: 50%;
+  animation: edgeTravel 4s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.edge-reflection:nth-child(4) {
+  animation-delay: 1s;
+  background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.6) 50%, transparent 100%);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+}
+
+.edge-reflection:nth-child(5) {
+  animation-delay: 2s;
+  background: radial-gradient(circle, rgba(147, 197, 253, 1) 0%, rgba(147, 197, 253, 0.6) 50%, transparent 100%);
+  box-shadow: 0 0 10px rgba(147, 197, 253, 0.8);
+}
+
+.edge-reflection:nth-child(6) {
+  animation-delay: 3s;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes lightSweep {
+  0% {
+    transform: translateX(-100%) scaleX(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.8;
+    transform: translateX(-50%) scaleX(1);
+  }
+  75% {
+    opacity: 0.8;
+    transform: translateX(50%) scaleX(1);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.5);
+    opacity: 0;
+  }
+}
+
+/* Professional Navigation Glass */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.glass-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-nav {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark .glass-nav:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced Shimmer Effect */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  animation: shimmer 2.5s infinite;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 2.5s infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Professional Reflective Background */
+.reflective-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.reflective-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 15% 25%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.04) 0%, transparent 60%),
+    radial-gradient(circle at 25% 85%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  animation: ambientLight 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.reflective-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
+    linear-gradient(45deg, rgba(255, 0, 0, 0.02) 0%, transparent 50%);
+  animation: subtleReflection 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ambientLight {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1) rotate(0deg);
+  }
+  33% {
+    opacity: 0.6;
+    transform: scale(1.05) rotate(1deg);
+  }
+  66% {
+    opacity: 0.5;
+    transform: scale(0.98) rotate(-0.5deg);
+  }
+}
+
+@keyframes subtleReflection {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Dark mode background enhancements */
+.dark .reflective-bg::before {
+  background:
+    radial-gradient(circle at 15% 25%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.06) 0%, transparent 60%),
+    radial-gradient(circle at 25% 85%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+}
+
+.dark .reflective-bg::after {
+  background:
+    linear-gradient(135deg, rgba(255, 0, 0, 0.03) 0%, transparent 50%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+}
+
+/* Professional button enhancements */
+.glass-button {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.glass-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.glass-button:hover::before {
+  left: 100%;
+}
+
+/* Dark mode button enhancements */
+.dark .glass-button {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-button:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive glass effects */
+@media (max-width: 768px) {
+  .glass-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-nav {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .light-beam {
+    height: 1px;
+  }
+}
+
+/* Professional focus states */
+.glass-card:focus-within,
+.glass-button:focus {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.dark .glass-card:focus-within,
+.dark .glass-button:focus {
+  box-shadow:
+    0 0 0 3px rgba(255, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Additional reflection animations */
+@keyframes topReflection {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleX(1.2);
+  }
+}
+
+@keyframes sideReflection {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scaleY(0.9);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(1.1);
+  }
+}
+
+/* Edge-traveling reflection animation */
+@keyframes edgeTravel {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12.5% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(100%, 0);
+    opacity: 1;
+  }
+  37.5% {
+    transform: translate(100%, 0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(100%, 100%);
+    opacity: 1;
+  }
+  62.5% {
+    transform: translate(100%, 100%);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(0, 100%);
+    opacity: 1;
+  }
+  87.5% {
+    transform: translate(0, 100%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}

@@ -4,7 +4,7 @@
 const Donor = require('../Models/donor');
 const Patient = require('../Models/Patient');
 const DonationRequest = require('../Models/DonationRequest');
-const asyncHandler = require('../middleware/asyncHandler');
+const asyncHandler = require('../Middleware/asyncHandler');
 
 /**
  * Register a donor profile or update existing one for the authenticated user
@@ -98,8 +98,10 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'MR number is required' });
   }
 
-  // Find patient by decrypted mrid
-  const patient = await Patient.findOne({}).where('encryptedMrid').equals(mrid.toUpperCase());
+  // Find patient by encrypted MRID: encrypt normalized MRID and compare
+  const { encrypt } = require('../utils/encryption');
+  const encryptedLookup = encrypt(mrid.toUpperCase());
+  const patient = await Patient.findOne({ encryptedMrid: encryptedLookup });
   if (!patient) {
     return res.status(404).json({ success: false, message: 'Patient not found with given MR number' });
   }
@@ -130,8 +132,24 @@ exports.getOne = asyncHandler(async (req, res) => {
  * Get the authenticated user's donor profile
  */
 exports.getMe = asyncHandler(async (req, res) => {
+  // Check if user has donor role
+  if (req.user.role !== 'donor') {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not registered as a donor.',
+      requiresRegistration: true
+    });
+  }
+
   const donor = await Donor.findOne({ userId: req.user.id });
-  if (!donor) return res.status(404).json({ success: false, message: 'Donor profile not found' });
+  if (!donor) {
+    return res.status(404).json({
+      success: false,
+      message: 'Donor profile not found. Please register as a donor first.',
+      requiresRegistration: true
+    });
+  }
+
   return res.json({ success: true, message: 'OK', data: donor });
 });
 

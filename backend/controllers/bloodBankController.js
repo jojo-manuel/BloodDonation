@@ -4,6 +4,8 @@ const User = require("../Models/User");
 const Donor = require("../Models/donor");
 const Patient = require("../Models/Patient");
 const DonationRequest = require("../Models/DonationRequest");
+const Booking = require("../Models/Booking");
+const Activity = require("../Models/Activity");
 const asyncHandler = require("../Middleware/asyncHandler");
 
 /**
@@ -207,4 +209,127 @@ exports.getDonationRequests = asyncHandler(async (req, res) => {
   }));
 
   res.json({ success: true, data: transformedRequests });
+});
+
+/**
+ * Confirm a pending booking request and create Booking entry
+ * Body: { donationRequestId }
+ * Checks capacity: 5 per time slot, 50 per day
+ */
+exports.createBooking = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const { donationRequestId } = req.body;
+  if (!donationRequestId) {
+    return res.status(400).json({ success: false, message: 'donationRequestId is required' });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  // Fetch the donation request
+  const donationRequest = await DonationRequest.findById(donationRequestId)
+    .populate('bloodBankId', 'name address')
+    .populate('donorId', 'userId name bloodGroup houseAddress');
+  if (!donationRequest || donationRequest.status !== 'pending_booking' || donationRequest.bloodBankId._id.toString() !== bloodBank._id.toString()) {
+    return res.status(400).json({ success: false, message: 'Invalid or non-pending booking request for this blood bank' });
+  }
+
+  const { requestedDate, requestedTime } = donationRequest;
+  const date = new Date(requestedDate);
+  const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+  // Check daily limit: 50 confirmed bookings for this blood bank on this date
+  const dailyCount = await Booking.aggregate([
+    { $match: {
+        bloodBankId: bloodBank._id,
+        date: date,
+        status: 'confirmed'
+      } },
+    { $count: 'count' }
+  ]);
+  if (dailyCount[0]?.count >= 50) {
+    return res.status(400).json({ success: false, message: 'Daily booking limit (50) reached for this blood bank' });
+  }
+
+  // Check time slot limit: 5 confirmed bookings for this blood bank, date, time
+  const slotCount = await Booking.aggregate([
+    { $match: {
+        bloodBankId: bloodBank._id,
+        date: date,
+        time: requestedTime,
+        status: 'confirmed'
+      } },
+    { $count: 'count' }
+  ]);
+  if (slotCount[0]?.count >= 5) {
+    return res.status(400).json({ success: false, message: `Time slot ${requestedTime} booking limit (5) reached for this blood bank` });
+  }
+
+  // Create booking
+  const tokenNumber = `TOKEN-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  const booking = await Booking.create({
+    bloodBankId: bloodBank._id,
+    date: date,
+    time: requestedTime,
+    donorId: donationRequest.donorId._id,
+    status: 'confirmed',
+    tokenNumber,
+    donationRequestId: donationRequest._id
+  });
+
+  // Update donation request status
+  donationRequest.status = 'booked';
+  await donationRequest.save();
+
+  // Log booking confirmation activity
+  await Activity.create({
+    userId: req.user._id,
+    role: 'bloodbank',
+    action: 'booking_confirmed',
+    details: {
+      bookingId: booking._id,
+      donorId: donationRequest.donorId._id,
+      date: date,
+      time: requestedTime,
+      donationRequestId: donationRequest._id
+    }
+  });
+
+  // Populate booking for response
+  await booking.populate('donorId', 'userId name bloodGroup houseAddress');
+  await booking.populate('donorId.userId', 'username name email phone');
+  await booking.populate('bloodBankId', 'name address');
+
+  res.json({
+    success: true,
+    message: 'Booking confirmed successfully',
+    data: booking
+  });
+});
+
+/**
+ * Get all bookings for the authenticated blood bank
+ */
+exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  const bookings = await Booking.find({ bloodBankId: bloodBank._id })
+    .populate('donorId', 'userId name bloodGroup houseAddress')
+    .populate('donorId.userId', 'username name email phone')
+    .populate('donationRequestId', 'requesterId patientId status')
+    .sort({ date: 1, time: 1 });
+
+  res.json({ success: true, data: bookings });
 });

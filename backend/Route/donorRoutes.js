@@ -21,8 +21,8 @@ router.delete('/delete', authMiddleware, deleteDonor);
 // Public donor search with filters
 router.get('/search', searchDonors);
 
-// New route: search donors by MR number
-router.get('/searchByMrid/:mrid', authMiddleware, searchDonorsByMrid);
+// New route: search donors by MR number (public)
+router.get('/searchByMrid/:mrid', searchDonorsByMrid);
 
 // Get a single donor by id
 router.get('/:id', getOne);

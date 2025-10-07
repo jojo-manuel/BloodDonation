@@ -46,9 +46,19 @@ export default function DonorSearch() {
         response = await api.get("/donors/search", { params });
       }
       if (response.data.success) {
-        setDonors(response.data.data.data);
-        setTotalPages(response.data.data.pages);
-        setTotalDonors(response.data.data.total);
+        // Handle two response shapes:
+        // 1) Normal search: { data: { data: Donor[], page, total, pages } }
+        // 2) MRID search: { data: Donor[] }
+        const payload = response.data.data;
+        if (Array.isArray(payload)) {
+          setDonors(payload);
+          setTotalPages(1);
+          setTotalDonors(payload.length);
+        } else {
+          setDonors(payload.data);
+          setTotalPages(payload.pages);
+          setTotalDonors(payload.total);
+        }
       } else {
         alert("Failed to fetch donors: " + response.data.message);
       }
@@ -83,6 +93,14 @@ export default function DonorSearch() {
           }}
           className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"
         >
+          <input
+            type="text"
+            name="mrnumber"
+            placeholder="Patient MRID"
+            value={filters.mrnumber}
+            onChange={handleInputChange}
+            className="rounded border px-3 py-2 md:col-span-2"
+          />
           <select
             name="bloodGroup"
             value={filters.bloodGroup}

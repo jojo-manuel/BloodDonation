@@ -1,6 +1,6 @@
 // middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../Models/User");
 
 /**
  * Middleware to verify JWT and attach user to request

@@ -161,7 +161,7 @@ export default function BloodBankLogin() {
       }
     } catch (error) {
       console.error("Google login error:", error);
-      alert("Google login failed: " + error.message);
+      alert("Google login failed: " + (error.response?.data?.message || error.message));
     }
   };
 

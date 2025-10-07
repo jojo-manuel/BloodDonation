@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../Middleware/auth');
 const validate = require('../Middleware/validate');
 const { userUpdateBody } = require('../validators/schemas');
-const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks } = require('../controllers/userController');
+const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks, requestDonation, getMyRequests, cancelRequest } = require('../controllers/userController');
 
 console.log('directBookSlot:', typeof directBookSlot);
 console.log('getApprovedBloodBanks:', typeof getApprovedBloodBanks);
@@ -47,9 +47,9 @@ router.post('/me/complete-profile', auth(true), completeProfile);
  
 
 // Donation request routes
-// router.post('/donation-requests', auth(true), requestDonation);
-// router.get('/donation-requests', auth(true), getMyRequests);
-// router.put('/donation-requests/:id', auth(true), cancelRequest);
+router.post('/request-donation', auth(true), requestDonation);
+router.get('/my-requests', auth(true), getMyRequests);
+router.delete('/my-requests/:id', auth(true), cancelRequest);
 
 // Book donation slot
 // router.post('/book-slot', auth(true), bookSlot);

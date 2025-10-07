@@ -6,8 +6,9 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const admin = require("../utils/firebaseAdmin");
 
-// Import models
 const User = require("../Models/User");
+const Activity = require("../Models/Activity");
+const { sendEmail } = require("../utils/email");
 
 // Create router
 const router = express.Router();
@@ -89,30 +90,30 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = expiry;
     await user.save();
 
-    // Configure nodemailer with Gmail SMTP
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-
+    // Send password reset email using Firebase Admin SDK
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
 
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
-      to: user.email || user.username,
-      subject: 'Password Reset Request',
-      text: `You requested a password reset. Click the link to reset your password: ${resetUrl}\n\nIf you did not request this, please ignore this email.`,
+    const message = {
+      notification: {
+        title: 'Password Reset Request',
+        body: `You requested a password reset. Click the link to reset your password.`,
+      },
+      data: {
+        resetUrl,
+      },
+      token: user.firebaseToken, // Assuming you store Firebase device tokens for users
     };
 
-    await transporter.sendMail(mailOptions);
-
-    return res.json({ success: true, message: 'If the account exists, a reset link has been sent' });
+    try {
+      await admin.messaging().send(message);
+      return res.json({ success: true, message: 'If the account exists, a reset link has been sent' });
+    } catch (firebaseErr) {
+      console.error('Firebase send message error:', firebaseErr);
+      return res.status(500).json({ success: false, message: 'Failed to send reset notification' });
+    }
   } catch (err) {
     console.error('Forgot password error:', err);
-    return res.status(500).json({ success: false, message: 'Failed to send reset email' });
+    return res.status(500).json({ success: false, message: 'Failed to send reset notification' });
   }
 });
 
@@ -194,6 +195,16 @@ router.post("/register", async (req, res) => {
       username = data.email; // Use email as username
     }
 
+    // Check if user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      console.log('User already exists with username:', username);
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
+      });
+    }
+
     const { password, role, provider } = data;
 
     // Password will be hashed by the User model pre-save hook
@@ -214,6 +225,14 @@ router.post("/register", async (req, res) => {
     console.log('User created, saving...');
     await newUser.save();
     console.log('User saved successfully');
+
+    // Log registration activity
+    await Activity.create({
+      userId: newUser._id,
+      role: newUser.role,
+      action: 'register',
+      details: { provider: newUser.provider }
+    });
 
     return res.status(201).json({
       success: true,
@@ -288,11 +307,26 @@ router.post("/login", async (req, res) => {
     const refreshToken = signRefreshToken(user);
     refreshStore.set(String(user._id), refreshToken);
 
+    // Log login activity
+    await Activity.create({
+      userId: user._id,
+      role: user.role,
+      action: 'login',
+      details: { method: 'local' }
+    });
+
     return res.json({
       success: true,
-      message: "Logged in",
+      message: "Login successful",
       data: {
-        user: { id: user._id, username: user.username, role: user.role },
+        user: {
+          id: user._id,
+          username: user.username,
+          role: user.role,
+          isSuspended: user.isSuspended || false,
+          isBlocked: user.isBlocked || false,
+          warningMessage: user.warningMessage || null
+        },
         accessToken,
         refreshToken,
       },
@@ -405,6 +439,14 @@ router.post("/google-login", async (req, res) => {
     const refreshToken = signRefreshToken(user);
     refreshStore.set(String(user._id), refreshToken);
 
+    // Log google login activity
+    await Activity.create({
+      userId: user._id,
+      role: user.role,
+      action: 'login',
+      details: { method: 'google' }
+    });
+
     return res.json({
       success: true,
       message: "Authenticated with Google",
@@ -424,6 +466,74 @@ router.post("/google-login", async (req, res) => {
   } catch (err) {
     console.error('Google login error:', err);
     return res.status(500).json({ success: false, message: "Google login failed", error: err.message });
+  }
+});
+
+/**
+ * @route   POST /api/auth/verify-login
+ * @desc    Verify login code and issue tokens
+ */
+router.post("/verify-login", async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+    if (!userId || !code) {
+      return res.status(400).json({ success: false, message: "User ID and code are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.emailVerificationCode !== code || !user.emailVerificationExpires || user.emailVerificationExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
+    }
+
+    // Clear verification fields
+    user.emailVerificationCode = null;
+    user.emailVerificationExpires = null;
+    await user.save();
+
+    // Check blood bank rejection status if user is a blood bank
+    if (user.role === 'bloodbank') {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank && bloodBank.status === 'rejected') {
+        return res.status(403).json({ success: false, message: "Your blood bank registration has been rejected. Please contact admin." });
+      }
+    }
+
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    refreshStore.set(String(user._id), refreshToken);
+
+    // Log login activity
+    await Activity.create({
+      userId: user._id,
+      role: user.role,
+      action: 'login',
+      details: { method: 'local' }
+    });
+
+    return res.json({
+      success: true,
+      message: "Login successful",
+      data: {
+        user: { 
+          id: user._id, 
+          username: user.username, 
+          role: user.role,
+          isSuspended: user.isSuspended || false,
+          isBlocked: user.isBlocked || false,
+          warningMessage: user.warningMessage || null
+        },
+        accessToken,
+        refreshToken,
+      },
+    });
+  } catch (err) {
+    console.error('Verify login error:', err);
+    return res.status(500).json({ success: false, message: "Verification failed", error: err.message });
   }
 });
 
@@ -471,16 +581,50 @@ router.post("/firebase", async (req, res) => {
       }
     }
 
+    // Check if user is a blood bank and update role accordingly
+    if (user.role === "user") {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank) {
+        user.role = "bloodbank";
+        await user.save();
+      }
+    }
+
+    // Check blood bank rejection status if user is a blood bank
+    if (user.role === 'bloodbank') {
+      const BloodBank = require("../Models/BloodBank");
+      const bloodBank = await BloodBank.findOne({ userId: user._id });
+      if (bloodBank && bloodBank.status === 'rejected') {
+        return res.status(403).json({ success: false, message: "Your blood bank registration has been rejected. Please contact admin." });
+      }
+    }
+
     // Generate tokens
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
     refreshStore.set(String(user._id), refreshToken);
 
+    // Log firebase login activity
+    await Activity.create({
+      userId: user._id,
+      role: user.role,
+      action: 'login',
+      details: { method: 'firebase' }
+    });
+
     return res.json({
       success: true,
       message: "Authenticated with Firebase",
       data: {
-        user: { id: user._id, username: user.username, role: user.role },
+        user: {
+          id: user._id,
+          username: user.username,
+          role: user.role,
+          isSuspended: user.isSuspended || false,
+          isBlocked: user.isBlocked || false,
+          warningMessage: user.warningMessage || null
+        },
         accessToken,
         refreshToken,
       },

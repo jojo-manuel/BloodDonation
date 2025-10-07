@@ -1,14 +1,15 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import UserDashboard from '../UserDashboard';
 
-const mockApi = {
+jest.mock('../../lib/api', () => ({
   get: jest.fn(),
   post: jest.fn(),
   patch: jest.fn(),
-};
+}));
 
-jest.mock('../../lib/api', () => mockApi);
+const api = require('../../lib/api');
 
 // Mock localStorage
 const localStorageMock = {
@@ -20,8 +21,6 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 // Mock window.location
-delete window.location;
-window.location = { href: '' };
 
 describe('UserDashboard Component', () => {
   beforeEach(() => {
@@ -30,19 +29,19 @@ describe('UserDashboard Component', () => {
   });
 
   test('renders Find Donors tab by default', () => {
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     expect(screen.getByText(/Find Blood Donors/i)).toBeInTheDocument();
   });
 
   test('search donors by blood group and city', async () => {
-    mockApi.get.mockResolvedValueOnce({
+    api.get.mockResolvedValueOnce({
       data: {
         success: true,
         data: { data: [{ _id: '1', userId: { username: 'Donor1' }, bloodGroup: 'A+', houseAddress: { city: 'City1' }, lastDonatedDate: null }] }
       }
     });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     fireEvent.change(screen.getByLabelText(/Blood Type/i), { target: { value: 'A+' } });
     fireEvent.change(screen.getByPlaceholderText(/Enter city/i), { target: { value: 'City1' } });
     fireEvent.click(screen.getByRole('button', { name: /Search Donors/i }));
@@ -54,46 +53,46 @@ describe('UserDashboard Component', () => {
   });
 
   test('fetch patient by MRID and search donors', async () => {
-    mockApi.get.mockImplementation((url) => {
-      if (url.startsWith('/patients/search/')) {
-        return Promise.resolve({ data: { success: true, data: { name: 'Patient1', bloodGroup: 'B+', address: 'Address1' } } });
-      }
+    api.get.mockImplementation((url) => {
       if (url.startsWith('/donors/searchByMrid/')) {
-        return Promise.resolve({ data: { success: true, data: [{ _id: '2', userId: { username: 'Donor2' }, bloodGroup: 'B+', houseAddress: { city: 'City2' }, lastDonatedDate: null }] } });
+        return Promise.resolve({
+          data: {
+            success: true,
+            data: {
+              data: [{ _id: '2', userId: { username: 'Donor2' }, bloodGroup: 'B+', houseAddress: { city: 'City2' }, lastDonatedDate: null }],
+              total: 1,
+              pages: 1,
+              page: 1,
+            },
+          },
+        });
       }
       return Promise.resolve({ data: { success: false } });
     });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     fireEvent.click(screen.getByRole('button', { name: /Search by MRID/i }));
 
-    const mridInput = screen.getByPlaceholderText(/Enter MRID/i);
+    const mridInput = screen.getByLabelText(/Patient MRID/i);
     fireEvent.change(mridInput, { target: { value: 'MRID123' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /Fetch Patient/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Patient Details/i)).toBeInTheDocument();
-      expect(screen.getByText(/Patient1/i)).toBeInTheDocument();
-    });
 
     fireEvent.click(screen.getByRole('button', { name: /Search Donors/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Matching Donors/i)).toBeInTheDocument();
+      expect(screen.getByText(/Donors for MRID/i)).toBeInTheDocument();
       expect(screen.getByText(/Donor2/i)).toBeInTheDocument();
     });
   });
 
   test('send donation request', async () => {
-    mockApi.post.mockResolvedValueOnce({ data: { success: true } });
+    api.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     // Simulate sending request by calling handleRequest directly or clicking request button
     // For simplicity, call handleRequest via button click in Find Donors tab
 
     // Mock donors in state by searching first
-    mockApi.get.mockResolvedValueOnce({
+    api.get.mockResolvedValueOnce({
       data: {
         success: true,
         data: { data: [{ _id: '3', userId: { username: 'Donor3' }, bloodGroup: 'O+', houseAddress: { city: 'City3' }, lastDonatedDate: null }] }
@@ -110,26 +109,26 @@ describe('UserDashboard Component', () => {
     fireEvent.click(requestButton);
 
     await waitFor(() => {
-      expect(mockApi.post).toHaveBeenCalledWith('/users/donation-requests', expect.any(Object));
+      expect(api.post).toHaveBeenCalledWith('/users/donation-requests', expect.any(Object));
     });
   });
 
   test('profile dropdown toggle and availability toggle', async () => {
-    mockApi.get.mockResolvedValueOnce({
+    api.get.mockResolvedValueOnce({
       data: {
         success: true,
         data: { username: 'User1', role: 'donor', needsProfileCompletion: false }
       }
     });
-    mockApi.get.mockResolvedValueOnce({
+    api.get.mockResolvedValueOnce({
       data: {
         success: true,
         data: { availability: true }
       }
     });
-    mockApi.patch.mockResolvedValue({ data: { success: true } });
+    api.patch.mockResolvedValue({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Wait for user data to load
     await waitFor(() => {
@@ -143,7 +142,7 @@ describe('UserDashboard Component', () => {
     fireEvent.click(availabilityCheckbox);
 
     await waitFor(() => {
-      expect(mockApi.patch).toHaveBeenCalledWith('/users/me/availability', expect.any(Object));
+      expect(api.patch).toHaveBeenCalledWith('/users/me/availability', expect.any(Object));
     });
   });
 
@@ -162,7 +161,7 @@ describe('UserDashboard Component', () => {
     });
     api.post.mockResolvedValueOnce({ data: { success: true, data: { username: 'User2', role: 'donor', needsProfileCompletion: false } } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     await waitFor(() => {
       expect(screen.getByText(/Complete Your Profile/i)).toBeInTheDocument();
@@ -180,7 +179,7 @@ describe('UserDashboard Component', () => {
   });
 
   test('tab navigation', () => {
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     const searchByMRIDTab = screen.getByRole('button', { name: /Search by MRID/i });
     fireEvent.click(searchByMRIDTab);
     expect(screen.getByText(/Search Patient by MRID/i)).toBeInTheDocument();
@@ -195,11 +194,9 @@ describe('UserDashboard Component', () => {
   });
 
   test('logout clears localStorage and redirects', () => {
-    delete window.location;
-    window.location = { href: '' };
     localStorage.setItem('token', 'testtoken');
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
     const logoutButton = screen.getByRole('button', { name: /Logout/i });
     fireEvent.click(logoutButton);
 
@@ -234,7 +231,7 @@ describe('UserDashboard Component', () => {
     });
     api.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Wait for requests to load
     await waitFor(() => {
@@ -287,7 +284,7 @@ describe('UserDashboard Component', () => {
     });
     api.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Switch to My Requests tab
     const myRequestsTab = screen.getByRole('button', { name: /My Requests/i });
@@ -334,7 +331,7 @@ describe('UserDashboard Component', () => {
       }
     });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Switch to My Requests tab
     const myRequestsTab = screen.getByRole('button', { name: /My Requests/i });
@@ -380,7 +377,7 @@ describe('UserDashboard Component', () => {
     });
     api.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Switch to My Requests tab
     const myRequestsTab = screen.getByRole('button', { name: /My Requests/i });
@@ -436,7 +433,7 @@ describe('UserDashboard Component', () => {
     });
     api.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<UserDashboard />);
+    render(<BrowserRouter><UserDashboard /></BrowserRouter>);
 
     // Search for donors
     fireEvent.click(screen.getByRole('button', { name: /Search Donors/i }));

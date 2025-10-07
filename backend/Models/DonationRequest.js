@@ -5,7 +5,7 @@ const DonationRequestSchema = new mongoose.Schema({
   donorId: { type: mongoose.Schema.Types.ObjectId, ref: "Donor", required: true },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" }, // Patient for whom the blood is needed
   bloodBankId: { type: mongoose.Schema.Types.ObjectId, ref: "BloodBank" }, // Blood bank associated with the patient
-  status: { type: String, enum: ["pending", "accepted", "rejected", "booked"], default: "pending" },
+  status: { type: String, enum: ["pending", "pending_booking", "accepted", "rejected", "booked"], default: "pending" },
   message: { type: String, default: "We urgently need your blood donation. Please consider donating." },
   requestedAt: { type: Date, default: Date.now },
   respondedAt: { type: Date },

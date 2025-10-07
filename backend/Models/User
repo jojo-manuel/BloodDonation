@@ -96,6 +96,15 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // Email verification for login
+  emailVerificationCode: {
+    type: String,
+    default: null,
+  },
+  emailVerificationExpires: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 // Pre-save hook to hash password before saving

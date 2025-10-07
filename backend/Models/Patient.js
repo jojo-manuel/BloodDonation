@@ -26,7 +26,11 @@ const patientSchema = new mongoose.Schema(
       required: [true, "Encrypted MRID is required"],
       unique: true,
     },
-  // Removed phone number field
+    encryptedPhoneNumber: {
+      type: String,
+      required: [true, "Encrypted phone number is required"],
+      unique: true,
+    },
     unitsRequired: {
       type: Number,
       required: [true, "Units required is mandatory"],
@@ -69,11 +73,26 @@ patientSchema.virtual('address').get(function() {
 });
 
   
-// Removed phone number virtual
+// Virtual for decrypted phone number
+patientSchema.virtual('phoneNumber').get(function() {
+  return this.encryptedPhoneNumber ? decrypt(this.encryptedPhoneNumber) : '';
+}).set(function(value) {
+  this.encryptedPhoneNumber = encrypt(value);
+});
 
 // Ensure virtual fields are serialized
 patientSchema.set('toJSON', { virtuals: true });
 patientSchema.set('toObject', { virtuals: true });
+
+
+// Virtual for decrypted MRID
+patientSchema.virtual('mrid').get(function() {
+  return this.encryptedMrid ? decrypt(this.encryptedMrid) : '';
+}).set(function(value) {
+  // store uppercase MRID for consistency
+  const normalized = (value || '').toString().toUpperCase();
+  this.encryptedMrid = encrypt(normalized);
+});
 
 
 module.exports = mongoose.model("Patient", patientSchema);
