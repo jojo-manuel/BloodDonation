@@ -212,3 +212,24 @@ exports.requestDonation = asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'Donation request sent successfully', data: request });
 });
+
+/**
+ * Get all donation requests with user and donor names
+ */
+exports.getAllDonationRequests = asyncHandler(async (req, res) => {
+  const requests = await DonationRequest.find({})
+    .populate('senderId', 'username name')
+    .populate('receiverId', 'username name')
+    .populate({ path: 'donorId', select: 'userId', populate: { path: 'userId', select: 'username name' } })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const data = requests.map(r => ({
+    id: r._id,
+    userName: r.senderId?.name || r.senderId?.username || 'N/A',
+    donorName: r.donorId?.userId?.name || r.donorId?.userId?.username || r.receiverId?.name || r.receiverId?.username || 'N/A',
+    date: r.requestedAt || r.createdAt,
+  }));
+
+  res.json({ success: true, data });
+});
