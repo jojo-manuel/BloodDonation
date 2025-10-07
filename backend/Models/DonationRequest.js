@@ -1,8 +1,16 @@
 const mongoose = require("mongoose");
 
 const DonationRequestSchema = new mongoose.Schema({
-  requesterId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Admin or blood bank requesting
-  donorId: { type: mongoose.Schema.Types.ObjectId, ref: "Donor", required: true },
+  // New fields per requirement
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  receiverId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  bloodGroup: { type: String, enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"], required: true },
+  issuedAt: { type: Date },
+  isActive: { type: Boolean, default: true },
+
+  // Existing fields (kept for compatibility with donor flows)
+  requesterId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Admin or blood bank requesting
+  donorId: { type: mongoose.Schema.Types.ObjectId, ref: "Donor" },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" }, // Patient for whom the blood is needed
   bloodBankId: { type: mongoose.Schema.Types.ObjectId, ref: "BloodBank" }, // Blood bank associated with the patient
   status: { type: String, enum: ["pending", "pending_booking", "accepted", "rejected", "booked"], default: "pending" },
