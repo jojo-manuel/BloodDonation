@@ -3,8 +3,9 @@
 
 const mongoose = require('mongoose');
 
-// Connection string: prefer env MONGO_URI, otherwise fall back to local MongoDB
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/blooddonation';
+// NOTE: Consider moving credentials to an environment variable (MONGO_URI)
+// and not committing secrets to source control.
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 /**
  * Connect to MongoDB using Mongoose
@@ -15,9 +16,8 @@ const connectDB = async () => {
     await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
     });
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB Atlas');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     process.exit(1);
