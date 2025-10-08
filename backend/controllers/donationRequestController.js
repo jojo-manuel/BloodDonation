@@ -47,4 +47,35 @@ exports.listSent = asyncHandler(async (req, res) => {
   return res.json({ success: true, data: requests });
 });
 
+exports.updateStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const userId = req.user.id;
+
+  const request = await DonationRequest.findById(id);
+  if (!request) {
+    return res.status(404).json({ success: false, message: 'Request not found' });
+  }
+
+  // Allow update if user is sender or receiver
+  if (request.senderId.toString() !== userId && request.receiverId.toString() !== userId) {
+    return res.status(403).json({ success: false, message: 'Not authorized to update this request' });
+  }
+
+  // Validate status
+  const validStatuses = ['pending', 'pending_booking', 'accepted', 'rejected', 'booked'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ success: false, message: 'Invalid status' });
+  }
+
+  request.status = status;
+  if (status === 'accepted' || status === 'rejected') {
+    request.respondedAt = new Date();
+  }
+
+  await request.save();
+
+  return res.json({ success: true, message: 'Status updated', data: request });
+});
+
 

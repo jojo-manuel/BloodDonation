@@ -21,6 +21,8 @@ export default function UserDashboard() {
   const [mridSuccess, setMridSuccess] = useState("");
   const navigate = useNavigate();
   const [requestingId, setRequestingId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [newStatuses, setNewStatuses] = useState({});
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Handle search form changes

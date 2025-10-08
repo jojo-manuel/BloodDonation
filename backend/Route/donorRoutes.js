@@ -49,6 +49,9 @@ router.get('/requests', authMiddleware, donationRequestController.listReceived);
 // List requests sent by current user
 router.get('/requests/sent', authMiddleware, donationRequestController.listSent);
 
+// Update status of a donation request
+router.put('/requests/:id/status', authMiddleware, donationRequestController.updateStatus);
+
 
 module.exports = router;
 
