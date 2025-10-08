@@ -142,6 +142,34 @@ export default function UserDashboard() {
     }
   };
 
+  const handleStatusChange = (requestId, newStatus) => {
+    setNewStatuses(prev => ({ ...prev, [requestId]: newStatus }));
+  };
+
+  const handleUpdateStatus = async (requestId) => {
+    const newStatus = newStatuses[requestId];
+    if (!newStatus) {
+      alert('Please select a status');
+      return;
+    }
+    try {
+      setUpdatingId(requestId);
+      const res = await api.put(`/donors/requests/${requestId}/status`, { status: newStatus });
+      if (res.data.success) {
+        alert('Status updated successfully');
+        // Refresh requests
+        fetchRequests();
+        setNewStatuses(prev => ({ ...prev, [requestId]: undefined }));
+      } else {
+        alert(res.data.message || 'Failed to update status');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to update status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <Layout>
       <div className="flex justify-center mb-6">
@@ -404,6 +432,7 @@ export default function UserDashboard() {
                             <th className="px-2 py-1">Requested</th>
                             <th className="px-2 py-1">Issued</th>
                             <th className="px-2 py-1">Active</th>
+                            <th className="px-2 py-1">Update Status</th>
                           </tr>
                         </thead>
                         <tbody className="text-gray-800 dark:text-gray-200">
@@ -416,6 +445,26 @@ export default function UserDashboard() {
                               <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
                               <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
                               <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                              <td className="px-2 py-1">
+                                <select
+                                  value={newStatuses[request._id] || request.status}
+                                  onChange={(e) => handleStatusChange(request._id, e.target.value)}
+                                  className="mr-2 px-2 py-1 text-xs border rounded"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="pending_booking">Pending Booking</option>
+                                  <option value="accepted">Accepted</option>
+                                  <option value="rejected">Rejected</option>
+                                  <option value="booked">Booked</option>
+                                </select>
+                                <button
+                                  onClick={() => handleUpdateStatus(request._id)}
+                                  disabled={updatingId === request._id}
+                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50"
+                                >
+                                  {updatingId === request._id ? 'Updating...' : 'Update'}
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
