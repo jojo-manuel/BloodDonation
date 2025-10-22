@@ -855,7 +855,7 @@ export default function UserDashboard() {
                                 <td className="px-2 py-1">{loginUsername || 'Me'}</td>
                                 <td className="px-2 py-1">{request.receiverId?.username || request.donorId?.userId?.username || request.donorUsername || request.receiverId?.name || 'N/A'}</td>
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
-                                <td className="px-2 py-1">{request.status}</td>
+                                <td className="px-2 py-1">{getStatusBadge(request.status)}</td>
                                 <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
                                 <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
                                 <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
