@@ -254,23 +254,23 @@ export default function UserDashboard() {
   const handleUpdateStatus = async (requestId) => {
     const newStatus = newStatuses[requestId];
     if (!newStatus) {
-      alert('Please select a status');
+      addNotification('Please select a status', 'error');
       return;
     }
     try {
       setUpdatingId(requestId);
       const res = await api.put(`/donors/requests/${requestId}/status`, { status: newStatus });
       if (res.data.success) {
-        alert('Status updated successfully');
+        addNotification('Status updated successfully', 'success');
         // Refresh the requests lists
         fetchRequests();
         fetchReceivedRequests();
         setNewStatuses(prev => ({ ...prev, [requestId]: undefined }));
       } else {
-        alert(res.data.message || 'Failed to update status');
+        addNotification(res.data.message || 'Failed to update status', 'error');
       }
     } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to update status');
+      addNotification(e?.response?.data?.message || 'Failed to update status', 'error');
     } finally {
       setUpdatingId(null);
     }
