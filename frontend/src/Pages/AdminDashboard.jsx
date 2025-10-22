@@ -48,6 +48,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
 
+  // Safely format address objects for display
+  const formatAddress = (addr) => {
+    if (!addr) return 'N/A';
+    if (typeof addr === 'string') return addr;
+    const { houseName, houseAddress, localBody, city, district, state, pincode } = addr || {};
+    return [houseName, houseAddress, localBody, city, district, state, pincode]
+      .filter(Boolean)
+      .join(', ');
+  };
+
   // Search states for donors
   const [searchBloodGroup, setSearchBloodGroup] = useState("");
   const [searchPlace, setSearchPlace] = useState("");
@@ -559,7 +569,7 @@ export default function AdminDashboard() {
                   bloodbanks.map((bb) => (
                     <StyledTableRow key={bb._id}>
                       <StyledTableCell>{bb.name}</StyledTableCell>
-                      <StyledTableCell>{bb.address}</StyledTableCell>
+                      <StyledTableCell>{formatAddress(bb.address)}</StyledTableCell>
                       <StyledTableCell>{bb.status}</StyledTableCell>
                       <StyledTableCell align="center">
                         {bb.status === "pending" && (
@@ -619,7 +629,7 @@ export default function AdminDashboard() {
                   pendingBloodbanks.map((bb) => (
                     <StyledTableRow key={bb._id}>
                       <StyledTableCell>{bb.name}</StyledTableCell>
-                      <StyledTableCell>{bb.address}</StyledTableCell>
+                      <StyledTableCell>{formatAddress(bb.address)}</StyledTableCell>
                       <StyledTableCell>{bb.district}</StyledTableCell>
                       <StyledTableCell>{bb.contactNumber}</StyledTableCell>
                       <StyledTableCell>{bb.licenseNumber}</StyledTableCell>
@@ -705,7 +715,7 @@ export default function AdminDashboard() {
                         <StyledTableCell>{patient.bloodGroup}</StyledTableCell>
                         <StyledTableCell>{patient.mrid}</StyledTableCell>
                         <StyledTableCell>{patient.unitsRequired}</StyledTableCell>
-                        <StyledTableCell>{patient.address}</StyledTableCell>
+                        <StyledTableCell>{formatAddress(patient.address)}</StyledTableCell>
                         <StyledTableCell>{new Date(patient.dateNeeded).toLocaleDateString()}</StyledTableCell>
                         <StyledTableCell>{patient.bloodBankId?.name || "N/A"}</StyledTableCell>
                       </StyledTableRow>

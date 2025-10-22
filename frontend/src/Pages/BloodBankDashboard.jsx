@@ -32,6 +32,16 @@ export default function BloodBankDashboard() {
   });
   const [loading, setLoading] = useState(false);
 
+  // Safely format address objects for display
+  const formatAddress = (addr) => {
+    if (!addr) return 'N/A';
+    if (typeof addr === 'string') return addr;
+    const { houseName, houseAddress, localBody, city, district, state, pincode } = addr || {};
+    return [houseName, houseAddress, localBody, city, district, state, pincode]
+      .filter(Boolean)
+      .join(', ');
+  };
+
   // Search states for users
   const [searchUsername, setSearchUsername] = useState('');
   const [searchUserEmail, setSearchUserEmail] = useState('');
@@ -672,7 +682,7 @@ export default function BloodBankDashboard() {
                           <h4 className="font-bold text-lg text-gray-900 dark:text-white">{p.patientName || p.name}</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
                             <p>🩸 Blood Group: {p.bloodGroup}</p>
-                            <p>🏠 Address: {p.address}</p>
+                            <p>🏠 Address: {formatAddress(p.address)}</p>
                             <p>📋 MRID: {p.mrid}</p>
                             <p>📱 Phone: {p.phoneNumber}</p>
                             <p>🩸 Units Required: {p.requiredUnits || p.unitsRequired}</p>
@@ -747,7 +757,7 @@ export default function BloodBankDashboard() {
                         <p>📧 Email: {request.email}</p>
                         <p>📱 Phone: {request.phone}</p>
                         <p>🩸 Blood Group: {request.bloodGroup}</p>
-                        <p>📍 Address: {request.address}</p>
+                        <p>📍 Address: {formatAddress(request.address)}</p>
                         <p>📅 Donation Date: {new Date(request.donationDate).toLocaleDateString()}</p>
                         <p>⏰ Time Slot: {request.timeSlot}</p>
                         <p>🏥 Blood Bank: {request.bloodBankName}</p>
@@ -807,7 +817,7 @@ export default function BloodBankDashboard() {
                           <p>📧 Email: {donor.email}</p>
                           <p>📱 Phone: {donor.phone}</p>
                           <p>🩸 Blood Group: {donor.bloodGroup}</p>
-                          <p>📍 Address: {donor.address}</p>
+                          <p>📍 Address: {formatAddress(donor.address)}</p>
                           <p>📅 Last Donation: {donor.lastDonationDate ? new Date(donor.lastDonationDate).toLocaleDateString() : 'Never'}</p>
                           <p>🚫 Blocked: <span className={`font-semibold ${donor.isBlocked ? 'text-red-600' : 'text-green-600'}`}>{donor.isBlocked ? 'Yes' : 'No'}</span></p>
                           <p>⏸️ Suspended: <span className={`font-semibold ${donor.isSuspended ? 'text-yellow-600' : 'text-green-600'}`}>{donor.isSuspended ? 'Yes' : 'No'}</span></p>
