@@ -102,4 +102,4 @@ const patientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Patient", patientSchema);
+module.exports = mongoose.model("DonorSearchPatient", patientSchema);
