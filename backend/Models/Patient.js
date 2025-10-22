@@ -43,11 +43,6 @@ const patientSchema = new mongoose.Schema(
       required: [true, "MRID is required"],
       uppercase: true, // Store MRID in uppercase
     },
-    encryptedMrid: {
-      type: String,
-      unique: true,
-      sparse: true, // Allow multiple null values
-    },
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required"],
