@@ -490,6 +490,34 @@ export default function UserDashboard() {
 
   return (
     <Layout>
+      {/* Notification System */}
+      {notifications.length > 0 && (
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {notifications.map(notification => (
+            <div
+              key={notification.id}
+              className={`px-4 py-3 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ${
+                notification.type === 'success' 
+                  ? 'bg-green-500/90 text-white' 
+                  : notification.type === 'error'
+                  ? 'bg-red-500/90 text-white'
+                  : 'bg-blue-500/90 text-white'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{notification.message}</span>
+                <button
+                  onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
+                  className="ml-2 text-white/80 hover:text-white"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex justify-center mb-6">
         <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
           <button
