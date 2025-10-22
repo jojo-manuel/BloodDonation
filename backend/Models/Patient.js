@@ -75,4 +75,13 @@ const patientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Pre-save hook to remove any encryptedMrid field that might cause issues
+patientSchema.pre('save', function(next) {
+  // Remove encryptedMrid field if it exists to prevent index conflicts
+  if (this.encryptedMrid !== undefined) {
+    delete this.encryptedMrid;
+  }
+  next();
+});
+
 module.exports = mongoose.model("Patient", patientSchema);
