@@ -82,6 +82,7 @@ export default function PatientRegister() {
         address: formData.address.trim(),
         bloodGroup: formData.bloodGroup,
         mrid: formData.mrid.trim(),
+        phoneNumber: formData.phoneNumber.trim(),
         requiredUnits: parseInt(formData.requiredUnits),
         requiredDate: formData.requiredDate,
       };

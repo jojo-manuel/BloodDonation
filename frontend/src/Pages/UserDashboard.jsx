@@ -1,7 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import Layout from '../components/Layout';
+import ReviewTab from '../components/ReviewTab';
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'pending_booking', label: 'Pending Booking' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'booked', label: 'Booked' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'desc', label: 'Newest First' },
+  { value: 'asc', label: 'Oldest First' },
+];
 
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState("findDonors");
@@ -13,8 +28,8 @@ export default function UserDashboard() {
   const [results, setResults] = useState([]);
   const [mrid, setMrid] = useState("");
   const [mridResults, setMridResults] = useState([]);
-  const [requests, setRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
+  const [receivedRequests, setReceivedRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mridLoading, setMridLoading] = useState(false);
   const [mridError, setMridError] = useState("");
@@ -23,6 +38,14 @@ export default function UserDashboard() {
   const [requestingId, setRequestingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [newStatuses, setNewStatuses] = useState({});
+  const [contactModalDonor, setContactModalDonor] = useState(null); // For contact modal
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [requestType, setRequestType] = useState('sent'); // 'sent' or 'received'
+  const [profileData, setProfileData] = useState({});
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Handle search form changes
@@ -30,6 +53,14 @@ export default function UserDashboard() {
     const { name, value } = e.target;
     setSearchParams(prev => ({ ...prev, [name]: value }));
   };
+
+
+
+
+
+
+
+
 
   // Handle search submission
   const handleSearch = async (e) => {
@@ -39,7 +70,9 @@ export default function UserDashboard() {
       const query = new URLSearchParams(searchParams).toString();
       const res = await api.get(`/donors/search?${query}`);
       if (res.data.success) {
-        setResults(res.data.data);
+        const node = res?.data?.data;
+        const arr = Array.isArray(node) ? node : (node?.data || []);
+        setResults(arr);
       } else {
         setResults([]);
       }
@@ -84,29 +117,59 @@ export default function UserDashboard() {
     }
   };
 
-  // Fetch donation requests received by the authenticated donor
+  // Fetch donation requests sent by the authenticated user
   const fetchRequests = async () => {
     try {
-      const [recRes, sentRes] = await Promise.all([
-        api.get("/donors/requests"),
-        api.get("/donors/requests/sent")
-      ]);
-      if (recRes.data.success) {
-        setRequests(recRes.data.data);
-      } else {
-        setRequests([]);
-      }
+      const username = localStorage.getItem('username');
+      const sentRes = await api.get(`/donors/requests/sent?username=${username}`);
       if (sentRes.data.success) {
         setSentRequests(sentRes.data.data);
       } else {
         setSentRequests([]);
       }
     } catch (err) {
-      setRequests([]);
       setSentRequests([]);
     }
     setLoading(false);
   };
+
+  // Fetch donation requests received by the authenticated user
+  const fetchReceivedRequests = async () => {
+    try {
+      const receivedRes = await api.get('/donors/requests/all');
+      if (receivedRes.data.success) {
+        setReceivedRequests(receivedRes.data.data);
+      } else {
+        setReceivedRequests([]);
+      }
+    } catch (err) {
+      setReceivedRequests([]);
+    }
+  };
+
+  const filteredRequests = useMemo(() => {
+    const filtered = statusFilter === 'all'
+      ? sentRequests
+      : sentRequests.filter((request) => request.status === statusFilter);
+
+    return filtered.sort((a, b) => {
+      const aDate = new Date(a.requestedAt || a.createdAt || 0).getTime();
+      const bDate = new Date(b.requestedAt || b.createdAt || 0).getTime();
+      return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+    });
+  }, [sentRequests, statusFilter, sortOrder]);
+
+  const filteredReceivedRequests = useMemo(() => {
+    const filtered = statusFilter === 'all'
+      ? receivedRequests
+      : receivedRequests.filter((request) => request.status === statusFilter);
+
+    return filtered.sort((a, b) => {
+      const aDate = new Date(a.requestedAt || a.createdAt || 0).getTime();
+      const bDate = new Date(b.requestedAt || b.createdAt || 0).getTime();
+      return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+    });
+  }, [receivedRequests, statusFilter, sortOrder]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -122,16 +185,41 @@ export default function UserDashboard() {
   useEffect(() => {
     if (activeTab === "myRequests") {
       fetchRequests();
+      fetchReceivedRequests();
+
+    } else if (activeTab === "profile") {
+      fetchProfileData();
     }
   }, [activeTab]);
 
+  // Polling to keep My Requests up-to-date in near real-time
+  useEffect(() => {
+    if (activeTab !== "myRequests") return;
+    const id = setInterval(() => {
+      fetchRequests();
+      fetchReceivedRequests();
+    }, 10000); // every 10s
+    return () => clearInterval(id);
+  }, [activeTab]);
+
   const sendRequest = async (donor) => {
+    if (!donor.bloodGroup) {
+      alert('Donor blood group not available');
+      return;
+    }
+    if (!["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].includes(donor.bloodGroup)) {
+      alert('Invalid blood group');
+      return;
+    }
     try {
       setRequestingId(donor._id);
       const body = { bloodGroup: donor.bloodGroup };
       const res = await api.post(`/donors/${donor._id}/requests`, body);
       if (res.data.success) {
         alert('Request sent successfully');
+        // Refresh the requests lists
+        fetchRequests();
+        fetchReceivedRequests();
       } else {
         alert(res.data.message || 'Failed to send request');
       }
@@ -157,8 +245,9 @@ export default function UserDashboard() {
       const res = await api.put(`/donors/requests/${requestId}/status`, { status: newStatus });
       if (res.data.success) {
         alert('Status updated successfully');
-        // Refresh requests
+        // Refresh the requests lists
         fetchRequests();
+        fetchReceivedRequests();
         setNewStatuses(prev => ({ ...prev, [requestId]: undefined }));
       } else {
         alert(res.data.message || 'Failed to update status');
@@ -167,6 +256,171 @@ export default function UserDashboard() {
       alert(e?.response?.data?.message || 'Failed to update status');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleAccept = async (requestId) => {
+    try {
+      setUpdatingId(requestId);
+      const res = await api.put(`/donors/requests/${requestId}/status`, { status: 'accepted' });
+      if (res.data.success) {
+        alert('Request accepted successfully');
+        // Refresh the requests lists
+        fetchRequests();
+        fetchReceivedRequests();
+      } else {
+        alert(res.data.message || 'Failed to accept request');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to accept request');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    try {
+      setUpdatingId(requestId);
+      const res = await api.put(`/donors/requests/${requestId}/status`, { status: 'rejected' });
+      if (res.data.success) {
+        alert('Request rejected successfully');
+        // Refresh the requests lists
+        fetchRequests();
+        fetchReceivedRequests();
+      } else {
+        alert(res.data.message || 'Failed to reject request');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to reject request');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const [bookingModal, setBookingModal] = useState(null); // For booking modal
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const handleBookSlot = async (request) => {
+    // Open booking modal with request details
+    setBookingModal(request);
+    // Set minimum date to 3 hours from now
+    const minDate = new Date();
+    minDate.setHours(minDate.getHours() + 3);
+    setSelectedDate(minDate.toISOString().split('T')[0]);
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!selectedDate || !selectedTime) {
+      alert('Please select both date and time');
+      return;
+    }
+
+    const bookingDateTime = new Date(`${selectedDate}T${selectedTime}`);
+    const now = new Date();
+    const minTime = new Date(now.getTime() + 3 * 60 * 60 * 1000); // 3 hours from now
+    const maxTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
+    if (bookingDateTime < minTime) {
+      alert('Booking must be at least 3 hours from now');
+      return;
+    }
+
+    if (bookingDateTime > maxTime) {
+      alert('Booking cannot be more than 7 days from now');
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+
+      // Create booking using the direct-book-slot endpoint
+      const bookingData = {
+        donorId: bookingModal.donorId._id || bookingModal.donorId,
+        bloodBankId: bookingModal.bloodBankId._id || bookingModal.bloodBankId,
+        requestedDate: selectedDate,
+        requestedTime: selectedTime,
+        donationRequestId: bookingModal._id,
+        patientName: bookingModal.patientId?.name || 'N/A',
+        donorName: bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'N/A',
+        requesterName: bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A'
+      };
+
+      const res = await api.post('/users/direct-book-slot', bookingData);
+
+      if (res.data.success) {
+        alert('Booking request sent successfully! The blood bank will confirm your appointment.');
+        setBookingModal(null);
+        setSelectedDate('');
+        setSelectedTime('');
+        // Refresh requests
+        fetchRequests();
+        fetchReceivedRequests();
+      } else {
+        alert(res.data.message || 'Failed to book slot');
+      }
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to book slot');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  // Fetch user profile data
+  const fetchProfileData = async () => {
+    try {
+      const res = await api.get('/users/me');
+      if (res.data.success) {
+        setProfileData(res.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile data:', error);
+    }
+  };
+
+  // Handle profile update
+  const handleUpdateProfile = async () => {
+    try {
+      setUpdatingProfile(true);
+      const res = await api.put('/users/me', {
+        name: profileData.name,
+        phone: profileData.phone,
+      });
+      if (res.data.success) {
+        alert('Profile updated successfully');
+        fetchProfileData(); // Refresh data
+      } else {
+        alert(res.data.message || 'Failed to update profile');
+      }
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.'
+    );
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingAccount(true);
+      const res = await api.delete('/users/me');
+      if (res.data.success) {
+        alert('Account deleted successfully');
+        localStorage.clear();
+        navigate('/login');
+      } else {
+        alert(res.data.message || 'Failed to delete account');
+      }
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to delete account');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -206,8 +460,22 @@ export default function UserDashboard() {
           >
             ⭐ Leave Reviews
           </button>
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              activeTab === "profile" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+            }`}
+          >
+            👤 Profile
+          </button>
         </div>
       </div>
+
+      {activeTab === "myRequests" && receivedRequests.length > 0 && (
+        <div className="mx-auto w-full max-w-4xl bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+          You have {receivedRequests.length} new requests received.
+        </div>
+      )}
 
       <div className="mx-auto w-full max-w-4xl overflow-auto max-h-[70vh]">
         {activeTab === "findDonors" && (
@@ -349,7 +617,7 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-600 to-gray-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
+                          <button onClick={() => setContactModalDonor(donor)} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-600 to-gray-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]">
                             <span className="mr-1">📞</span>
                             Contact
                           </button>
@@ -374,105 +642,215 @@ export default function UserDashboard() {
                 📋 My Requests
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                View requests you've received and sent
+                View and manage your donation requests
               </p>
             </div>
+
+            {/* Request Type Slider */}
+            <div className="flex justify-center mb-6">
+              <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+                <button
+                  onClick={() => setRequestType('sent')}
+                  className={`px-6 py-2 rounded-full font-semibold transition ${
+                    requestType === 'sent' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  📤 Sent Requests
+                </button>
+                <button
+                  onClick={() => setRequestType('received')}
+                  className={`px-6 py-2 rounded-full font-semibold transition ${
+                    requestType === 'received' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  📥 Received Requests
+                </button>
+              </div>
+            </div>
+
             {loading ? (
               <p className="text-gray-600 dark:text-gray-400">Loading...</p>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Received Requests ({requests.length})</h3>
-                  {requests.length === 0 ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">No requests received yet.</p>
-                  ) : (
-                    <div className="overflow-auto">
-                      <table className="min-w-full text-sm">
-                        <thead>
-                          <tr className="text-left text-gray-700 dark:text-gray-300">
-                            <th className="px-2 py-1">From</th>
-                            <th className="px-2 py-1">To</th>
-                            <th className="px-2 py-1">Blood Group</th>
-                            <th className="px-2 py-1">Status</th>
-                            <th className="px-2 py-1">Requested</th>
-                            <th className="px-2 py-1">Issued</th>
-                            <th className="px-2 py-1">Active</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-gray-800 dark:text-gray-200">
-                          {requests.map((request) => (
-                            <tr key={request._id} className="border-t border-white/10">
-                              <td className="px-2 py-1">{request.senderId?.username || request.senderId?.name || 'N/A'}</td>
-                              <td className="px-2 py-1">{loginUsername || 'Me'}</td>
-                              <td className="px-2 py-1">{request.bloodGroup}</td>
-                              <td className="px-2 py-1">{request.status}</td>
-                              <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
-                              <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
-                              <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+              <>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200" htmlFor="request-status-filter">
+                      Filter by status
+                    </label>
+                    <select
+                      id="request-status-filter"
+                      value={statusFilter}
+                      onChange={(event) => setStatusFilter(event.target.value)}
+                      className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    >
+                      {STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm font-medium text-gray-800 dark:text-gray-200" htmlFor="request-sort-order">
+                      Sort by date
+                    </label>
+                    <select
+                      id="request-sort-order"
+                      value={sortOrder}
+                      onChange={(event) => setSortOrder(event.target.value)}
+                      className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                    >
+                      {SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Sent Requests ({sentRequests.length})</h3>
-                  {sentRequests.length === 0 ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">No requests sent yet.</p>
-                  ) : (
-                    <div className="overflow-auto">
-                      <table className="min-w-full text-sm">
-                        <thead>
-                          <tr className="text-left text-gray-700 dark:text-gray-300">
-                            <th className="px-2 py-1">From</th>
-                            <th className="px-2 py-1">To</th>
-                            <th className="px-2 py-1">Blood Group</th>
-                            <th className="px-2 py-1">Status</th>
-                            <th className="px-2 py-1">Requested</th>
-                            <th className="px-2 py-1">Issued</th>
-                            <th className="px-2 py-1">Active</th>
-                            <th className="px-2 py-1">Update Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-gray-800 dark:text-gray-200">
-                          {sentRequests.map((request) => (
-                            <tr key={request._id} className="border-t border-white/10">
-                              <td className="px-2 py-1">{loginUsername || 'Me'}</td>
-                              <td className="px-2 py-1">{request.receiverId?.username || request.receiverId?.name || 'N/A'}</td>
-                              <td className="px-2 py-1">{request.bloodGroup}</td>
-                              <td className="px-2 py-1">{request.status}</td>
-                              <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
-                              <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
-                              <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
-                              <td className="px-2 py-1">
-                                <select
-                                  value={newStatuses[request._id] || request.status}
-                                  onChange={(e) => handleStatusChange(request._id, e.target.value)}
-                                  className="mr-2 px-2 py-1 text-xs border rounded"
-                                >
-                                  <option value="pending">Pending</option>
-                                  <option value="pending_booking">Pending Booking</option>
-                                  <option value="accepted">Accepted</option>
-                                  <option value="rejected">Rejected</option>
-                                  <option value="booked">Booked</option>
-                                </select>
-                                <button
-                                  onClick={() => handleUpdateStatus(request._id)}
-                                  disabled={updatingId === request._id}
-                                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50"
-                                >
-                                  {updatingId === request._id ? 'Updating...' : 'Update'}
-                                </button>
-                              </td>
+
+                {requestType === 'sent' ? (
+                  <div>
+                    <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Sent Requests ({filteredRequests.length})</h3>
+                    {filteredRequests.length === 0 ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {statusFilter === 'all' ? 'No requests sent yet.' : 'No sent requests match the selected status.'}
+                      </p>
+                    ) : (
+                      <div className="overflow-auto">
+                        <table className="min-w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-gray-700 dark:text-gray-300">
+                              <th className="px-2 py-1">ID</th>
+                              <th className="px-2 py-1">From</th>
+                              <th className="px-2 py-1">To</th>
+                              <th className="px-2 py-1">Blood Group</th>
+                              <th className="px-2 py-1">Status</th>
+                              <th className="px-2 py-1">Requested</th>
+                              <th className="px-2 py-1">Issued</th>
+                              <th className="px-2 py-1">Active</th>
+                              <th className="px-2 py-1">Blood Bank</th>
+                              <th className="px-2 py-1">Update Status</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
+                          </thead>
+                          <tbody className="text-gray-800 dark:text-gray-200">
+                            {filteredRequests.map((request) => (
+                              <tr key={request._id} className="border-t border-white/10">
+                                <td className="px-2 py-1 font-mono text-xs">{request._id}</td>
+                                <td className="px-2 py-1">{loginUsername || 'Me'}</td>
+                                <td className="px-2 py-1">{request.receiverId?.username || request.donorId?.userId?.username || request.donorUsername || request.receiverId?.name || 'N/A'}</td>
+                                <td className="px-2 py-1">{request.bloodGroup}</td>
+                                <td className="px-2 py-1">{request.status}</td>
+                                <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
+                                <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
+                                <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                                <td className="px-2 py-1">{request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || 'N/A'}</td>
+                                <td className="px-2 py-1">
+                                  <select
+                                    value={newStatuses[request._id] || request.status}
+                                    onChange={(e) => handleStatusChange(request._id, e.target.value)}
+                                    className="mr-2 px-2 py-1 text-xs border rounded"
+                                  >
+                                    <option value="pending">Pending</option>
+                                    <option value="pending_booking">Pending Booking</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="booked">Booked</option>
+                                  </select>
+                                  <button
+                                    onClick={() => handleUpdateStatus(request._id)}
+                                    disabled={updatingId === request._id}
+                                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50"
+                                  >
+                                    {updatingId === request._id ? 'Updating...' : 'Update'}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Received Requests ({filteredReceivedRequests.length})</h3>
+                    {filteredReceivedRequests.length === 0 ? (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {statusFilter === 'all' ? 'No requests received yet.' : 'No received requests match the selected status.'}
+                      </p>
+                    ) : (
+                      <div className="overflow-auto">
+                        <table className="min-w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-gray-700 dark:text-gray-300">
+                              <th className="px-2 py-1">ID</th>
+                              <th className="px-2 py-1">From</th>
+                              <th className="px-2 py-1">Blood Group</th>
+                              <th className="px-2 py-1">Status</th>
+                              <th className="px-2 py-1">Requested</th>
+                              <th className="px-2 py-1">Issued</th>
+                              <th className="px-2 py-1">Active</th>
+                              <th className="px-2 py-1">Blood Bank</th>
+                              <th className="px-2 py-1">Patient</th>
+                              <th className="px-2 py-1">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-gray-800 dark:text-gray-200">
+                            {filteredReceivedRequests.map((request) => (
+                              <tr
+                                key={request._id}
+                                className="border-t border-white/10 cursor-pointer hover:bg-white/5"
+                                onClick={() => setSelectedRequest(request)}
+                              >
+                                <td className="px-2 py-1 font-mono text-xs">{request._id}</td>
+                                <td className="px-2 py-1">{request.senderId?.username || request.requesterId?.username || request.requesterUsername || request.senderId?.name || 'N/A'}</td>
+                                <td className="px-2 py-1">{request.bloodGroup}</td>
+                                <td className="px-2 py-1">{request.status}</td>
+                                <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
+                                <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
+                                <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                                <td className="px-2 py-1">{request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || 'N/A'}</td>
+                                <td className="px-2 py-1">{request.patientId?.name || 'N/A'}</td>
+                                <td className="px-2 py-1">
+                                  {request.status === 'pending' ? (
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleAccept(request._id); }}
+                                        disabled={updatingId === request._id}
+                                        className="px-2 py-1 text-xs bg-green-500 text-white rounded disabled:opacity-50"
+                                      >
+                                        {updatingId === request._id ? 'Accepting...' : 'Accept'}
+                                      </button>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); handleReject(request._id); }}
+                                        disabled={updatingId === request._id}
+                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50"
+                                      >
+                                        {updatingId === request._id ? 'Rejecting...' : 'Reject'}
+                                      </button>
+                                    </div>
+                                  ) : request.status === 'accepted' ? (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleBookSlot(request); }}
+                                      className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    >
+                                      📅 Book Slot
+                                    </button>
+                                  ) : (
+                                    <span className="text-xs text-gray-500">{request.status}</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -487,9 +865,336 @@ export default function UserDashboard() {
                 Share your experience and help others
               </p>
             </div>
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">Feature coming soon...</p>
+            <ReviewTab />
+          </div>
+        )}
+
+        {activeTab === "profile" && (
+          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <div className="mb-6 text-center">
+              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                👤 My Profile
+              </h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Update your profile information
+              </p>
+            </div>
+
+            <div className="max-w-md mx-auto">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={profileData.name || ''}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Enter your name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={profileData.phone || ''}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={profileData.email || ''}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Enter your email"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={profileData.username || ''}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Enter your username"
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={updatingProfile}
+                  className="flex-1 bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 disabled:opacity-50"
+                >
+                  {updatingProfile ? 'Updating...' : 'Update Profile'}
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deletingAccount ? 'Deleting...' : 'Delete Account'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
+        {/* Request Details Modal */}
+        {selectedRequest && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Request Details</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Request ID</label>
+                    <p className="text-gray-900 dark:text-white font-mono text-sm">{selectedRequest._id}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.senderId?.username || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.bloodGroup}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.status}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requested At</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.requestedAt ? new Date(selectedRequest.requestedAt).toLocaleString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issued At</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.issuedAt ? new Date(selectedRequest.issuedAt).toLocaleString() : '—'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.isActive ? 'Yes' : 'No'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Bank</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.bloodBankId?.name || selectedRequest.bloodBankName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient</label>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.patientId?.name || 'N/A'}</p>
+                  </div>
+                  {selectedRequest.patientId && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient Blood Group</label>
+                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.bloodGroup || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Units Needed</label>
+                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.unitsNeeded || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Needed</label>
+                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.dateNeeded ? new Date(selectedRequest.patientId.dateNeeded).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                {selectedRequest.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => { handleAccept(selectedRequest._id); setSelectedRequest(null); }}
+                      disabled={updatingId === selectedRequest._id}
+                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {updatingId === selectedRequest._id ? 'Accepting...' : 'Accept Request'}
+                    </button>
+                    <button
+                      onClick={() => { handleReject(selectedRequest._id); setSelectedRequest(null); }}
+                      disabled={updatingId === selectedRequest._id}
+                      className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {updatingId === selectedRequest._id ? 'Rejecting...' : 'Reject Request'}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setSelectedRequest(null)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Contact Modal */}
+        {contactModalDonor && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Contact Donor</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.userId?.username || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.bloodGroup || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Number</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.contactNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Emergency Contact</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.emergencyContactNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">House Address</label>
+                  <p className="text-gray-900 dark:text-white">
+                    {contactModalDonor.houseAddress ? `${contactModalDonor.houseAddress.houseName}, ${contactModalDonor.houseAddress.houseAddress}, ${contactModalDonor.houseAddress.localBody}, ${contactModalDonor.houseAddress.city}, ${contactModalDonor.houseAddress.district}, ${contactModalDonor.houseAddress.pincode}` : 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Work Address</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.workAddress || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contact Preference</label>
+                  <p className="text-gray-900 dark:text-white">{contactModalDonor.contactPreference || 'phone'}</p>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setContactModalDonor(null)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Booking Modal */}
+        {bookingModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">📅 Book Donation Slot</h3>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Request Details</h4>
+                  <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                    <p><strong>Request ID:</strong> {bookingModal._id}</p>
+                    <p><strong>Blood Group:</strong> {bookingModal.bloodGroup}</p>
+                    <p><strong>Patient:</strong> {bookingModal.patientId?.name || 'N/A'}</p>
+                    <p><strong>Blood Bank:</strong> {bookingModal.bloodBankId?.name || bookingModal.bloodBankName || 'N/A'}</p>
+                    <p><strong>Requester:</strong> {bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">📋 Booking Rules</h4>
+                  <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                    <li>• Minimum booking: 3 hours from now</li>
+                    <li>• Maximum booking: 7 days from now</li>
+                    <li>• Blood bank will confirm your appointment</li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      📅 Select Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      min={new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                      max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      🕐 Select Time *
+                    </label>
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    >
+                      <option value="">Select time</option>
+                      <option value="09:00">9:00 AM</option>
+                      <option value="09:30">9:30 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="10:30">10:30 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="11:30">11:30 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="12:30">12:30 PM</option>
+                      <option value="13:00">1:00 PM</option>
+                      <option value="13:30">1:30 PM</option>
+                      <option value="14:00">2:00 PM</option>
+                      <option value="14:30">2:30 PM</option>
+                      <option value="15:00">3:00 PM</option>
+                      <option value="15:30">3:30 PM</option>
+                      <option value="16:00">4:00 PM</option>
+                      <option value="16:30">4:30 PM</option>
+                      <option value="17:00">5:00 PM</option>
+                      <option value="17:30">5:30 PM</option>
+                      <option value="18:00">6:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleConfirmBooking}
+                  disabled={bookingLoading || !selectedDate || !selectedTime}
+                  className="flex-1 bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {bookingLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Booking...
+                    </>
+                  ) : (
+                    <>
+                      📅 Confirm Booking
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setBookingModal(null);
+                    setSelectedDate('');
+                    setSelectedTime('');
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

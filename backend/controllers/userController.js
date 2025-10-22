@@ -118,6 +118,15 @@ exports.register = asyncHandler(async (req, res) => {
 exports.me = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id).select('-password');
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  // If user is a donor, fetch and include bloodGroup
+  if (user.role === 'donor') {
+    const donor = await Donor.findOne({ userId: user._id }).select('bloodGroup');
+    if (donor) {
+      user.bloodGroup = donor.bloodGroup;
+    }
+  }
+
   res.json({ success: true, message: 'OK', data: user });
 });
 
@@ -133,6 +142,64 @@ exports.updateMe = asyncHandler(async (req, res) => {
 
   const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password');
   res.json({ success: true, message: 'Profile updated', data: user });
+});
+
+/**
+ * Fetch address details from pincode using postalpincode.in API
+ * Query param: pincode
+ */
+exports.getAddressFromPincode = asyncHandler(async (req, res) => {
+  const { pincode } = req.query;
+
+  if (!pincode || !/^[0-9]{6}$/.test(pincode)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Valid 6-digit pincode is required'
+    });
+  }
+
+  try {
+    const axios = require('axios');
+    const response = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+
+    if (!response.data || !response.data[0] || response.data[0].Status !== 'Success') {
+      return res.status(404).json({
+        success: false,
+        message: 'Pincode not found or invalid'
+      });
+    }
+
+    const postOffices = response.data[0].PostOffice;
+    if (!postOffices || postOffices.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No post offices found for this pincode'
+      });
+    }
+
+    // Return the first post office details
+    const postOffice = postOffices[0];
+    const addressData = {
+      district: postOffice.District,
+      city: postOffice.Block || postOffice.Division,
+      localBody: postOffice.Name,
+      state: postOffice.State
+    };
+
+    res.json({
+      success: true,
+      message: 'Address details fetched successfully',
+      data: addressData
+    });
+
+  } catch (error) {
+    console.error('Error fetching address from pincode:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch address details',
+      error: error.message
+    });
+  }
 });
 
 /**
@@ -214,6 +281,7 @@ exports.uploadProfileImage = [
 ];
 const DonationRequest = require('../Models/DonationRequest');
 const BloodBank = require('../Models/BloodBank');
+const Booking = require('../Models/Booking');
 const { sendEmail } = require('../utils/email');
 
 /**
@@ -335,35 +403,258 @@ Blood Donation Team
   }
 });
 
+// Helper function to generate token number based on time
+function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
+  // Parse time string (e.g., "10:00 AM")
+  const timeMatch = requestedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!timeMatch) throw new Error('Invalid time format');
+
+  let hour = parseInt(timeMatch[1]);
+  const minute = parseInt(timeMatch[2]);
+  const ampm = timeMatch[3].toUpperCase();
+
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+
+  const totalMinutes = hour * 60 + minute;
+
+  // 9 AM = 540 minutes, 4 PM = 960 minutes
+  const minMinutes = 9 * 60; // 540
+  const maxMinutes = 16 * 60; // 960
+  const minToken = 15;
+  const maxToken = 70;
+
+  // Linear interpolation
+  let baseToken = minToken + ((totalMinutes - minMinutes) / (maxMinutes - minMinutes)) * (maxToken - minToken);
+  baseToken = Math.round(baseToken);
+
+  // Ensure within bounds
+  if (baseToken < minToken) baseToken = minToken;
+  if (baseToken > maxToken) baseToken = maxToken;
+
+  return baseToken;
+}
+
 /**
- * Direct book slot (legacy function - keeping for backward compatibility)
+ * Direct book slot - Creates a booking record and sends notification to blood bank
  */
 exports.directBookSlot = asyncHandler(async (req, res) => {
-  const { donorId, bloodBankId, requestedDate, requestedTime } = req.body;
-  const request = await DonationRequest.create({
-    requesterId: req.user.id,
+  const {
     donorId,
     bloodBankId,
-    status: 'pending_booking',
-    requestedDate: new Date(requestedDate),
+    requestedDate,
     requestedTime,
-  });
+    donationRequestId,
+    patientName,
+    donorName,
+    requesterName
+  } = req.body;
 
-  // Log booking request activity
-  await Activity.create({
-    userId: req.user.id,
-    role: req.user.role || 'user',
-    action: 'booking_requested',
-    details: {
-      donorId,
-      bloodBankId,
-      requestedDate,
-      requestedTime,
-      requestId: request._id
+  // Validate required fields
+  if (!donorId || !bloodBankId || !requestedDate || !requestedTime || !donationRequestId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Donor ID, Blood Bank ID, requested date, time, and donation request ID are required'
+    });
+  }
+
+  try {
+    // Get donor details
+    const donor = await Donor.findById(donorId).populate('userId', 'username name');
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donor not found'
+      });
     }
-  });
 
-  res.json({ success: true, message: 'Booking request sent, awaiting blood bank confirmation', data: request });
+    // Get blood bank details
+    const bloodBank = await BloodBank.findById(bloodBankId);
+    if (!bloodBank) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blood bank not found'
+      });
+    }
+
+    // Get donation request details
+    const donationRequest = await DonationRequest.findById(donationRequestId);
+    if (!donationRequest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donation request not found'
+      });
+    }
+
+    // Generate token number based on time
+    let tokenNumber = generateTokenNumber(requestedTime, bloodBankId, requestedDate);
+
+    // Check for existing tokens on the same day and increment if necessary
+    const bookingDate = new Date(requestedDate);
+    const existingBookings = await Booking.find({
+      bloodBankId,
+      date: {
+        $gte: new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate()),
+        $lt: new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate() + 1)
+      }
+    }).sort({ tokenNumber: -1 });
+
+    const existingTokens = existingBookings.map(b => parseInt(b.tokenNumber)).filter(t => !isNaN(t));
+    while (existingTokens.includes(tokenNumber) && tokenNumber < 70) {
+      tokenNumber++;
+    }
+
+    if (tokenNumber > 70) {
+      return res.status(400).json({ success: false, message: 'No slots available for this date. Maximum token number reached.' });
+    }
+
+    tokenNumber = tokenNumber.toString();
+
+    // Get patient details if donationRequest has patientId
+    const patient = donationRequest.patientId ? await require('../Models/Patient').findById(donationRequest.patientId) : null;
+
+    // Create booking record
+    const booking = await Booking.create({
+      bloodBankId,
+      date: new Date(requestedDate),
+      time: requestedTime,
+      donorId,
+      status: 'pending',
+      donationRequestId,
+      tokenNumber,
+      patientName: patientName || patient?.name || 'N/A',
+      donorName: donorName || donor.userId?.name || 'N/A',
+      requesterName: requesterName || 'N/A',
+      bloodBankName: bloodBank.name,
+      bloodGroup: donor.bloodGroup,
+      patientMRID: patient?.mrid || 'N/A'
+    });
+
+    // Update donation request status to indicate booking is in progress
+    await DonationRequest.findByIdAndUpdate(donationRequestId, {
+      status: 'booked',
+      bookingId: booking._id
+    });
+
+    // Send email notification to blood bank
+    const emailSubject = 'New Donation Booking Request - Action Required';
+    const emailBody = `
+Dear ${bloodBank.name} Team,
+
+A donor has booked a slot for blood donation through our platform.
+
+Booking Details:
+- Booking ID: ${booking._id}
+- Donor: ${donor.name} (${donor.email})
+- Blood Group: ${donor.bloodGroup}
+- Patient: ${patientName || 'N/A'}
+- Requested Date: ${new Date(requestedDate).toLocaleDateString()}
+- Requested Time: ${requestedTime}
+- Requester: ${requesterName || 'N/A'}
+
+Please log in to your dashboard to review and confirm this booking.
+
+Thank you for your service in saving lives!
+
+Best regards,
+Blood Donation Team
+    `;
+
+    try {
+      await sendEmail(bloodBank.email, emailSubject, emailBody);
+      console.log('Booking notification email sent successfully to blood bank:', bloodBank.email);
+    } catch (emailError) {
+      console.error('Failed to send booking email:', emailError);
+      // Don't fail the booking if email fails, just log it
+    }
+
+    // Log booking activity
+    await Activity.create({
+      userId: req.user.id,
+      role: req.user.role || 'user',
+      action: 'booking_created',
+      details: {
+        donorId,
+        bloodBankId,
+        requestedDate,
+        requestedTime,
+        bookingId: booking._id,
+        donationRequestId
+      }
+    });
+
+    // Generate PDF summary
+    let pdfUrl = null;
+    try {
+      const PDFDocument = require('pdfkit');
+      const QRCode = require('qrcode');
+      const fs = require('fs');
+      const path = require('path');
+
+      // Populate booking data
+      await booking.populate('donorId', 'userId name bloodGroup contactNumber houseAddress');
+      await booking.populate('donorId.userId', 'username name');
+      await booking.populate('bloodBankId', 'name address');
+
+      const doc = new PDFDocument();
+      const pdfPath = path.join(__dirname, '../uploads', `booking-${booking._id}.pdf`);
+      doc.pipe(fs.createWriteStream(pdfPath));
+
+      // PDF Content
+      doc.fontSize(20).text('Blood Donation Booking Confirmation', { align: 'center' });
+      doc.moveDown();
+
+      doc.fontSize(14).text(`Token Number: ${booking.tokenNumber}`);
+      doc.text(`Donor Name: ${booking.donorId.userId.name}`);
+      doc.text(`Donor ID: ${booking.donorId.userId.username}`);
+      doc.text(`Blood Group: ${booking.donorId.bloodGroup}`);
+      doc.text(`Blood Bank: ${booking.bloodBankId.name}`);
+      doc.text(`Address: ${booking.bloodBankId.address}`);
+      doc.text(`Date: ${new Date(booking.date).toLocaleDateString()}`);
+      doc.text(`Time: ${booking.time}`);
+      doc.moveDown();
+
+      // Generate QR Code
+      const qrData = JSON.stringify({
+        token: booking.tokenNumber,
+        donor: booking.donorId.userId.name,
+        donorId: booking.donorId.userId.username,
+        bloodBank: booking.bloodBankId.name,
+        address: booking.bloodBankId.address,
+        date: new Date(booking.date).toLocaleDateString(),
+        time: booking.time
+      });
+
+      const qrCodeDataURL = await QRCode.toDataURL(qrData);
+      const qrBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
+
+      // Add QR Code to PDF (simplified - in real implementation you'd need to handle image embedding)
+      doc.text('Scan QR Code for details:');
+      doc.moveDown();
+      doc.text(qrData); // Placeholder - actual QR image would need additional setup
+
+      doc.end();
+
+      pdfUrl = `/uploads/booking-${booking._id}.pdf`;
+    } catch (pdfError) {
+      console.error('PDF generation error:', pdfError);
+      // Don't fail the booking if PDF fails
+    }
+
+    res.json({
+      success: true,
+      message: 'Booking request sent successfully! The blood bank will review and confirm your appointment.',
+      data: { booking, pdfUrl }
+    });
+
+  } catch (error) {
+    console.error('Error creating booking:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create booking',
+      error: error.message
+    });
+  }
 });
   
 /**
@@ -432,6 +723,15 @@ exports.cancelRequest = asyncHandler(async (req, res) => {
   });
 
   res.json({ success: true, message: 'Request cancelled successfully', data: request });
+});
+
+/**
+ * Soft delete the authenticated user's account
+ */
+exports.deleteMe = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(req.user.id, { isDeleted: true }, { new: true }).select('-password');
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  res.json({ success: true, message: 'Account deleted successfully', data: user });
 });
 
 /**

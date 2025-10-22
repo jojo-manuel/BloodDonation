@@ -69,7 +69,105 @@ api.interceptors.response.use(
   }
 );
 
+export const getAddressByPostalCode = async (postalCode) => {
+  try {
+    const response = await api.get(`/donors/address/${postalCode}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching address:", error);
+    throw error;
+  }
+};
+
+export const getAddressFromPincodeAPI = async (pincode) => {
+  try {
+    const response = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching address from pincode API:", error);
+    throw error;
+  }
+};
+
+// Review API functions
+export const createReview = async (reviewData) => {
+  try {
+    const response = await api.post('/reviews', reviewData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating review:", error);
+    throw error;
+  }
+};
+
+export const getDonorReviews = async (donorId, page = 1, limit = 10) => {
+  try {
+    const response = await api.get(`/reviews/donor/${donorId}?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching donor reviews:", error);
+    throw error;
+  }
+};
+
+export const getBloodBankReviews = async (bloodBankId, page = 1, limit = 10) => {
+  try {
+    const response = await api.get(`/reviews/bloodbank/${bloodBankId}?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching blood bank reviews:", error);
+    throw error;
+  }
+};
+
+export const getMyReviews = async (page = 1, limit = 10) => {
+  try {
+    const response = await api.get(`/reviews/my?page=${page}&limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching my reviews:", error);
+    throw error;
+  }
+};
+
+export const updateReview = async (reviewId, updateData) => {
+  try {
+    const response = await api.put(`/reviews/${reviewId}`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating review:", error);
+    throw error;
+  }
+};
+
+export const deleteReview = async (reviewId) => {
+  try {
+    const response = await api.delete(`/reviews/${reviewId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    throw error;
+  }
+};
+
+export const getReviewableDonors = async () => {
+  try {
+    const response = await api.get('/reviews/reviewable-donors');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching reviewable donors:", error);
+    throw error;
+  }
+};
+
+export const getReviewableBloodBanks = async () => {
+  try {
+    const response = await api.get('/reviews/reviewable-bloodbanks');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching reviewable blood banks:", error);
+    throw error;
+  }
+};
+
 export default api;
-
-
-

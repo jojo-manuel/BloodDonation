@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { auth, sendPasswordResetEmail } from '../firebase';
 
 function Navbar({ isDark, toggleTheme }) {
   return (
@@ -53,7 +54,16 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = identity.includes('@') ? { email: identity } : { username: identity };
+      // First try Firebase password reset for Firebase users
+      if (identity.includes('@')) {
+        await sendPasswordResetEmail(auth, identity);
+        alert('If the account exists, a password reset email has been sent to your email address.');
+        navigate('/login');
+        return;
+      }
+
+      // Fallback to backend for local users
+      const payload = { username: identity };
       const { data } = await api.post('/auth/forgot-password', payload);
       if (data?.success) {
         alert('If the account exists, a reset link has been created. In dev mode, you will use the token directly on the next page.');
@@ -62,8 +72,12 @@ export default function ForgotPassword() {
         alert(data?.message || 'Failed to request reset');
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to request reset';
-      alert(msg);
+      if (err.code === 'auth/user-not-found') {
+        alert('If the account exists, a password reset email has been sent.');
+      } else {
+        const msg = err?.response?.data?.message || err?.message || 'Failed to request reset';
+        alert(msg);
+      }
     }
   };
 

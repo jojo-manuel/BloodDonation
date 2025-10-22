@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { styled } from '@mui/material/styles';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import api from "../lib/api";
 import Layout from "../components/Layout";
 import DonorSearchForm from "../components/DonorSearchForm";
@@ -23,9 +15,18 @@ export default function BloodBankDashboard() {
   const [editingPatient, setEditingPatient] = useState(null);
   const [formData, setFormData] = useState({
     patientName: "",
-    address: "",
+    address: {
+      houseName: "",
+      houseAddress: "",
+      pincode: "",
+      district: "",
+      city: "",
+      localBody: "",
+      state: ""
+    },
     bloodGroup: "",
     mrid: "",
+    phoneNumber: "",
     requiredUnits: "",
     requiredDate: "",
   });
@@ -167,6 +168,7 @@ export default function BloodBankDashboard() {
         address: formData.address,
         bloodGroup: formData.bloodGroup,
         mrid: formData.mrid,
+        phoneNumber: formData.phoneNumber,
         requiredUnits: Number(formData.requiredUnits),
         requiredDate: formData.requiredDate,
       });
@@ -174,9 +176,18 @@ export default function BloodBankDashboard() {
         setPatients([...patients, res.data.patient || res.data.data]);
         setFormData({
           patientName: "",
-          address: "",
+          address: {
+            houseName: "",
+            houseAddress: "",
+            pincode: "",
+            district: "",
+            city: "",
+            localBody: "",
+            state: ""
+          },
           bloodGroup: "",
           mrid: "",
+          phoneNumber: "",
           requiredUnits: "",
           requiredDate: "",
         });
@@ -210,9 +221,18 @@ export default function BloodBankDashboard() {
         setEditingPatient(null);
         setFormData({
           patientName: "",
-          address: "",
+          address: {
+            houseName: "",
+            houseAddress: "",
+            pincode: "",
+            district: "",
+            city: "",
+            localBody: "",
+            state: ""
+          },
           bloodGroup: "",
           mrid: "",
+          phoneNumber: "",
           requiredUnits: "",
           requiredDate: "",
         });
@@ -260,9 +280,18 @@ export default function BloodBankDashboard() {
     setEditingPatient(patient);
     setFormData({
       patientName: patient.patientName || patient.name || "",
-      address: patient.address || "",
+      address: patient.address || {
+        houseName: "",
+        houseAddress: "",
+        pincode: "",
+        district: "",
+        city: "",
+        localBody: "",
+        state: ""
+      },
       bloodGroup: patient.bloodGroup || "",
       mrid: patient.mrid || "",
+      phoneNumber: patient.phoneNumber || "",
       requiredUnits: patient.requiredUnits || patient.unitsRequired || "",
       requiredDate: patient.requiredDate
         ? new Date(patient.requiredDate).toISOString().split("T")[0]
@@ -277,9 +306,18 @@ export default function BloodBankDashboard() {
     setEditingPatient(null);
     setFormData({
       patientName: "",
-      address: "",
+      address: {
+        houseName: "",
+        houseAddress: "",
+        pincode: "",
+        district: "",
+        city: "",
+        localBody: "",
+        state: ""
+      },
       bloodGroup: "",
       mrid: "",
+      phoneNumber: "",
       requiredUnits: "",
       requiredDate: "",
     });
@@ -353,6 +391,26 @@ export default function BloodBankDashboard() {
           >
             🩸 Manage Donors
           </button>
+          <button
+            onClick={() => setActiveTab('received')}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              activeTab === 'received'
+                ? 'bg-pink-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white'
+            }`}
+          >
+            📥 Received Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('frontdesk')}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              activeTab === 'frontdesk'
+                ? 'bg-pink-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white'
+            }`}
+          >
+            🖥️ Frontdesk
+          </button>
           <Link
             to="/bloodbank-register"
             className="px-6 py-2 rounded-full font-semibold text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white transition"
@@ -422,6 +480,19 @@ export default function BloodBankDashboard() {
                   </div>
 
                   <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Phone Number</label>
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      pattern="[0-9]{10}"
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      required
+                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                    />
+                  </div>
+
+                  <div>
                     <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Required Units</label>
                     <input
                       type="number"
@@ -440,21 +511,116 @@ export default function BloodBankDashboard() {
                       type="date"
                       value={formData.requiredDate}
                       onChange={(e) => setFormData({ ...formData, requiredDate: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
                       required
                       className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Address</label>
-                    <input
-                      type="text"
-                      placeholder="Enter patient address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      required
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                    />
+                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Address Details</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">House Name</label>
+                        <input
+                          type="text"
+                          placeholder="Enter house name"
+                          value={formData.address.houseName}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, houseName: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">House Address</label>
+                        <input
+                          type="text"
+                          placeholder="Enter house address"
+                          value={formData.address.houseAddress}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, houseAddress: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Pincode *</label>
+                        <input
+                          type="text"
+                          placeholder="Enter pincode"
+                          pattern="[0-9]{6}"
+                          maxLength="6"
+                          value={formData.address.pincode}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, pincode: e.target.value }
+                          })}
+                          required
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">District</label>
+                        <input
+                          type="text"
+                          placeholder="Enter district"
+                          value={formData.address.district}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, district: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">City</label>
+                        <input
+                          type="text"
+                          placeholder="Enter city"
+                          value={formData.address.city}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, city: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Local Body</label>
+                        <input
+                          type="text"
+                          placeholder="Enter local body"
+                          value={formData.address.localBody}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, localBody: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">State</label>
+                        <input
+                          type="text"
+                          placeholder="Enter state"
+                          value={formData.address.state}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            address: { ...formData.address, state: e.target.value }
+                          })}
+                          className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -508,9 +674,26 @@ export default function BloodBankDashboard() {
                             <p>🩸 Blood Group: {p.bloodGroup}</p>
                             <p>🏠 Address: {p.address}</p>
                             <p>📋 MRID: {p.mrid}</p>
+                            <p>📱 Phone: {p.phoneNumber}</p>
                             <p>🩸 Units Required: {p.requiredUnits || p.unitsRequired}</p>
                             <p>📅 Date Needed: {new Date(p.requiredDate || p.dateNeeded).toLocaleDateString()}</p>
                           </div>
+                          {/* Donation Requests Section */}
+                          {p.donationRequests && p.donationRequests.length > 0 && (
+                            <div className="mt-4">
+                              <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">🩸 Donation Requests:</h5>
+                              <div className="space-y-2">
+                                {p.donationRequests.map((request) => (
+                                  <div key={request._id} className="bg-white/20 rounded-lg p-2 text-xs">
+                                    <p><strong>Donor:</strong> {request.donorName}</p>
+                                    <p><strong>Status:</strong> <span className={`font-semibold ${request.status === 'confirmed' ? 'text-green-600' : request.status === 'pending' ? 'text-yellow-600' : request.status === 'booked' ? 'text-blue-600' : 'text-red-600'}`}>{request.status}</span></p>
+                                    {request.requestedDate && <p><strong>Date:</strong> {new Date(request.requestedDate).toLocaleDateString()}</p>}
+                                    {request.requestedTime && <p><strong>Time:</strong> {request.requestedTime}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -560,6 +743,7 @@ export default function BloodBankDashboard() {
                     <div className="flex-1">
                       <h4 className="font-bold text-lg text-gray-900 dark:text-white">{request.donorName || request.name}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        <p><strong>To:</strong> {request.donorName || request.name}</p>
                         <p>📧 Email: {request.email}</p>
                         <p>📱 Phone: {request.phone}</p>
                         <p>🩸 Blood Group: {request.bloodGroup}</p>
@@ -618,6 +802,8 @@ export default function BloodBankDashboard() {
                       <div className="flex-1">
                         <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.name}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                          <p>🆔 User ID: <strong>{donor.userId?._id || donor.userId}</strong></p>
+                          <p>👤 Username: <strong>{donor.userId?.username}</strong></p>
                           <p>📧 Email: {donor.email}</p>
                           <p>📱 Phone: {donor.phone}</p>
                           <p>🩸 Blood Group: {donor.bloodGroup}</p>
@@ -664,6 +850,24 @@ export default function BloodBankDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'frontdesk' && (
+          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <div className="mb-6 text-center">
+              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                🖥️ Frontdesk Management
+              </h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Manage walk-in donors and frontdesk operations
+              </p>
+            </div>
+
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">Frontdesk features coming soon...</p>
+            </div>
           </div>
         )}
       </div>

@@ -3,9 +3,9 @@ const { z } = require('zod');
 const isProd = process.env.NODE_ENV === 'production';
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production"]).default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.string().optional(),
-  MONGO_URI: z.string().min(1, "MONGO_URI required"),
+  MONGO_URI: z.string().min(1,  "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0;"),
   JWT_ACCESS_SECRET: z.string().min(1, "JWT_ACCESS_SECRET required"),
   JWT_REFRESH_SECRET: z.string().min(1, "JWT_REFRESH_SECRET required"),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),

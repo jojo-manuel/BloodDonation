@@ -199,6 +199,9 @@ export default function PatientCRUD() {
                       Date Needed
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                      Blood Bank
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -251,6 +254,9 @@ export default function PatientCRUD() {
                               className="w-full rounded border border-white/30 bg-white/20 px-2 py-1 text-gray-900 dark:text-white"
                             />
                           </td>
+                          <td className="px-6 py-4 text-gray-900 dark:text-white">
+                            {patient.bloodBankId?.name || 'N/A'}
+                          </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">
                               <button
@@ -284,6 +290,9 @@ export default function PatientCRUD() {
                           </td>
                           <td className="px-6 py-4 text-gray-900 dark:text-white">
                             {patient.dateNeeded ? new Date(patient.dateNeeded).toLocaleDateString() : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-gray-900 dark:text-white">
+                            {patient.bloodBankId?.name || 'N/A'}
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex gap-2">

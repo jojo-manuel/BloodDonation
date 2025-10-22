@@ -4,16 +4,19 @@ const User = require('./Models/User');
 
 async function createTestData() {
   try {
-    await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not set. Please set it to your cloud MongoDB URI.');
+    }
+    await mongoose.connect(process.env.MONGO_URI);
 
     // Delete existing patient with MRID 222 if exists
-    const deletedPatient = await Patient.findOneAndDelete({}).where('encryptedMrid').equals('222'.toUpperCase());
+    const deletedPatient = await Patient.findOneAndDelete({ mrid: '222' });
     if (deletedPatient) {
       console.log('🗑️ Deleted existing patient with MRID 222');
     }
 
     // Check if patient with MRID 222 already exists
-    const existingPatient = await Patient.findOne({}).where('encryptedMrid').equals('222'.toUpperCase());
+    const existingPatient = await Patient.findOne({ mrid: '222' });
     if (existingPatient) {
       console.log('✅ Patient with MRID 222 already exists');
       console.log('📋 Patient details:', {
@@ -43,18 +46,19 @@ async function createTestData() {
       await user.save();
     }
 
-    // Create test patient using virtual setters
+    // Create test patient with plain text data
     const patient = new Patient({
       bloodBankId: user._id,
+      bloodBankName: 'Test Blood Bank', // Add blood bank name
+      name: 'John Doe',
+      address: '123 Hospital St',
       bloodGroup: 'O+',
+      mrid: '222',
+      phoneNumber: '1234567890',
       unitsRequired: 2,
       dateNeeded: new Date('2025-12-31')
     });
 
-    // Use virtual setters to set encrypted fields
-    patient.name = 'John Doe';
-    patient.address = '123 Hospital St';
-    patient.mrid = '222';
     await patient.save();
 
     console.log('✅ Test patient created successfully');

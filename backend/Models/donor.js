@@ -6,14 +6,15 @@ const mongoose = require("mongoose");
 // House Address Schema (nested inside Donor schema)
 const HouseAddressSchema = new mongoose.Schema({
   houseName: { type: String, required: true, trim: true },
-  houseAddress: { type: String, required: true, trim: true },
-  localBody: { type: String, required: true, trim: true },
-  city: { type: String, required: true, trim: true },
-  district: { type: String, required: true, trim: true },
-  pincode: { 
-    type: String, 
-    required: true, 
-    match: [/^[0-9]{6}$/, "Invalid pincode. Must be 6 digits"] 
+  houseAddress: { type: String, trim: true }, // Made optional - will be auto-filled from API
+  localBody: { type: String, trim: true }, // Made optional - will be auto-filled from API
+  city: { type: String, trim: true }, // Made optional - will be auto-filled from API
+  district: { type: String, trim: true }, // Made optional - will be auto-filled from API
+  state: { type: String, trim: true }, // Added state field - will be auto-filled from API
+  pincode: {
+    type: String,
+    required: true,
+    match: [/^[0-9]{6}$/, "Invalid pincode. Must be 6 digits"]
   }
 });
 
@@ -56,18 +57,15 @@ const DonorSchema = new mongoose.Schema({
   donatedDates: [{ type: Date }],
   isBlocked: { type: Boolean, default: false },
   isSuspended: { type: Boolean, default: false },
-  warningMessage: { type: String, default: null }
+  warningMessage: { type: String, default: null },
+  warningCount: { type: Number, default: 0 },
+  suspendUntil: { type: Date, default: null },
+  blockMessage: { type: String, default: null }
 }, { timestamps: true });
 
 // Create unique index on userId to prevent duplicate donor registrations per user
 DonorSchema.index({ userId: 1 }, { unique: true });
 
-// Drop old index on 'user' field if it exists
 const Donor = mongoose.model("Donor", DonorSchema);
-Donor.collection.dropIndex("user_1").catch(err => {
-  if (err.code !== 27) { // 27 is index not found
-    console.log("Old index 'user_1' dropped or not found:", err.message);
-  }
-});
 
 module.exports = Donor;

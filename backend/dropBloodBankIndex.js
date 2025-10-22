@@ -6,7 +6,10 @@ require('dotenv').config();
 async function fixBloodBankIndexes() {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blooddonation');
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not set. Please set it to your cloud MongoDB URI.');
+    }
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
     const BloodBank = require('./Models/BloodBank');

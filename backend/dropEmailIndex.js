@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '../.env' });
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
 
 async function dropEmailIndex() {
   try {
+    if (!MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not set. Please set it to your cloud MongoDB URI.');
+    }
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
 

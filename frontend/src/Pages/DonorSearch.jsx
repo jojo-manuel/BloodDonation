@@ -159,6 +159,15 @@ export default function DonorSearch() {
               >
                 <h2 className="text-xl font-semibold">{donor.name}</h2>
                 <p>
+                  User ID: <strong>{donor.userId?._id || donor.userId}</strong>
+                </p>
+                <p>
+                  Username: <strong>{donor.userId?.username}</strong>
+                </p>
+                <p>
+                  Email: <strong>{donor.userId?.email}</strong>
+                </p>
+                <p>
                   Blood Group: <strong>{donor.bloodGroup}</strong>
                 </p>
                 <p>

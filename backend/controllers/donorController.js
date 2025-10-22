@@ -5,6 +5,7 @@ const Donor = require('../Models/donor');
 const Patient = require('../Models/Patient');
 const DonationRequest = require('../Models/DonationRequest');
 const asyncHandler = require('../Middleware/asyncHandler');
+const axios = require('axios');
 
 /**
  * Register a donor profile or update existing one for the authenticated user
@@ -27,6 +28,32 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
       return res.status(400).json({ success: false, message: 'Validation failed', errors: validation.error.format() });
     }
 
+    // Auto-fill address details from pincode if not provided
+    let houseAddress = validation.data.houseAddress;
+    if (houseAddress.pincode && (!houseAddress.houseAddress || !houseAddress.localBody || !houseAddress.city || !houseAddress.district)) {
+      try {
+        const response = await axios.get(`https://api.postalpincode.in/pincode/${houseAddress.pincode}`);
+
+        if (response.data && response.data[0] && response.data[0].Status === 'Success') {
+          const postOffices = response.data[0].PostOffice;
+          if (postOffices && postOffices.length > 0) {
+            const postOffice = postOffices[0];
+            houseAddress = {
+              houseName: houseAddress.houseName, // Keep user-provided house name
+              houseAddress: houseAddress.houseAddress || '', // Keep if provided, else empty
+              localBody: houseAddress.localBody || postOffice.Name || '',
+              city: houseAddress.city || postOffice.Block || postOffice.Division || '',
+              district: houseAddress.district || postOffice.District || '',
+              pincode: houseAddress.pincode
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching address from pincode:', error);
+        // Continue with user-provided data if API fails
+      }
+    }
+
     const payload = {
       userId: req.user.id,
       name: validation.data.name,
@@ -35,7 +62,7 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
       bloodGroup: validation.data.bloodGroup,
       contactNumber: validation.data.contactNumber,
       emergencyContactNumber: validation.data.emergencyContactNumber,
-      houseAddress: validation.data.houseAddress,
+      houseAddress: houseAddress,
       workAddress: validation.data.workAddress,
       weight: validation.data.weight,
       availability: validation.data.availability,
@@ -66,7 +93,7 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
  * Query: bloodGroup, city, state, pincode, page, limit
  */
 exports.searchDonors = asyncHandler(async (req, res) => {
-  const { bloodGroup, city, state, pincode, page = 1, limit = 10 } = req.query;
+  const { bloodGroup, city, state, pincode, availability, page = 1, limit = 10 } = req.query;
   const maxLimit = Math.min(Number(limit) || 10, 50);
   const skip = (Number(page) - 1) * maxLimit;
 
@@ -75,12 +102,13 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   if (city) filter['houseAddress.city'] = city;
   if (state) filter['houseAddress.district'] = state; // Assuming state maps to district
   if (pincode) filter['houseAddress.pincode'] = pincode;
+  if (availability === 'available') filter.availability = true;
 
   // Filter lastDonatedDate to be before today
   filter.lastDonatedDate = { $lt: new Date() };
 
   const [data, total] = await Promise.all([
-    Donor.find(filter).populate('userId', 'username').skip(skip).limit(maxLimit).sort({ updatedAt: -1 }),
+    Donor.find(filter).populate('userId', 'username email').skip(skip).limit(maxLimit).sort({ updatedAt: -1 }),
     Donor.countDocuments(filter),
   ]);
 
@@ -98,10 +126,8 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'MR number is required' });
   }
 
-  // Find patient by encrypted MRID: encrypt normalized MRID and compare
-  const { encrypt } = require('../utils/encryption');
-  const encryptedLookup = encrypt(mrid.toUpperCase());
-  const patient = await Patient.findOne({ encryptedMrid: encryptedLookup });
+  // Find patient by MRID: normalize to uppercase and compare directly
+  const patient = await Patient.findOne({ mrid: mrid.toUpperCase() });
   if (!patient) {
     return res.status(404).json({ success: false, message: 'Patient not found with given MR number' });
   }
@@ -112,12 +138,10 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     lastDonatedDate: { $lt: new Date() }
   };
 
-  const donors = await Donor.find(filter).populate('userId', 'username').sort({ updatedAt: -1 });
+  const donors = await Donor.find(filter).populate('userId', 'username email').sort({ updatedAt: -1 });
 
   return res.json({ success: true, message: 'Donors found', data: donors });
 });
-
-
 
 /**
  * Get a single donor by ID
@@ -160,6 +184,32 @@ exports.updateDonor = asyncHandler(async (req, res) => {
   const donor = await Donor.findOne({ userId: req.user.id });
   if (!donor) return res.status(404).json({ success: false, message: 'Donor profile not found' });
 
+  // Auto-fill address details from pincode if not provided
+  let houseAddress = req.body.houseAddress;
+  if (houseAddress && houseAddress.pincode && (!houseAddress.houseAddress || !houseAddress.localBody || !houseAddress.city || !houseAddress.district)) {
+    try {
+      const response = await axios.get(`https://api.postalpincode.in/pincode/${houseAddress.pincode}`);
+
+      if (response.data && response.data[0] && response.data[0].Status === 'Success') {
+        const postOffices = response.data[0].PostOffice;
+        if (postOffices && postOffices.length > 0) {
+          const postOffice = postOffices[0];
+          houseAddress = {
+            houseName: houseAddress.houseName || donor.houseAddress.houseName, // Keep existing or new
+            houseAddress: houseAddress.houseAddress || '', // Keep if provided, else empty
+            localBody: houseAddress.localBody || postOffice.Name || '',
+            city: houseAddress.city || postOffice.Block || postOffice.Division || '',
+            district: houseAddress.district || postOffice.District || '',
+            pincode: houseAddress.pincode
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching address from pincode:', error);
+      // Continue with user-provided data if API fails
+    }
+  }
+
   const payload = {
     name: req.body.name,
     dob: req.body.dob,
@@ -167,7 +217,7 @@ exports.updateDonor = asyncHandler(async (req, res) => {
     bloodGroup: req.body.bloodGroup,
     contactNumber: req.body.contactNumber,
     emergencyContactNumber: req.body.emergencyContactNumber,
-    houseAddress: req.body.houseAddress,
+    houseAddress: houseAddress || req.body.houseAddress,
     workAddress: req.body.workAddress,
     weight: req.body.weight,
     availability: req.body.availability,
@@ -198,7 +248,7 @@ exports.getIncomingRequests = asyncHandler(async (req, res) => {
   const donor = await Donor.findOne({ userId: req.user.id });
   if (!donor) return res.status(404).json({ success: false, message: 'Donor profile not found' });
 
-  const allRequests = await DonationRequest.find({})
+  const requests = await DonationRequest.find({ donorId: donor._id })
     .populate('requesterId', 'username name phone')
     .populate('donorId', 'userId bloodGroup houseAddress')
     .populate('donorId.userId', 'username')
@@ -211,12 +261,6 @@ exports.getIncomingRequests = asyncHandler(async (req, res) => {
       },
     })
     .sort({ createdAt: -1 });
-
-  // Filter requests for this donor using string comparison for robustness
-  const requests = allRequests.filter(request => {
-    const requestDonorId = request.donorId?._id || request.donorId;
-    return requestDonorId?.toString() === donor._id.toString() || requestDonorId === donor._id.toString();
-  });
 
   res.json({ success: true, data: requests });
 });
@@ -283,5 +327,77 @@ exports.bookSlot = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Slot booked successfully', data: request });
 });
 
+/**
+ * Get donation requests sent by a user, filtered by username
+ * Query: username
+ */
+exports.getSentRequests = asyncHandler(async (req, res) => {
+  const { username } = req.query;
 
+  if (!username) {
+    return res.status(400).json({ success: false, message: 'Username is required' });
+  }
 
+  // Find the user by username
+  const User = require('../Models/User');
+  const user = await User.findOne({ username });
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  // Find donation requests where the requesterId matches the user's ID
+  const requests = await DonationRequest.find({ requesterId: user._id })
+    .populate('receiverId', 'username name phone')
+    .populate('donorId', 'userId bloodGroup houseAddress')
+    .populate('donorId.userId', 'username')
+    .populate({
+      path: 'patientId',
+      select: 'name bloodGroup address bloodBankId dateNeeded unitsNeeded',
+      populate: {
+        path: 'bloodBankId',
+        select: 'name address',
+      },
+    })
+    .sort({ createdAt: -1 });
+
+  res.json({ success: true, data: requests });
+});
+
+/**
+ * Get address details by postal code using Geocoding API
+ * Params: postalCode
+ */
+exports.getAddressByPostalCode = asyncHandler(async (req, res) => {
+  const { postalCode } = req.params;
+
+  if (!postalCode || postalCode.length !== 6 || !/^\d{6}$/.test(postalCode)) {
+    return res.status(400).json({ success: false, message: 'Invalid postal code. Must be 6 digits.' });
+  }
+
+  try {
+    // Use OpenStreetMap Nominatim API to get address details from postal code
+    const response = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&postalcode=${postalCode}&country=India`, {
+      headers: {
+        'User-Agent': 'BloodDonationApp/1.0'
+      }
+    });
+
+    if (response.data && response.data.length > 0) {
+      const address = response.data[0].address;
+      const addressDetails = {
+        city: address.city || address.town || address.village || '',
+        district: address.county || address.state_district || '',
+        state: address.state || '',
+        country: address.country || ''
+      };
+
+      return res.json({ success: true, message: 'Address details retrieved', data: addressDetails });
+    } else {
+      return res.status(404).json({ success: false, message: 'No address details found for the given postal code.' });
+    }
+  } catch (error) {
+    console.error('Error fetching address details:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch address details' });
+  }
+});

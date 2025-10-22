@@ -13,12 +13,6 @@ const ThemeToggle = () => {
         Default
       </button>
       <button
-        onClick={() => toggleTheme('light')}
-        className={`px-3 py-1 rounded ${theme === 'light' ? 'bg-pink-600 text-white' : 'bg-purple-600 text-gray-300'}`}
-      >
-        Light
-      </button>
-      <button
         onClick={() => toggleTheme('dark')}
         className={`px-3 py-1 rounded ${theme === 'dark' ? 'bg-pink-600 text-white' : 'bg-purple-600 text-gray-300'}`}
       >

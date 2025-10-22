@@ -21,4 +21,18 @@ router.get(
   bloodBankController.getBloodBankByUser
 );
 
+// Get all bookings for the blood bank
+router.get(
+  "/bookings",
+  authMiddleware,
+  bloodBankController.getBookingsForBloodBank
+);
+
+// Reschedule a booking
+router.put(
+  "/bookings/reschedule",
+  authMiddleware,
+  bloodBankController.rescheduleBooking
+);
+
 module.exports = router;

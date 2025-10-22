@@ -21,6 +21,25 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: user.blockMessage || "Your account has been blocked." });
+    }
+
+    // Check suspension status
+    if (user.isSuspended) {
+      if (user.suspendUntil && new Date() >= user.suspendUntil) {
+        // Suspension period has ended, automatically unsuspend
+        user.isSuspended = false;
+        user.suspendUntil = null;
+        await user.save();
+      } else {
+        // Still suspended
+        const message = user.suspendUntil ? `Your account is suspended until ${user.suspendUntil.toISOString().split('T')[0]}.` : "Your account is suspended.";
+        return res.status(403).json({ success: false, message });
+      }
+    }
+
     req.user = user; // Attach user to request
     next();
   } catch (err) {

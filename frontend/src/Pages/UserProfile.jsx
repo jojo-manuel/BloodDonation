@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import Layout from "../components/Layout";
 
@@ -7,6 +7,7 @@ export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserProfile();
@@ -32,6 +33,28 @@ export default function UserProfile() {
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? Your account will be deactivated and you will be logged out. You can contact support to restore it if needed."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await api.delete('/users/me');
+      if (response.data.success) {
+        alert("Account deleted successfully. You have been logged out.");
+        localStorage.clear();
+        navigate("/login");
+      } else {
+        alert("Failed to delete account: " + (response.data.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert("Error deleting account: " + (error.response?.data?.message || error.message));
+    }
   };
 
   if (loading) {
@@ -87,7 +110,7 @@ export default function UserProfile() {
             <div className="flex flex-col items-center md:items-start">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-500/80 to-red-600/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg ring-1 ring-white/10 mb-4">
                 <span className="text-white font-bold text-2xl">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
                 </span>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user?.name}</h2>
@@ -140,13 +163,24 @@ export default function UserProfile() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-white/20">
-            <Link
-              to="/user-settings"
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
-            >
-              <span className="mr-2">⚙️</span>
-              Edit Profile
-            </Link>
+            {user?.role !== 'admin' && (
+              <>
+                <Link
+                  to="/user-settings"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+                >
+                  <span className="mr-2">⚙️</span>
+                  Edit Profile
+                </Link>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] hover:bg-red-700"
+                >
+                  <span className="mr-2">🗑️</span>
+                  Delete Account
+                </button>
+              </>
+            )}
             <Link
               to="/user-dashboard"
               className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"

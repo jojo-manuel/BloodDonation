@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { encrypt, decrypt } = require("../utils/encryption");
 
 const patientSchema = new mongoose.Schema(
   {
@@ -8,27 +7,45 @@ const patientSchema = new mongoose.Schema(
       ref: "BloodBank",
       required: true,
     },
-    encryptedName: {
+    bloodBankName: {
       type: String,
-      required: [true, "Encrypted patient name is required"],
+      required: [true, "Blood bank name is required"],
     },
-    encryptedAddress: {
+    name: {
       type: String,
-      required: [true, "Encrypted address is required"],
+      required: [true, "Patient name is required"],
+    },
+    address: {
+      houseName: { type: String },
+      houseAddress: { type: String },
+      localBody: { type: String },
+      city: { type: String },
+      district: { type: String },
+      state: { type: String },
+      pincode: {
+        type: String,
+        required: [true, "Pincode is required"],
+        validate: {
+          validator: function(v) {
+            return /^[0-9]{6}$/.test(v);
+          },
+          message: "Pincode must be a valid 6-digit number"
+        }
+      }
     },
     bloodGroup: {
       type: String,
       required: [true, "Blood group is required"],
       enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
     },
-    encryptedMrid: {
+    mrid: {
       type: String,
-      required: [true, "Encrypted MRID is required"],
-      unique: true,
+      required: [true, "MRID is required"],
+      uppercase: true, // Store MRID in uppercase
     },
-    encryptedPhoneNumber: {
+    phoneNumber: {
       type: String,
-      required: [true, "Encrypted phone number is required"],
+      required: [true, "Phone number is required"],
       unique: true,
     },
     unitsRequired: {
@@ -57,42 +74,5 @@ const patientSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-// Virtual for decrypted name
-patientSchema.virtual('name').get(function() {
-  return this.encryptedName ? decrypt(this.encryptedName) : '';
-}).set(function(value) {
-  this.encryptedName = encrypt(value);
-});
-
-// Virtual for decrypted address
-patientSchema.virtual('address').get(function() {
-  return this.encryptedAddress ? decrypt(this.encryptedAddress) : '';
-}).set(function(value) {
-  this.encryptedAddress = encrypt(value);
-});
-
-  
-// Virtual for decrypted phone number
-patientSchema.virtual('phoneNumber').get(function() {
-  return this.encryptedPhoneNumber ? decrypt(this.encryptedPhoneNumber) : '';
-}).set(function(value) {
-  this.encryptedPhoneNumber = encrypt(value);
-});
-
-// Ensure virtual fields are serialized
-patientSchema.set('toJSON', { virtuals: true });
-patientSchema.set('toObject', { virtuals: true });
-
-
-// Virtual for decrypted MRID
-patientSchema.virtual('mrid').get(function() {
-  return this.encryptedMrid ? decrypt(this.encryptedMrid) : '';
-}).set(function(value) {
-  // store uppercase MRID for consistency
-  const normalized = (value || '').toString().toUpperCase();
-  this.encryptedMrid = encrypt(normalized);
-});
-
 
 module.exports = mongoose.model("Patient", patientSchema);

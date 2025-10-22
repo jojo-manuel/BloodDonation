@@ -303,6 +303,33 @@ router.post("/login", async (req, res) => {
       }
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: user.blockMessage || "Your account has been blocked." });
+    }
+
+    // Check suspension status
+    if (user.isSuspended) {
+      if (user.suspendUntil && new Date() >= user.suspendUntil) {
+        // Suspension period has ended, automatically unsuspend
+        user.isSuspended = false;
+        user.suspendUntil = null;
+        await user.save();
+      } else {
+        // Still suspended
+        const message = user.suspendUntil ? `Your account is suspended until ${user.suspendUntil.toISOString().split('T')[0]}.` : "Your account is suspended.";
+        return res.status(403).json({ success: false, message });
+      }
+    }
+
+    // Handle warnings
+    let warningMsg = null;
+    if (user.warningCount > 0) {
+      warningMsg = user.warningMessage || "You have a warning.";
+      user.warningCount -= 1;
+      await user.save();
+    }
+
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
     refreshStore.set(String(user._id), refreshToken);
@@ -325,7 +352,7 @@ router.post("/login", async (req, res) => {
           role: user.role,
           isSuspended: user.isSuspended || false,
           isBlocked: user.isBlocked || false,
-          warningMessage: user.warningMessage || null
+          warningMessage: warningMsg
         },
         accessToken,
         refreshToken,
@@ -434,6 +461,33 @@ router.post("/google-login", async (req, res) => {
       }
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: user.blockMessage || "Your account has been blocked." });
+    }
+
+    // Check suspension status
+    if (user.isSuspended) {
+      if (user.suspendUntil && new Date() >= user.suspendUntil) {
+        // Suspension period has ended, automatically unsuspend
+        user.isSuspended = false;
+        user.suspendUntil = null;
+        await user.save();
+      } else {
+        // Still suspended
+        const message = user.suspendUntil ? `Your account is suspended until ${user.suspendUntil.toISOString().split('T')[0]}.` : "Your account is suspended.";
+        return res.status(403).json({ success: false, message });
+      }
+    }
+
+    // Handle warnings
+    let warningMsg = null;
+    if (user.warningCount > 0) {
+      warningMsg = user.warningMessage || "You have a warning.";
+      user.warningCount -= 1;
+      await user.save();
+    }
+
     // Generate tokens
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
@@ -457,7 +511,7 @@ router.post("/google-login", async (req, res) => {
           role: user.role,
           isSuspended: user.isSuspended || false,
           isBlocked: user.isBlocked || false,
-          warningMessage: user.warningMessage || null
+          warningMessage: warningMsg
         },
         accessToken,
         refreshToken,
@@ -503,6 +557,33 @@ router.post("/verify-login", async (req, res) => {
       }
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: user.blockMessage || "Your account has been blocked." });
+    }
+
+    // Check suspension status
+    if (user.isSuspended) {
+      if (user.suspendUntil && new Date() >= user.suspendUntil) {
+        // Suspension period has ended, automatically unsuspend
+        user.isSuspended = false;
+        user.suspendUntil = null;
+        await user.save();
+      } else {
+        // Still suspended
+        const message = user.suspendUntil ? `Your account is suspended until ${user.suspendUntil.toISOString().split('T')[0]}.` : "Your account is suspended.";
+        return res.status(403).json({ success: false, message });
+      }
+    }
+
+    // Handle warnings
+    let warningMsg = null;
+    if (user.warningCount > 0) {
+      warningMsg = user.warningMessage || "You have a warning.";
+      user.warningCount -= 1;
+      await user.save();
+    }
+
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
     refreshStore.set(String(user._id), refreshToken);
@@ -519,13 +600,13 @@ router.post("/verify-login", async (req, res) => {
       success: true,
       message: "Login successful",
       data: {
-        user: { 
-          id: user._id, 
-          username: user.username, 
+        user: {
+          id: user._id,
+          username: user.username,
           role: user.role,
           isSuspended: user.isSuspended || false,
           isBlocked: user.isBlocked || false,
-          warningMessage: user.warningMessage || null
+          warningMessage: warningMsg
         },
         accessToken,
         refreshToken,
@@ -600,6 +681,33 @@ router.post("/firebase", async (req, res) => {
       }
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ success: false, message: user.blockMessage || "Your account has been blocked." });
+    }
+
+    // Check suspension status
+    if (user.isSuspended) {
+      if (user.suspendUntil && new Date() >= user.suspendUntil) {
+        // Suspension period has ended, automatically unsuspend
+        user.isSuspended = false;
+        user.suspendUntil = null;
+        await user.save();
+      } else {
+        // Still suspended
+        const message = user.suspendUntil ? `Your account is suspended until ${user.suspendUntil.toISOString().split('T')[0]}.` : "Your account is suspended.";
+        return res.status(403).json({ success: false, message });
+      }
+    }
+
+    // Handle warnings
+    let warningMsg = null;
+    if (user.warningCount > 0) {
+      warningMsg = user.warningMessage || "You have a warning.";
+      user.warningCount -= 1;
+      await user.save();
+    }
+
     // Generate tokens
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
@@ -623,7 +731,7 @@ router.post("/firebase", async (req, res) => {
           role: user.role,
           isSuspended: user.isSuspended || false,
           isBlocked: user.isBlocked || false,
-          warningMessage: user.warningMessage || null
+          warningMessage: warningMsg
         },
         accessToken,
         refreshToken,

@@ -466,6 +466,10 @@ export default function DonorCRUD() {
                 <p className="text-lg text-gray-900 dark:text-white">{donor.name}</p>
               </div>
               <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">User ID</p>
+                <p className="text-lg text-gray-900 dark:text-white">{donor.userId?._id || donor.userId}</p>
+              </div>
+              <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Blood Group</p>
                 <p className="text-lg text-gray-900 dark:text-white">{donor.bloodGroup}</p>
               </div>

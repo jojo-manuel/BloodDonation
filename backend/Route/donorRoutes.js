@@ -5,7 +5,7 @@ const express = require('express');
 const authMiddleware = require('../Middleware/authMiddleware');
 const validate = require('../Middleware/validate');
 const { donorRegisterBody } = require('../validators/schemas');
-const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, getIncomingRequests, respondToRequest, bookSlot } = require('../controllers/donorController');
+const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, respondToRequest, bookSlot, getAddressByPostalCode } = require('../controllers/donorController');
 const donationRequestController = require('../controllers/donationRequestController');
 
 const router = express.Router();
@@ -31,29 +31,28 @@ router.get('/:id', getOne);
 // Get the authenticated user's donor profile
 router.get('/me', authMiddleware, getMe);
 
-// Get incoming donation requests for the authenticated donor
-router.get('/requests', authMiddleware, getIncomingRequests);
-
 // Respond to a donation request (accept or reject)
 router.put('/requests/:requestId/respond', authMiddleware, respondToRequest);
 
 // Book a slot for an accepted donation request
-router.put('/requests/:requestId/book-slot', authMiddleware, bookSlot);
+router.put('/:donorId/requests/:requestId/book-slot', authMiddleware, donationRequestController.bookSlot);
 
 // Create a donation request to a donor (sender is current user)
 router.post('/:donorId/requests', authMiddleware, donationRequestController.createRequest);
 
-// List requests received by current user (as donor)
+// List requests received by current user (as receiver/donor)
 router.get('/requests', authMiddleware, donationRequestController.listReceived);
 
-// List requests sent by current user
+// List requests sent by current user (as sender)
 router.get('/requests/sent', authMiddleware, donationRequestController.listSent);
 
 // Update status of a donation request
 router.put('/requests/:id/status', authMiddleware, donationRequestController.updateStatus);
 
+// List all donation requests (admin view)
+router.get('/requests/all', authMiddleware, donationRequestController.listAll);
+
+// Get address details by postal code
+router.get('/address/:postalCode', getAddressByPostalCode);
 
 module.exports = router;
-
-
-

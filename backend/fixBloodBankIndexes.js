@@ -4,11 +4,14 @@ const mongoose = require('mongoose');
 require('dotenv').config({ path: '../.env' });
 
 // Use the same connection string as the main application
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
 
 async function fixBloodBankIndexes() {
   try {
     // Connect to MongoDB using same config as main app
+    if (!MONGO_URI) {
+      throw new Error('MONGO_URI environment variable is not set. Please set it to your cloud MongoDB URI.');
+    }
     await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

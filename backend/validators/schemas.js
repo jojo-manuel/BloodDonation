@@ -87,10 +87,10 @@ const donorRegisterBody = z.object({
   emergencyContactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Emergency contact must be a valid 10-digit Indian number starting with 6-9').refine(val => val.trim().length === 10, "Emergency contact cannot be empty or only spaces"),
   houseAddress: z.object({
     houseName: z.string().min(1).max(100).refine(val => val.trim().length > 0, "House name cannot be empty or only spaces"),
-    houseAddress: z.string().min(3).max(200).refine(val => val.trim().length > 0, "House address cannot be empty or only spaces"),
-    localBody: z.string().min(3).max(100).refine(val => val.trim().length > 0, "Local body cannot be empty or only spaces"),
-    city: z.string().min(3).max(50).refine(val => val.trim().length > 0, "City cannot be empty or only spaces"),
-    district: z.string().min(3).max(50).refine(val => val.trim().length > 0, "District cannot be empty or only spaces"),
+    houseAddress: z.string().max(200).optional(), // Made optional - will be auto-filled
+    localBody: z.string().max(100).optional(), // Made optional - will be auto-filled
+    city: z.string().max(50).optional(), // Made optional - will be auto-filled
+    district: z.string().max(50).optional(), // Made optional - will be auto-filled
     pincode: z.string().regex(/^[0-9]{6}$/, 'Pincode must be exactly 6 digits').refine(val => val.trim().length === 6, "Pincode cannot be empty or only spaces"),
   }),
   workAddress: z.string().min(3).max(200).refine(val => val.trim().length > 0, "Work address cannot be empty or only spaces"),

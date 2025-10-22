@@ -77,6 +77,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  warningCount: {
+    type: Number,
+    default: 0,
+  },
+  suspendUntil: {
+    type: Date,
+    default: null,
+  },
+  blockMessage: {
+    type: String,
+    default: null,
+  },
   provider: {
     type: String,
     enum: ['local', 'google', 'firebase'],
@@ -88,11 +100,27 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     match: [/^[6-9]\d{9}$/, "Phone number must be a valid Indian number (10 digits, starts with 6-9)"],
   },
+  address: {
+    houseName: { type: String, trim: true },
+    houseAddress: { type: String, trim: true },
+    localBody: { type: String, trim: true },
+    city: { type: String, trim: true },
+    district: { type: String, trim: true },
+    pincode: {
+      type: String,
+      match: [/^[0-9]{6}$/, "Invalid pincode. Must be 6 digits"]
+    },
+  },
   profileImage: {
     type: String,
     default: null,
   },
   needsProfileCompletion: {
+    type: Boolean,
+    default: false,
+  },
+  // Soft delete flag
+  isDeleted: {
     type: Boolean,
     default: false,
   },

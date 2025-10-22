@@ -8,22 +8,18 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'default';
     setTheme(savedTheme);
-    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.remove('dark');
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else if (savedTheme === 'light') {
-      document.documentElement.classList.add('light');
     }
   }, []);
 
   const toggleTheme = (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.remove('dark');
     if (newTheme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else if (newTheme === 'light') {
-      document.documentElement.classList.add('light');
     }
   };
 

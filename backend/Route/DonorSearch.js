@@ -13,8 +13,8 @@ router.get("/search-donors/:mrid", async (req, res) => {
   try {
     const { mrid } = req.params;
 
-    // Step 1: Find the patient request by MRID
-    const patient = await Patient.findOne({ mrid });
+    // Step 1: Find the patient request by MRID (normalize to uppercase)
+    const patient = await Patient.findOne({ mrid: mrid.toUpperCase() });
 
     // Step 2: If patient not found → return error
     if (!patient) {

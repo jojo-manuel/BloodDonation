@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../Middleware/auth');
 const validate = require('../Middleware/validate');
 const { userUpdateBody } = require('../validators/schemas');
-const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks, requestDonation, getMyRequests, cancelRequest } = require('../controllers/userController');
+const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks, requestDonation, getMyRequests, cancelRequest, getAddressFromPincode } = require('../controllers/userController');
 
 console.log('directBookSlot:', typeof directBookSlot);
 console.log('getApprovedBloodBanks:', typeof getApprovedBloodBanks);
@@ -57,7 +57,14 @@ router.delete('/my-requests/:id', auth(true), cancelRequest);
 // Direct book slot
 router.post('/direct-book-slot', auth(true), directBookSlot);
 
+// Soft delete current user's account
+const { deleteMe } = require('../controllers/userController');
+router.delete('/me', auth(true), deleteMe);
+
 // Get all approved blood banks (public endpoint)
 router.get('/bloodbanks/approved', getApprovedBloodBanks);
+
+// Get address details from pincode (public endpoint)
+router.get('/address-from-pincode', getAddressFromPincode);
 
 module.exports = router;

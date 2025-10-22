@@ -163,10 +163,33 @@ exports.setDonorStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { isBlocked, isSuspended, warningMessage } = req.body;
 
-  const donor = await Donor.findByIdAndUpdate(id, { isBlocked, isSuspended, warningMessage }, { new: true });
+  const updateData = { isBlocked, isSuspended, warningMessage };
+
+  if (isBlocked) {
+    updateData.blockMessage = "Your account has been blocked permanently.";
+  } else if (isSuspended) {
+    updateData.suspendUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 3 months
+  } else if (warningMessage) {
+    updateData.warningCount = 5;
+  }
+
+  const donor = await Donor.findByIdAndUpdate(id, updateData, { new: true });
   if (!donor) {
     return res.status(404).json({ success: false, message: 'Donor not found' });
   }
+
+  // Also update the associated user
+  const userUpdateData = { isBlocked, isSuspended, warningMessage };
+  if (isBlocked) {
+    userUpdateData.blockMessage = "Your account has been blocked permanently.";
+  } else if (isSuspended) {
+    userUpdateData.suspendUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 3 months
+  } else if (warningMessage) {
+    userUpdateData.warningCount = 5;
+  }
+
+  await User.findByIdAndUpdate(donor.userId, userUpdateData, { new: true });
+
   res.json({ success: true, message: 'Donor status updated', data: donor });
 });
 
@@ -301,14 +324,69 @@ exports.createBooking = asyncHandler(async (req, res) => {
   });
 
   // Populate booking for response
-  await booking.populate('donorId', 'userId name bloodGroup houseAddress');
+  await booking.populate('donorId', 'userId name bloodGroup houseAddress contactNumber');
   await booking.populate('donorId.userId', 'username name email phone');
   await booking.populate('bloodBankId', 'name address');
+
+  // Generate PDF for patient
+  let pdfUrl = null;
+  try {
+    const PDFDocument = require('pdfkit');
+    const QRCode = require('qrcode');
+    const fs = require('fs');
+    const path = require('path');
+
+    const doc = new PDFDocument();
+    const pdfPath = path.join(__dirname, '../uploads', `patient-booking-${booking._id}.pdf`);
+    doc.pipe(fs.createWriteStream(pdfPath));
+
+    // PDF Content
+    doc.fontSize(20).text('Patient Donation Booking Confirmation', { align: 'center' });
+    doc.moveDown();
+
+    doc.fontSize(14).text(`Token Number: ${booking.tokenNumber}`);
+    doc.text(`Patient MR Number: ${donationRequest.patientId?.mrid || 'N/A'}`);
+    doc.text(`Donor Name: ${booking.donorId.userId.name}`);
+    doc.text(`Donor ID: ${booking.donorId.userId.username}`);
+    doc.text(`Blood Group: ${booking.donorId.bloodGroup}`);
+    doc.text(`Blood Bank: ${booking.bloodBankId.name}`);
+    doc.text(`Address: ${booking.bloodBankId.address}`);
+    doc.text(`Date: ${new Date(booking.date).toLocaleDateString()}`);
+    doc.text(`Time: ${booking.time}`);
+    doc.moveDown();
+
+    // Generate QR Code
+    const qrData = JSON.stringify({
+      token: booking.tokenNumber,
+      patientMR: donationRequest.patientId?.mrid || 'N/A',
+      donor: booking.donorId.userId.name,
+      donorId: booking.donorId.userId.username,
+      bloodBank: booking.bloodBankId.name,
+      address: booking.bloodBankId.address,
+      date: new Date(booking.date).toLocaleDateString(),
+      time: booking.time
+    });
+
+    const qrCodeDataURL = await QRCode.toDataURL(qrData);
+    const qrBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
+
+    // Add QR Code to PDF (placeholder)
+    doc.text('Scan QR Code for details:');
+    doc.moveDown();
+    doc.text(qrData); // Placeholder for QR image
+
+    doc.end();
+
+    pdfUrl = `/uploads/patient-booking-${booking._id}.pdf`;
+  } catch (pdfError) {
+    console.error('Patient PDF generation error:', pdfError);
+    // Don't fail the booking if PDF fails
+  }
 
   res.json({
     success: true,
     message: 'Booking confirmed successfully',
-    data: booking
+    data: { booking, pdfUrl }
   });
 });
 
@@ -332,4 +410,89 @@ exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
     .sort({ date: 1, time: 1 });
 
   res.json({ success: true, data: bookings });
+});
+
+/**
+ * Reschedule a booking
+ * Body: { bookingId, newDate, newTime }
+ */
+exports.rescheduleBooking = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const { bookingId, newDate, newTime } = req.body;
+  if (!bookingId || !newDate || !newTime) {
+    return res.status(400).json({ success: false, message: 'bookingId, newDate, and newTime are required' });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  const booking = await Booking.findById(bookingId);
+  if (!booking || booking.bloodBankId.toString() !== bloodBank._id.toString()) {
+    return res.status(404).json({ success: false, message: 'Booking not found or not owned by this blood bank' });
+  }
+
+  // Check capacity for new slot
+  const date = new Date(newDate);
+  const dateStr = date.toISOString().split('T')[0];
+
+  // Check daily limit
+  const dailyCount = await Booking.aggregate([
+    { $match: {
+        bloodBankId: bloodBank._id,
+        date: date,
+        status: 'confirmed'
+      } },
+    { $count: 'count' }
+  ]);
+  if (dailyCount[0]?.count >= 50) {
+    return res.status(400).json({ success: false, message: 'Daily booking limit (50) reached for this blood bank' });
+  }
+
+  // Check time slot limit
+  const slotCount = await Booking.aggregate([
+    { $match: {
+        bloodBankId: bloodBank._id,
+        date: date,
+        time: newTime,
+        status: 'confirmed'
+      } },
+    { $count: 'count' }
+  ]);
+  if (slotCount[0]?.count >= 5) {
+    return res.status(400).json({ success: false, message: `Time slot ${newTime} booking limit (5) reached for this blood bank` });
+  }
+
+  // Update booking
+  booking.date = date;
+  booking.time = newTime;
+  await booking.save();
+
+  // Update donation request if exists
+  if (booking.donationRequestId) {
+    await DonationRequest.findByIdAndUpdate(booking.donationRequestId, {
+      requestedDate: date,
+      requestedTime: newTime
+    });
+  }
+
+  // Log reschedule activity
+  await Activity.create({
+    userId: req.user._id,
+    role: 'bloodbank',
+    action: 'booking_rescheduled',
+    details: {
+      bookingId: booking._id,
+      oldDate: booking.date,
+      oldTime: booking.time,
+      newDate: date,
+      newTime: newTime
+    }
+  });
+
+  res.json({ success: true, message: 'Booking rescheduled successfully', data: booking });
 });
