@@ -7,10 +7,10 @@ const router = express.Router();
 // ✅ CREATE Patient
 router.post("/", async (req, res) => {
   try {
-    const { name, address, bloodGroup, mrid, unitsRequired, dateNeeded } = req.body;
+    const { name, address, bloodGroup, mrid, unitsRequired, dateNeeded, bloodBankId, bloodBankName } = req.body;
 
-    if (!name || !address || !bloodGroup || !mrid || !unitsRequired || !dateNeeded) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!name || !address || !bloodGroup || !mrid || !unitsRequired || !dateNeeded || !bloodBankId || !bloodBankName) {
+      return res.status(400).json({ message: "All fields are required including bloodBankId and bloodBankName" });
     }
 
     const existing = await Patient.findOne({ mrid });
@@ -25,6 +25,8 @@ router.post("/", async (req, res) => {
       mrid,
       unitsRequired,
       dateNeeded,
+      bloodBankId,
+      bloodBankName,
     });
 
     await patient.save();
