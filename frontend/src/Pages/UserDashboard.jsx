@@ -1201,7 +1201,20 @@ export default function UserDashboard() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">House Address</label>
                   <p className="text-gray-900 dark:text-white">
-                    {contactModalDonor.houseAddress ? `${contactModalDonor.houseAddress.houseName}, ${contactModalDonor.houseAddress.houseAddress}, ${contactModalDonor.houseAddress.localBody}, ${contactModalDonor.houseAddress.city}, ${contactModalDonor.houseAddress.district}, ${contactModalDonor.houseAddress.pincode}` : 'N/A'}
+                    {(() => {
+                      if (!contactModalDonor.houseAddress || typeof contactModalDonor.houseAddress !== 'object') return 'N/A';
+                      const addr = contactModalDonor.houseAddress;
+                      const parts = [
+                        addr.houseName,
+                        addr.houseAddress,
+                        addr.localBody,
+                        addr.city,
+                        addr.district,
+                        addr.state,
+                        addr.pincode
+                      ].filter(part => part && typeof part === 'string');
+                      return parts.join(', ') || 'N/A';
+                    })()}
                   </p>
                 </div>
                 <div>
