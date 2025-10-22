@@ -107,6 +107,11 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   // Filter lastDonatedDate to be before today
   filter.lastDonatedDate = { $lt: new Date() };
 
+  // Exclude suspended donors from search results
+  const User = require('../Models/User');
+  const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
+  filter.userId = { $nin: suspendedUserIds };
+
   const [data, total] = await Promise.all([
     Donor.find(filter).populate('userId', 'username email').skip(skip).limit(maxLimit).sort({ updatedAt: -1 }),
     Donor.countDocuments(filter),
@@ -137,6 +142,11 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     bloodGroup: patient.bloodGroup,
     lastDonatedDate: { $lt: new Date() }
   };
+
+  // Exclude suspended donors from search results
+  const User = require('../Models/User');
+  const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
+  filter.userId = { $nin: suspendedUserIds };
 
   const donors = await Donor.find(filter).populate('userId', 'username email').sort({ updatedAt: -1 });
 

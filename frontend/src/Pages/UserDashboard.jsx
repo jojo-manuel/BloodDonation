@@ -400,6 +400,53 @@ export default function UserDashboard() {
     }
   };
 
+  // Handle account suspension
+  const handleSuspendAccount = async () => {
+    const confirmSuspend = window.confirm(
+      'Are you sure you want to suspend your account for 3 months? You will be logged out and cannot access your account until the suspension period ends.'
+    );
+    if (!confirmSuspend) return;
+
+    try {
+      setDeletingAccount(true); // Reuse the loading state
+      const res = await api.post('/users/me/suspend');
+      if (res.data.success) {
+        alert('Account suspended successfully. You will be logged out.');
+        localStorage.clear();
+        navigate('/login');
+      } else {
+        alert(res.data.message || 'Failed to suspend account');
+      }
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to suspend account');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  // Handle account unsuspension
+  const handleUnsuspendAccount = async () => {
+    const confirmUnsuspend = window.confirm(
+      'Are you sure you want to unsuspend your account? You will regain full access to your account.'
+    );
+    if (!confirmUnsuspend) return;
+
+    try {
+      setDeletingAccount(true); // Reuse the loading state
+      const res = await api.post('/users/me/unsuspend');
+      if (res.data.success) {
+        alert('Account unsuspended successfully.');
+        fetchProfileData(); // Refresh profile data
+      } else {
+        alert(res.data.message || 'Failed to unsuspend account');
+      }
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to unsuspend account');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   // Handle account deletion
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm(
@@ -934,6 +981,28 @@ export default function UserDashboard() {
                 >
                   {updatingProfile ? 'Updating...' : 'Update Profile'}
                 </button>
+                {profileData.isSuspended ? (
+                  <>
+                    <button
+                      onClick={handleUnsuspendAccount}
+                      disabled={deletingAccount}
+                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {deletingAccount ? 'Unsuspending...' : 'Unsuspend Account'}
+                    </button>
+                    <div className="flex-1 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg text-sm">
+                      Account suspended - you can login but won't appear in donor searches
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleSuspendAccount}
+                    disabled={deletingAccount}
+                    className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {deletingAccount ? 'Suspending...' : 'Suspend Account (3 Months)'}
+                  </button>
+                )}
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deletingAccount}

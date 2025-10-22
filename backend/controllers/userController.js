@@ -726,6 +726,54 @@ exports.cancelRequest = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Suspend the authenticated user's account for 3 months
+ */
+exports.suspendMe = asyncHandler(async (req, res) => {
+  const suspendUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 3 months from now
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      isSuspended: true,
+      suspendUntil,
+      blockMessage: 'Account suspended by user for 3 months'
+    },
+    { new: true }
+  ).select('-password');
+
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  res.json({
+    success: true,
+    message: 'Account suspended successfully. You will be logged out.',
+    data: { suspendUntil }
+  });
+});
+
+/**
+ * Unsuspend the authenticated user's account
+ */
+exports.unsuspendMe = asyncHandler(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      isSuspended: false,
+      suspendUntil: null,
+      blockMessage: null
+    },
+    { new: true }
+  ).select('-password');
+
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  res.json({
+    success: true,
+    message: 'Account unsuspended successfully.',
+    data: user
+  });
+});
+
+/**
  * Soft delete the authenticated user's account
  */
 exports.deleteMe = asyncHandler(async (req, res) => {

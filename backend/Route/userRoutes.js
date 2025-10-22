@@ -57,8 +57,14 @@ router.delete('/my-requests/:id', auth(true), cancelRequest);
 // Direct book slot
 router.post('/direct-book-slot', auth(true), directBookSlot);
 
+// Suspend current user's account
+const { suspendMe, unsuspendMe, deleteMe } = require('../controllers/userController');
+router.post('/me/suspend', auth(true), suspendMe);
+
+// Unsuspend current user's account
+router.post('/me/unsuspend', auth(true), unsuspendMe);
+
 // Soft delete current user's account
-const { deleteMe } = require('../controllers/userController');
 router.delete('/me', auth(true), deleteMe);
 
 // Get all approved blood banks (public endpoint)

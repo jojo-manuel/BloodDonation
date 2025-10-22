@@ -1,10 +1,10 @@
-++++++++// Script to drop unique index on mrid field to allow duplicate MR numbers
+// Script to drop unique index on mrid field to allow duplicate MR numbers
 
 const mongoose = require('mongoose');
 require('dotenv').config({ path: '../.env' });
 
 // Use the same connection string as the main application
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 async function allowDuplicateMR() {
   try {

@@ -9,7 +9,11 @@ async function migratePatientData() {
     console.log('Starting patient data migration...');
 
     // Connect to database
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/blooddonation');
+    const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
     const patients = await Patient.find({});
     console.log(`Found ${patients.length} patients to migrate`);
