@@ -46,6 +46,7 @@ export default function UserDashboard() {
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
+  const [notifications, setNotifications] = useState([]); // For notifications
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Handle search form changes
