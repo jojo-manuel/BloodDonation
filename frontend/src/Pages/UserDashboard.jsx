@@ -49,6 +49,28 @@ export default function UserDashboard() {
   const [notifications, setNotifications] = useState([]); // For notifications
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
+  // Status badge component
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+      pending_booking: { color: 'bg-blue-100 text-blue-800', icon: '📅' },
+      accepted: { color: 'bg-green-100 text-green-800', icon: '✅' },
+      rejected: { color: 'bg-red-100 text-red-800', icon: '❌' },
+      booked: { color: 'bg-purple-100 text-purple-800', icon: '🎫' },
+      cancelled: { color: 'bg-gray-100 text-gray-800', icon: '🚫' },
+      completed: { color: 'bg-emerald-100 text-emerald-800', icon: '🎉' }
+    };
+    
+    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: '❓' };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        <span className="mr-1">{config.icon}</span>
+        {status.replace('_', ' ').toUpperCase()}
+      </span>
+    );
+  };
+
   // Handle search form changes
   const handleChange = (e) => {
     const { name, value } = e.target;
