@@ -5,7 +5,7 @@ async function removeEncryptedMridIndex() {
   
   try {
     // Connect to MongoDB using the same URI as your app
-    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/blooddonation';
+    const uri = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
     console.log('Connecting to MongoDB...');
     
     client = new MongoClient(uri);
