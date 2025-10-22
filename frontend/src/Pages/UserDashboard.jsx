@@ -1105,7 +1105,7 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.status}</p>
+                    <div className="text-gray-900 dark:text-white">{getStatusBadge(selectedRequest.status)}</div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requested At</label>
