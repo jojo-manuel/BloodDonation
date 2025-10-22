@@ -63,6 +63,10 @@ api.interceptors.response.use(
         isRefreshing = false;
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        // If refresh fails due to user being blocked/suspended, redirect to login
+        if (e.response?.status === 403) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
