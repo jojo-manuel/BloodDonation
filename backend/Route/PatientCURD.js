@@ -96,6 +96,12 @@ router.post("/", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Patient Add Error:", err);
     if (err.code === 11000) {
+      if (err.keyPattern && err.keyPattern.encryptedMrid) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Database index error. Please contact administrator to fix encryptedMrid index issue." 
+        });
+      }
       return res.status(400).json({ success: false, message: "MRID already exists" });
     }
     res.status(500).json({ message: "Server error while adding patient" });
