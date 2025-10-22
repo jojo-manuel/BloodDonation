@@ -18,6 +18,11 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
     console.log('✅ Connected to MongoDB Atlas');
+    
+    // Initialize database (remove problematic indexes)
+    const initializeDatabase = require('../initDatabase');
+    await initializeDatabase();
+    
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     process.exit(1);
