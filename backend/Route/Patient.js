@@ -68,7 +68,7 @@ router.get("/:id", async (req, res) => {
 // ✅ UPDATE Patient
 router.put("/:id", async (req, res) => {
   try {
-    const { name, address, bloodGroup, unitsRequired, dateNeeded } = req.body;
+    const { name, address, bloodGroup, unitsRequired, dateNeeded, bloodBankId, bloodBankName } = req.body;
 
     const patient = await Patient.findById(req.params.id);
     if (!patient) return res.status(404).json({ message: "Patient not found" });
@@ -78,6 +78,8 @@ router.put("/:id", async (req, res) => {
     patient.bloodGroup = bloodGroup || patient.bloodGroup;
     patient.unitsRequired = unitsRequired || patient.unitsRequired;
     patient.dateNeeded = dateNeeded || patient.dateNeeded;
+    patient.bloodBankId = bloodBankId || patient.bloodBankId;
+    patient.bloodBankName = bloodBankName || patient.bloodBankName;
 
     await patient.save();
     res.status(200).json({ message: "Patient updated successfully", patient });
