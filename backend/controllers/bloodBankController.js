@@ -8,6 +8,19 @@ const Booking = require("../Models/Booking");
 const Activity = require("../Models/Activity");
 const asyncHandler = require("../Middleware/asyncHandler");
 
+// Get all approved blood banks (public endpoint for dropdown lists)
+exports.getApprovedBloodBanks = asyncHandler(async (req, res) => {
+  const bloodBanks = await BloodBank.find({ status: 'approved' })
+    .select('name address phoneNumber email licenseNumber city district state pincode')
+    .sort({ name: 1 });
+  
+  res.json({
+    success: true,
+    data: bloodBanks,
+    count: bloodBanks.length
+  });
+});
+
 /**
  * Register a new blood bank user and optionally create blood bank details
  * Body (supports both old and new flows):
