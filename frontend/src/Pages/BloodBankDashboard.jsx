@@ -10,6 +10,7 @@ export default function BloodBankDashboard() {
   const [patients, setPatients] = useState([]);
   const [users, setUsers] = useState([]);
   const [donationRequests, setDonationRequests] = useState([]);
+  const [bookings, setBookings] = useState([]); // Added for booking display
   const [donors, setDonors] = useState([]);
   const [bloodBankDetails, setBloodBankDetails] = useState(null);
   const [editingPatient, setEditingPatient] = useState(null);
