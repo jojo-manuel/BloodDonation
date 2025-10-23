@@ -4,6 +4,9 @@ const router = express.Router();
 const bloodBankController = require("../controllers/bloodBankController");
 const authMiddleware = require("../Middleware/authMiddleware");
 
+// Get all approved blood banks (public endpoint for dropdowns)
+router.get("/approved", bloodBankController.getApprovedBloodBanks);
+
 // Blood bank user registration
 router.post("/register", bloodBankController.registerBloodBankUser);
 
