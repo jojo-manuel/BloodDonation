@@ -1442,42 +1442,46 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Patient Selection with Search */}
+            {/* Enhanced Patient Selection with Blood Bank + MRID Search */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <span className="text-xl">🏥</span> Select Patient (Optional)
-              </label>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                🔍 Find Patient by Blood Bank & MRID
+              </h3>
               
-              {/* Search Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                {/* MRID Search */}
-                <div>
-                  <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">🔍 Search by MRID</label>
-                  <input
-                    type="text"
-                    placeholder="Enter MRID..."
-                    value={patientSearchMRID}
-                    onChange={(e) => setPatientSearchMRID(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-                
-                {/* Blood Bank Filter */}
-                <div>
-                  <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">🏥 Filter by Blood Bank</label>
-                  <select
-                    value={patientSearchBloodBank}
-                    onChange={(e) => setPatientSearchBloodBank(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="">All Blood Banks</option>
-                    {bloodBanks.map(bb => (
-                      <option key={bb._id} value={bb._id}>
-                        {bb.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Step 1: Select Blood Bank */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <span className="text-xl">🏥</span> Step 1: Select Blood Bank
+                </label>
+                <select
+                  value={patientSearchBloodBank}
+                  onChange={(e) => setPatientSearchBloodBank(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">-- Select Blood Bank --</option>
+                  {bloodBanks.map(bb => (
+                    <option key={bb._id} value={bb._id}>
+                      {bb.name} {bb.address ? `- ${bb.address}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Step 2: Enter MRID */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <span className="text-xl">🔍</span> Step 2: Enter Patient MRID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter MRID to search specific patient..."
+                  value={patientSearchMRID}
+                  onChange={(e) => setPatientSearchMRID(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  💡 Leave empty to see all patients from selected blood bank
+                </p>
               </div>
               
               {/* Clear Filters Button */}
