@@ -24,7 +24,14 @@ router.get(
   bloodBankController.getBloodBankByUser
 );
 
-// Get all bookings for the blood bank
+// Get donation requests received by the blood bank (not yet booked)
+router.get(
+  "/donation-requests",
+  authMiddleware,
+  bloodBankController.getDonationRequests
+);
+
+// Get all bookings for the blood bank (confirmed bookings)
 router.get(
   "/bookings",
   authMiddleware,
