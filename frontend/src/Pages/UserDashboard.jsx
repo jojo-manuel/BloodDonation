@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import Layout from '../components/Layout';
 import ReviewTab from '../components/ReviewTab';
+import TaxiBookingModal from '../components/TaxiBookingModal';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
