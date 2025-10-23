@@ -1933,16 +1933,20 @@ export default function UserDashboard() {
                 <li>✅ <strong>Donor:</strong> {requestModal.name || requestModal.userId?.name}</li>
                 <li>✅ <strong>Blood Group:</strong> {requestModal.bloodGroup}</li>
                 <li>
-                  {selectedPatient ? (
-                    <>✅ <strong>Patient:</strong> {patients.find(p => p._id === selectedPatient)?.name || 'Selected'}</>
-                  ) : (
+                  {selectedPatient ? (() => {
+                    const allPatients = [...searchedPatients, ...patients];
+                    const patient = allPatients.find(p => p._id === selectedPatient);
+                    return <>✅ <strong>Patient:</strong> {patient?.name || patient?.patientName || 'Selected'}</>;
+                  })() : (
                     <>⚠️ <strong>Patient:</strong> Not specified</>
                   )}
                 </li>
                 <li>
-                  {selectedPatient ? (
-                    <>✅ <strong>Blood Bank:</strong> {patients.find(p => p._id === selectedPatient)?.bloodBankId?.name || 'Auto-selected'}</>
-                  ) : (
+                  {selectedPatient ? (() => {
+                    const allPatients = [...searchedPatients, ...patients];
+                    const patient = allPatients.find(p => p._id === selectedPatient);
+                    return <>✅ <strong>Blood Bank:</strong> {patient?.bloodBankId?.name || 'Auto-selected'}</>;
+                  })() : (
                     <>⚠️ <strong>Blood Bank:</strong> Not specified</>
                   )}
                 </li>
