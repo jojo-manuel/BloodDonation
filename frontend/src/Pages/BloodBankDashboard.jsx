@@ -98,6 +98,7 @@ export default function BloodBankDashboard() {
       fetchDonationRequests(); // Fetch received donation requests
     } else if (activeTab === 'donors') {
       fetchDonors();
+      fetchVisitedDonors(); // Also fetch visited donors with history
     }
   }, [activeTab]);
 
