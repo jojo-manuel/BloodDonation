@@ -17,7 +17,7 @@ const app = express();
 // Basic security headers
 app.use(helmet());
 
-// ✅ CORS configuration: include frontend dev ports
+// ✅ CORS configuration: include frontend dev ports and production URLs
 const allowedOrigins = [
   'http://localhost:5173',   // Vite default
   'http://127.0.0.1:5173',
@@ -33,13 +33,21 @@ const allowedOrigins = [
   'http://127.0.0.1:8080',
 ];
 
+// Add production origins from environment variable
+if (process.env.CORS_ORIGIN) {
+  const productionOrigins = process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+  allowedOrigins.push(...productionOrigins);
+  console.log('🌐 Production CORS origins added:', productionOrigins);
+}
+
 const corsOptions = {
   origin(origin, callback) {
     // Allow non-browser tools (e.g., Postman) with no Origin
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
 
-    console.warn(`CORS blocked request from origin: ${origin}`);
+    console.warn(`❌ CORS blocked request from origin: ${origin}`);
+    console.warn(`✅ Allowed origins:`, allowedOrigins);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
