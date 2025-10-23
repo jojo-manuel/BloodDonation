@@ -673,8 +673,15 @@ Blood Donation Team
 
       // Populate booking data
       await booking.populate('donorId', 'userId name bloodGroup contactNumber houseAddress');
-      await booking.populate('donorId.userId', 'username name');
+      await booking.populate('donorId.userId', 'username name email');
       await booking.populate('bloodBankId', 'name address');
+
+      // Safety checks for populated data
+      const donorName = booking.donorName || booking.donorId?.userId?.name || booking.donorId?.name || 'N/A';
+      const donorUsername = booking.donorId?.userId?.username || 'N/A';
+      const donorBloodGroup = booking.bloodGroup || booking.donorId?.bloodGroup || 'N/A';
+      const bloodBankName = booking.bloodBankName || booking.bloodBankId?.name || 'N/A';
+      const bloodBankAddress = booking.bloodBankId?.address || 'N/A';
 
       const doc = new PDFDocument();
       const pdfPath = path.join(__dirname, '../uploads', `booking-${booking._id}.pdf`);
@@ -685,11 +692,11 @@ Blood Donation Team
       doc.moveDown();
 
       doc.fontSize(14).text(`Token Number: ${booking.tokenNumber}`);
-      doc.text(`Donor Name: ${booking.donorId.userId.name}`);
-      doc.text(`Donor ID: ${booking.donorId.userId.username}`);
-      doc.text(`Blood Group: ${booking.donorId.bloodGroup}`);
-      doc.text(`Blood Bank: ${booking.bloodBankId.name}`);
-      doc.text(`Address: ${booking.bloodBankId.address}`);
+      doc.text(`Donor Name: ${donorName}`);
+      doc.text(`Donor ID: ${donorUsername}`);
+      doc.text(`Blood Group: ${donorBloodGroup}`);
+      doc.text(`Blood Bank: ${bloodBankName}`);
+      doc.text(`Address: ${bloodBankAddress}`);
       doc.text(`Date: ${new Date(booking.date).toLocaleDateString()}`);
       doc.text(`Time: ${booking.time}`);
       doc.moveDown();
@@ -697,10 +704,10 @@ Blood Donation Team
       // Generate QR Code
       const qrData = JSON.stringify({
         token: booking.tokenNumber,
-        donor: booking.donorId.userId.name,
-        donorId: booking.donorId.userId.username,
-        bloodBank: booking.bloodBankId.name,
-        address: booking.bloodBankId.address,
+        donor: donorName,
+        donorId: donorUsername,
+        bloodBank: bloodBankName,
+        address: bloodBankAddress,
         date: new Date(booking.date).toLocaleDateString(),
         time: booking.time
       });
