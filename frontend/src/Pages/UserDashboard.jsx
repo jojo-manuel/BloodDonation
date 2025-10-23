@@ -376,6 +376,11 @@ export default function UserDashboard() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [requestModal, setRequestModal] = useState(null); // For enhanced request modal
+  const [patients, setPatients] = useState([]); // Available patients
+  const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
+  const [selectedPatient, setSelectedPatient] = useState('');
+  const [selectedBloodBank, setSelectedBloodBank] = useState('');
 
   const handleBookSlot = async (request) => {
     // Open booking modal with request details
