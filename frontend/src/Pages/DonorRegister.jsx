@@ -731,13 +731,19 @@ export default function DonorRegister() {
             <input
               type="text"
               name="pincode"
-              placeholder="Pincode"
+              placeholder="Pincode (6 digits)"
+              pattern="[0-9]{6}"
+              maxLength="6"
               className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
               value={formData.pincode}
               onChange={handleChange}
               onBlur={handlePincodeBlur}
               required
+              title="Pincode must be exactly 6 digits"
             />
+            {formData.pincode && !/^[0-9]{6}$/.test(formData.pincode) && (
+              <p className="mt-1 text-xs text-red-500">⚠️ Pincode must be exactly 6 digits</p>
+            )}
           </div>
 
           <div>
