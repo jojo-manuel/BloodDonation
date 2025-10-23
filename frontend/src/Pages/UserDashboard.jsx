@@ -241,7 +241,27 @@ export default function UserDashboard() {
     return () => clearInterval(id);
   }, [activeTab]);
 
-  const sendRequest = async (donor) => {
+  // Fetch available patients and blood banks for request
+  const fetchPatientsAndBloodBanks = async () => {
+    try {
+      const [patientsRes, bloodBanksRes] = await Promise.all([
+        api.get('/patients'),
+        api.get('/bloodbank/approved')
+      ]);
+      
+      if (patientsRes.data.success) {
+        setPatients(patientsRes.data.data || patientsRes.data.patients || []);
+      }
+      if (bloodBanksRes.data.success) {
+        setBloodBanks(bloodBanksRes.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching patients/blood banks:', error);
+    }
+  };
+
+  // Open request modal with donor information
+  const openRequestModal = (donor) => {
     if (!donor.bloodGroup) {
       alert('Donor blood group not available');
       return;
@@ -250,12 +270,28 @@ export default function UserDashboard() {
       alert('Invalid blood group');
       return;
     }
+    setRequestModal(donor);
+    fetchPatientsAndBloodBanks();
+  };
+
+  // Send request with full details
+  const sendRequest = async () => {
+    if (!requestModal) return;
+
     try {
-      setRequestingId(donor._id);
-      const body = { bloodGroup: donor.bloodGroup };
-      const res = await api.post(`/donors/${donor._id}/requests`, body);
+      setRequestingId(requestModal._id);
+      const body = {
+        bloodGroup: requestModal.bloodGroup,
+        patientId: selectedPatient || null,
+      };
+      
+      const res = await api.post(`/donors/${requestModal._id}/requests`, body);
       if (res.data.success) {
-        alert('Request sent successfully');
+        alert('Request sent successfully with patient and blood bank details!');
+        // Close modal and reset
+        setRequestModal(null);
+        setSelectedPatient('');
+        setSelectedBloodBank('');
         // Refresh the requests lists
         fetchRequests();
         fetchReceivedRequests();
