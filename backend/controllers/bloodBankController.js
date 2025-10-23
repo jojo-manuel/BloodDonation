@@ -509,3 +509,79 @@ exports.rescheduleBooking = asyncHandler(async (req, res) => {
 
   res.json({ success: true, message: 'Booking rescheduled successfully', data: booking });
 });
+
+/**
+ * Update booking status (confirm/reject/cancel/complete)
+ * PUT /api/bloodbank/bookings/:bookingId/status
+ * Body: { status, rejectionReason }
+ */
+exports.updateBookingStatus = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const { bookingId } = req.params;
+  const { status, rejectionReason } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ success: false, message: 'status is required' });
+  }
+
+  const validStatuses = ['pending', 'confirmed', 'rejected', 'cancelled', 'completed'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  const booking = await Booking.findById(bookingId);
+  if (!booking || booking.bloodBankId.toString() !== bloodBank._id.toString()) {
+    return res.status(404).json({ success: false, message: 'Booking not found or not owned by this blood bank' });
+  }
+
+  const oldStatus = booking.status;
+
+  // Update status
+  booking.status = status;
+  
+  if (status === 'rejected' && rejectionReason) {
+    booking.rejectionReason = rejectionReason;
+  }
+
+  await booking.save();
+
+  // Update donation request status if exists
+  if (booking.donationRequestId) {
+    const newRequestStatus = 
+      status === 'confirmed' ? 'accepted' :
+      status === 'rejected' ? 'rejected' :
+      status === 'completed' ? 'completed' :
+      status === 'cancelled' ? 'cancelled' : 'pending';
+    
+    await DonationRequest.findByIdAndUpdate(booking.donationRequestId, {
+      status: newRequestStatus
+    });
+  }
+
+  // Log activity
+  await Activity.create({
+    userId: req.user._id,
+    role: 'bloodbank',
+    action: 'booking_status_updated',
+    details: {
+      bookingId: booking._id,
+      oldStatus,
+      newStatus: status,
+      rejectionReason
+    }
+  });
+
+  res.json({ 
+    success: true, 
+    message: `Booking ${status} successfully`, 
+    data: booking 
+  });
+});
