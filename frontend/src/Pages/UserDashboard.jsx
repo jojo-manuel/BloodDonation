@@ -1665,12 +1665,28 @@ export default function UserDashboard() {
             <div className="mb-4">
               {selectedPatient && (() => {
                 const patient = patients.find(p => p._id === selectedPatient);
+                // Check if patient was auto-selected (blood bank + MRID both provided)
+                const wasAutoSelected = patientSearchBloodBank && patientSearchMRID;
+                
                 return patient ? (
-                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm"><strong>Patient Name:</strong> {patient.name || patient.patientName}</p>
-                    <p className="text-sm"><strong>Blood Group:</strong> {patient.bloodGroup}</p>
-                    {patient.mrid && <p className="text-sm"><strong>MRID:</strong> {patient.mrid}</p>}
-                    {patient.bloodBankId?.name && <p className="text-sm"><strong>Blood Bank:</strong> {patient.bloodBankId.name}</p>}
+                  <div className="mt-2 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border-2 border-blue-300 dark:border-blue-700 shadow-md">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                        <span className="text-2xl">✅</span>
+                        Patient Selected
+                      </h4>
+                      {wasAutoSelected && (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-500 text-white animate-pulse">
+                          🎯 Auto-Selected
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <p className="text-sm"><strong>Name:</strong> {patient.name || patient.patientName}</p>
+                      <p className="text-sm"><strong>Blood Group:</strong> <span className="text-red-600 dark:text-red-400 font-bold">{patient.bloodGroup}</span></p>
+                      {patient.mrid && <p className="text-sm col-span-2"><strong>MRID:</strong> <span className="font-mono bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">{patient.mrid}</span></p>}
+                      {patient.bloodBankId?.name && <p className="text-sm col-span-2"><strong>Blood Bank:</strong> {patient.bloodBankId.name}</p>}
+                    </div>
                   </div>
                 ) : null;
               })()}
