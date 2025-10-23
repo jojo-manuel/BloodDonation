@@ -947,6 +947,149 @@ export default function BloodBankDashboard() {
               </p>
             </div>
 
+            {/* Filter Section */}
+            <div className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 shadow-md">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                  <span className="text-2xl">🔍</span>
+                  Filter Bookings
+                </h3>
+                <button
+                  onClick={() => {
+                    setFilterDate('');
+                    setFilterBloodGroup('');
+                    setFilterPatientName('');
+                    setFilterPatientMRID('');
+                    setFilterStatus('');
+                  }}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold text-sm"
+                >
+                  Clear Filters
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                {/* Date Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    📅 Date
+                  </label>
+                  <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm"
+                  />
+                </div>
+
+                {/* Blood Group Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    🩸 Blood Group
+                  </label>
+                  <select
+                    value={filterBloodGroup}
+                    onChange={(e) => setFilterBloodGroup(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm"
+                  >
+                    <option value="">All Blood Groups</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                  </select>
+                </div>
+
+                {/* Patient Name Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    🙋 Patient Name
+                  </label>
+                  <input
+                    type="text"
+                    value={filterPatientName}
+                    onChange={(e) => setFilterPatientName(e.target.value)}
+                    placeholder="Search by name..."
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm"
+                  />
+                </div>
+
+                {/* Patient MRID Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    🏥 MRID
+                  </label>
+                  <input
+                    type="text"
+                    value={filterPatientMRID}
+                    onChange={(e) => setFilterPatientMRID(e.target.value)}
+                    placeholder="Search by MRID..."
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm"
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    📊 Status
+                  </label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white text-sm"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Active Filters Display */}
+              {(filterDate || filterBloodGroup || filterPatientName || filterPatientMRID || filterStatus) && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Active Filters:</span>
+                  {filterDate && (
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-bold flex items-center gap-1">
+                      📅 {new Date(filterDate).toLocaleDateString()}
+                      <button onClick={() => setFilterDate('')} className="hover:text-red-600">×</button>
+                    </span>
+                  )}
+                  {filterBloodGroup && (
+                    <span className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-xs font-bold flex items-center gap-1">
+                      🩸 {filterBloodGroup}
+                      <button onClick={() => setFilterBloodGroup('')} className="hover:text-red-600">×</button>
+                    </span>
+                  )}
+                  {filterPatientName && (
+                    <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs font-bold flex items-center gap-1">
+                      🙋 {filterPatientName}
+                      <button onClick={() => setFilterPatientName('')} className="hover:text-red-600">×</button>
+                    </span>
+                  )}
+                  {filterPatientMRID && (
+                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs font-bold flex items-center gap-1">
+                      🏥 {filterPatientMRID}
+                      <button onClick={() => setFilterPatientMRID('')} className="hover:text-red-600">×</button>
+                    </span>
+                  )}
+                  {filterStatus && (
+                    <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-xs font-bold flex items-center gap-1">
+                      📊 {filterStatus}
+                      <button onClick={() => setFilterStatus('')} className="hover:text-red-600">×</button>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
             {bookings.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-4">📭</div>
