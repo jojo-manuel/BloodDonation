@@ -46,13 +46,11 @@ async function resetPassword() {
     console.log(`   Role: ${user.role}`);
     console.log(`   Current password hash: ${user.password.substring(0, 20)}...`);
 
-    // Hash new password
+    // Set new password (User model pre-save hook will hash it automatically)
     console.log(`\n🔐 Setting new password: ${NEW_PASSWORD}`);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(NEW_PASSWORD, salt);
-
-    // Update user password
-    user.password = hashedPassword;
+    
+    // Important: Set plain text password - the User model's pre-save hook will hash it
+    user.password = NEW_PASSWORD;
     await user.save();
 
     console.log('✅ Password updated successfully!\n');
