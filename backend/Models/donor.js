@@ -58,6 +58,11 @@ const DonorSchema = new mongoose.Schema({
   donatedDates: [{ type: Date }],
   isBlocked: { type: Boolean, default: false },
   isSuspended: { type: Boolean, default: false },
+  // Location coordinates for smart matching (optional)
+  location: {
+    latitude: { type: Number },
+    longitude: { type: Number }
+  },
   warningMessage: { type: String, default: null },
   warningCount: { type: Number, default: 0 },
   suspendUntil: { type: Date, default: null },

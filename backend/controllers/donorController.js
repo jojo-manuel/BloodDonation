@@ -90,18 +90,37 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
 
 /**
  * Search donors with optional filters and pagination
- * Query: bloodGroup, city, state, pincode, page, limit
+ * Now includes KNN-inspired smart matching algorithm
+ * Query: bloodGroup, city, state, pincode, latitude, longitude, smartMatch, page, limit
  */
 exports.searchDonors = asyncHandler(async (req, res) => {
-  const { bloodGroup, city, state, pincode, availability, page = 1, limit = 10 } = req.query;
+  const { 
+    bloodGroup, 
+    city, 
+    state, 
+    pincode, 
+    availability, 
+    latitude, 
+    longitude,
+    smartMatch = 'true', // Enable smart matching by default
+    page = 1, 
+    limit = 10 
+  } = req.query;
+  
   const maxLimit = Math.min(Number(limit) || 10, 50);
   const skip = (Number(page) - 1) * maxLimit;
 
   const filter = {};
-  if (bloodGroup) filter.bloodGroup = bloodGroup;
-  if (city) filter['houseAddress.city'] = city;
-  if (state) filter['houseAddress.district'] = state; // Assuming state maps to district
-  if (pincode) filter['houseAddress.pincode'] = pincode;
+  
+  // Basic filters (less strict when smart matching is enabled)
+  if (smartMatch !== 'true') {
+    // Traditional exact matching
+    if (bloodGroup) filter.bloodGroup = bloodGroup;
+    if (city) filter['houseAddress.city'] = city;
+    if (state) filter['houseAddress.district'] = state;
+    if (pincode) filter['houseAddress.pincode'] = pincode;
+  }
+  
   if (availability === 'available') filter.availability = true;
 
   // Filter lastDonatedDate to be before today
@@ -118,26 +137,96 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   
   // Add to the filter to exclude donors with completed bookings
   if (filter._id) {
-    // If _id filter exists, merge with $nin
     if (filter._id.$nin) {
       filter._id.$nin = [...filter._id.$nin, ...completedDonorIds];
     } else {
       filter._id = { ...filter._id, $nin: completedDonorIds };
     }
   } else {
-    // Create new _id filter with $nin
     if (completedDonorIds.length > 0) {
       filter._id = { $nin: completedDonorIds };
     }
   }
 
-  const [data, total] = await Promise.all([
-    Donor.find(filter).populate('userId', 'username email').skip(skip).limit(maxLimit).sort({ updatedAt: -1 }),
-    Donor.countDocuments(filter),
+  // Fetch all eligible donors
+  let donors = await Donor.find(filter)
+    .populate('userId', 'username email phone')
+    .lean();
+
+  // Get booking statistics for each donor
+  const donorIds = donors.map(d => d._id);
+  const bookingStats = await Booking.aggregate([
+    { $match: { donorId: { $in: donorIds } } },
+    {
+      $group: {
+        _id: '$donorId',
+        completedDonations: {
+          $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+        },
+        rejectedBookings: {
+          $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
+        }
+      }
+    }
   ]);
 
+  // Add statistics to donors
+  const statsMap = new Map(bookingStats.map(s => [s._id.toString(), s]));
+  donors = donors.map(donor => ({
+    ...donor,
+    completedDonations: statsMap.get(donor._id.toString())?.completedDonations || 0,
+    rejectedBookings: statsMap.get(donor._id.toString())?.rejectedBookings || 0
+  }));
+
+  // Apply smart matching if enabled
+  if (smartMatch === 'true' && bloodGroup) {
+    const { matchDonors } = require('../utils/donorMatcher');
+    
+    const searchCriteria = {
+      bloodGroup,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
+      city,
+      pincode
+    };
+    
+    // Get matched and scored donors
+    donors = matchDonors(donors, searchCriteria);
+    
+    // Donors are already sorted by score
+    const total = donors.length;
+    const paginatedDonors = donors.slice(skip, skip + maxLimit);
+    const pages = Math.ceil(total / maxLimit);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Smart matching applied', 
+      smartMatch: true,
+      data: { 
+        data: paginatedDonors, 
+        page: Number(page), 
+        total, 
+        pages 
+      } 
+    });
+  }
+
+  // Traditional pagination (if smart match disabled)
+  const total = donors.length;
+  const paginatedDonors = donors.slice(skip, skip + maxLimit);
   const pages = Math.ceil(total / maxLimit);
-  return res.json({ success: true, message: 'OK', data: { data, page: Number(page), total, pages } });
+  
+  return res.json({ 
+    success: true, 
+    message: 'OK', 
+    smartMatch: false,
+    data: { 
+      data: paginatedDonors, 
+      page: Number(page), 
+      total, 
+      pages 
+    } 
+  });
 });
 
 /**
