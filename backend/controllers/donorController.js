@@ -112,6 +112,25 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
   filter.userId = { $nin: suspendedUserIds };
 
+  // Exclude donors who have completed donations
+  const Booking = require('../Models/Booking');
+  const completedDonorIds = await Booking.find({ status: 'completed' }).distinct('donorId');
+  
+  // Add to the filter to exclude donors with completed bookings
+  if (filter._id) {
+    // If _id filter exists, merge with $nin
+    if (filter._id.$nin) {
+      filter._id.$nin = [...filter._id.$nin, ...completedDonorIds];
+    } else {
+      filter._id = { ...filter._id, $nin: completedDonorIds };
+    }
+  } else {
+    // Create new _id filter with $nin
+    if (completedDonorIds.length > 0) {
+      filter._id = { $nin: completedDonorIds };
+    }
+  }
+
   const [data, total] = await Promise.all([
     Donor.find(filter).populate('userId', 'username email').skip(skip).limit(maxLimit).sort({ updatedAt: -1 }),
     Donor.countDocuments(filter),
