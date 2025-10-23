@@ -1133,11 +1133,25 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Bank</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.bloodBankId?.name || selectedRequest.bloodBankName || 'N/A'}</p>
+                    <p className="text-gray-900 dark:text-white font-semibold">
+                      🏥 {selectedRequest.bloodBankId?.name || selectedRequest.bloodBankName || selectedRequest.bloodBankUsername || 'Not Specified'}
+                    </p>
+                    {selectedRequest.bloodBankId?.address && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        📍 {selectedRequest.bloodBankId.address}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.patientId?.name || 'N/A'}</p>
+                    <p className="text-gray-900 dark:text-white font-semibold">
+                      👤 {selectedRequest.patientId?.name || selectedRequest.patientUsername || 'Not Specified'}
+                    </p>
+                    {selectedRequest.patientId?.mrid && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        🆔 MRID: {selectedRequest.patientId.mrid}
+                      </p>
+                    )}
                   </div>
                   {selectedRequest.patientId && (
                     <>
