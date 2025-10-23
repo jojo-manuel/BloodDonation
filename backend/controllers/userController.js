@@ -621,7 +621,7 @@ A donor has booked a slot for blood donation through our platform.
 
 Booking Details:
 - Booking ID: ${booking._id}
-- Donor: ${donor.name} (${donor.email})
+- Donor: ${donor.name} (${donor.userId?.email || 'N/A'})
 - Blood Group: ${donor.bloodGroup}
 - Patient: ${patientName || 'N/A'}
 - Requested Date: ${new Date(requestedDate).toLocaleDateString()}
