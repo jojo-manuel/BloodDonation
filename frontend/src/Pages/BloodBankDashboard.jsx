@@ -135,6 +135,63 @@ export default function BloodBankDashboard() {
     }
   };
 
+  // Handle confirm booking
+  const handleConfirmBooking = async (booking) => {
+    if (!confirm(`Confirm booking for ${booking.donorName}?`)) return;
+    
+    try {
+      const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, { status: 'confirmed' });
+      if (res.data.success) {
+        alert('Booking confirmed successfully!');
+        fetchBookings(); // Refresh bookings list
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to confirm booking');
+    }
+  };
+
+  // Handle reject booking
+  const handleRejectBooking = async (booking) => {
+    const reason = prompt('Enter reason for rejection (optional):');
+    if (reason === null) return; // User clicked cancel
+    
+    try {
+      const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, { 
+        status: 'rejected',
+        rejectionReason: reason
+      });
+      if (res.data.success) {
+        alert('Booking rejected');
+        fetchBookings(); // Refresh bookings list
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject booking');
+    }
+  };
+
+  // Handle reschedule booking
+  const handleRescheduleBooking = async (newDate, newTime) => {
+    if (!rescheduleModal) return;
+    
+    try {
+      setRescheduling(true);
+      const res = await api.put(`/bloodbank/bookings/${rescheduleModal._id}/reschedule`, {
+        newDate,
+        newTime
+      });
+      
+      if (res.data.success) {
+        alert('Booking rescheduled successfully!');
+        setRescheduleModal(null);
+        fetchBookings(); // Refresh bookings list
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reschedule booking');
+    } finally {
+      setRescheduling(false);
+    }
+  };
+
   // Handle user status change
   const handleUserStatusChange = async (userId, action, value) => {
     let status = {};
