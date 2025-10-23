@@ -156,6 +156,14 @@ const handleFirebaseSignIn = async () => {
     const username = formData.email;
 
     const payload = { email: username, password: formData.password };
+    
+    // Debug logging to see what's being sent
+    console.log('🔍 Login Debug Info:');
+    console.log('  Email:', formData.email);
+    console.log('  Email length:', formData.email?.length);
+    console.log('  Password length:', formData.password?.length);
+    console.log('  Payload:', { email: payload.email, passwordLength: payload.password?.length });
+    
     api.post('/auth/login', payload)
       .then(({ data }) => {
           if (data?.success && data?.data) {
