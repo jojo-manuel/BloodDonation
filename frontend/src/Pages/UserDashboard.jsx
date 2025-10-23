@@ -921,6 +921,14 @@ export default function UserDashboard() {
                                   </span>
                                 </td>
                                 <td className="px-2 py-1">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    👤 {request.patientId?.name || request.patientUsername || 'Not Specified'}
+                                    {(request.patientId?.mrid || request.patientMRID) && (
+                                      <span className="ml-1 text-xs opacity-75">| MRID: {request.patientId?.mrid || request.patientMRID}</span>
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="px-2 py-1">
                                   <select
                                     value={newStatuses[request._id] || request.status}
                                     onChange={(e) => handleStatusChange(request._id, e.target.value)}
