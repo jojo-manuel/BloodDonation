@@ -115,12 +115,14 @@ router.post("/", authMiddleware, async (req, res) => {
  */
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== "bloodbank" && req.user.role !== "user") {
+    if (req.user.role !== "bloodbank" && req.user.role !== "user" && req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
-    // Determine blood bank ID
-    let bloodBankId = req.user._id;
+    let query = {};
+    let bloodBankId = null;
+    
+    // For blood banks: filter by their blood bank ID
     if (req.user.role === "bloodbank") {
       const BloodBank = require("../Models/BloodBank");
       const bloodBank = await BloodBank.findOne({ userId: req.user._id });
@@ -128,9 +130,12 @@ router.get("/", authMiddleware, async (req, res) => {
         return res.status(400).json({ success: false, message: "Blood bank not found" });
       }
       bloodBankId = bloodBank._id;
+      query = { bloodBankId };
     }
-
-    const patients = await Patient.find({ bloodBankId }).populate('bloodBankId', 'name');
+    // For regular users and admins: return ALL patients from all blood banks
+    // (so they can select any patient when making donation requests)
+    
+    const patients = await Patient.find(query).populate('bloodBankId', 'name address');
 
     // Get patient IDs
     const patientIds = patients.map(p => p._id);
