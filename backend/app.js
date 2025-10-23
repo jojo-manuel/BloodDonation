@@ -77,6 +77,7 @@ app.use('/api/reviews', require('./Route/reviewRoutes'));
 app.use('/api/admin', require('./Route/adminRoutes'));
 app.use('/api/bloodbank', require('./Route/bloodBankRoutes'));
 app.use('/api/patients', require('./Route/PatientCURD'));
+app.use('/api/bloodbank-analytics', require('./Route/bloodBankAnalytics'));
 
 // 404 fallback for unmatched routes
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
