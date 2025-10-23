@@ -48,6 +48,7 @@ export default function UserDashboard() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
   const [notifications, setNotifications] = useState([]); // For notifications
+  const [taxiBookingModal, setTaxiBookingModal] = useState(null); // For taxi booking modal
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Status badge component
