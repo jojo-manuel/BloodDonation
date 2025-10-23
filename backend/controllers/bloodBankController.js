@@ -405,6 +405,7 @@ exports.createBooking = asyncHandler(async (req, res) => {
 
 /**
  * Get all bookings for the authenticated blood bank
+ * Query params: date, bloodGroup, patientName, patientMRID, status
  */
 exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
   if (req.user.role !== 'bloodbank') {
@@ -416,13 +417,55 @@ exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Blood bank not found' });
   }
 
-  const bookings = await Booking.find({ bloodBankId: bloodBank._id })
+  // Build filter object
+  const filter = { bloodBankId: bloodBank._id };
+  
+  // Filter by date (exact date match)
+  if (req.query.date) {
+    const searchDate = new Date(req.query.date);
+    const startOfDay = new Date(searchDate.getFullYear(), searchDate.getMonth(), searchDate.getDate());
+    const endOfDay = new Date(searchDate.getFullYear(), searchDate.getMonth(), searchDate.getDate() + 1);
+    filter.date = { $gte: startOfDay, $lt: endOfDay };
+  }
+
+  // Filter by blood group
+  if (req.query.bloodGroup) {
+    filter.bloodGroup = req.query.bloodGroup;
+  }
+
+  // Filter by patient name (case-insensitive partial match)
+  if (req.query.patientName) {
+    filter.patientName = { $regex: req.query.patientName, $options: 'i' };
+  }
+
+  // Filter by patient MRID (exact match)
+  if (req.query.patientMRID) {
+    filter.patientMRID = req.query.patientMRID;
+  }
+
+  // Filter by status
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
+
+  const bookings = await Booking.find(filter)
     .populate('donorId', 'userId name bloodGroup houseAddress')
     .populate('donorId.userId', 'username name email phone')
     .populate('donationRequestId', 'requesterId patientId status')
     .sort({ date: 1, time: 1 });
 
-  res.json({ success: true, data: bookings });
+  res.json({ 
+    success: true, 
+    data: bookings,
+    count: bookings.length,
+    filters: {
+      date: req.query.date || null,
+      bloodGroup: req.query.bloodGroup || null,
+      patientName: req.query.patientName || null,
+      patientMRID: req.query.patientMRID || null,
+      status: req.query.status || null
+    }
+  });
 });
 
 /**
