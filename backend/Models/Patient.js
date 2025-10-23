@@ -53,6 +53,18 @@ const patientSchema = new mongoose.Schema(
       required: [true, "Units required is mandatory"],
       min: [1, "At least 1 unit is required"],
     },
+    unitsReceived: {
+      type: Number,
+      default: 0,
+      min: [0, "Units received cannot be negative"],
+    },
+    isFulfilled: {
+      type: Boolean,
+      default: false,
+    },
+    fulfilledAt: {
+      type: Date,
+    },
     dateNeeded: {
       type: Date,
       required: [true, "Date at which blood is needed is required"],
