@@ -771,9 +771,9 @@ export default function UserDashboard() {
                             <span className="mr-1">📞</span>
                             Contact
                           </button>
-                          <button onClick={() => sendRequest(donor)} disabled={requestingId === donor._id} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50">
+                          <button onClick={() => openRequestModal(donor)} disabled={requestingId === donor._id} className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-600 to-purple-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50">
                             <span className="mr-1">❤️</span>
-                            {requestingId === donor._id ? 'Requesting...' : 'Request'}
+                            Request Donation
                           </button>
                         </div>
                       </div>
