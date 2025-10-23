@@ -1820,32 +1820,29 @@ export default function UserDashboard() {
                     
                     {/* Results Counter */}
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      {(() => {
-                        let filteredPatients = patients;
-                        
-                        // Filter by Blood Bank
-                        if (patientSearchBloodBank) {
-                          filteredPatients = filteredPatients.filter(p => {
-                            const bbId = p.bloodBankId?._id || p.bloodBankId;
-                            return bbId === patientSearchBloodBank;
-                          });
-                        }
-                        
-                        // Filter by MRID
-                        if (patientSearchMRID) {
-                          filteredPatients = filteredPatients.filter(p => 
-                            p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
-                          );
-                        }
+                      {searchingPatients ? (
+                        <span className="text-blue-600 dark:text-blue-400">
+                          🔍 Searching database...
+                        </span>
+                      ) : (() => {
+                        // Use searched patients if MRID is entered
+                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0) 
+                          ? searchedPatients 
+                          : patients.filter(p => {
+                              const bbId = p.bloodBankId?._id || p.bloodBankId;
+                              return bbId === patientSearchBloodBank;
+                            });
                         
                         const count = filteredPatients.length;
                         const selectedBB = bloodBanks.find(bb => bb._id === patientSearchBloodBank);
+                        const isDbSearch = patientSearchMRID && searchedPatients.length > 0;
                         
                         return (
                           <>
-                            📊 Found {count} patient{count !== 1 ? 's' : ''} 
+                            {isDbSearch ? '🔍' : '📊'} Found {count} patient{count !== 1 ? 's' : ''} 
                             {patientSearchMRID && ` with MRID "${patientSearchMRID}"`}
                             {selectedBB && ` in ${selectedBB.name}`}
+                            {isDbSearch && <span className="ml-1 text-blue-600 dark:text-blue-400">(from database)</span>}
                             {count === 1 && patientSearchMRID && (
                               <span className="ml-2 text-green-600 dark:text-green-400 font-semibold">
                                 ✅ Auto-selected!
