@@ -426,6 +426,51 @@ exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get booking by token number (for frontdesk)
+ * GET /api/bloodbank/bookings/token/:tokenNumber
+ */
+exports.getBookingByToken = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const { tokenNumber } = req.params;
+
+  if (!tokenNumber) {
+    return res.status(400).json({ success: false, message: 'Token number is required' });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  // Find booking with this token number for this blood bank
+  const booking = await Booking.findOne({ 
+    tokenNumber: tokenNumber.toString(),
+    bloodBankId: bloodBank._id
+  })
+    .populate('donorId', 'userId name bloodGroup houseAddress contactNumber')
+    .populate({
+      path: 'donorId',
+      populate: {
+        path: 'userId',
+        select: 'username name email phone'
+      }
+    })
+    .populate('donationRequestId', 'requesterId patientId status');
+
+  if (!booking) {
+    return res.status(404).json({ 
+      success: false, 
+      message: `No booking found with token number ${tokenNumber}` 
+    });
+  }
+
+  res.json({ success: true, data: booking });
+});
+
+/**
  * Reschedule a booking
  * Route param: bookingId (optional, for new format)
  * Body: { bookingId, newDate, newTime } (bookingId optional if in route param)

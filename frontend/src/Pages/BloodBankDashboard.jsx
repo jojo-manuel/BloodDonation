@@ -16,6 +16,9 @@ export default function BloodBankDashboard() {
   const [editingPatient, setEditingPatient] = useState(null);
   const [rescheduleModal, setRescheduleModal] = useState(null); // For reschedule modal
   const [rescheduling, setRescheduling] = useState(false);
+  const [tokenSearch, setTokenSearch] = useState(''); // Frontdesk token search
+  const [searchedBooking, setSearchedBooking] = useState(null); // Found booking
+  const [searchingToken, setSearchingToken] = useState(false); // Loading state
   const [formData, setFormData] = useState({
     patientName: "",
     address: {
@@ -189,6 +192,98 @@ export default function BloodBankDashboard() {
       alert(err.response?.data?.message || 'Failed to reschedule booking');
     } finally {
       setRescheduling(false);
+    }
+  };
+
+  // Frontdesk: Search booking by token number
+  const handleTokenSearch = async () => {
+    if (!tokenSearch.trim()) {
+      alert('Please enter a token number');
+      return;
+    }
+
+    try {
+      setSearchingToken(true);
+      const res = await api.get(`/bloodbank/bookings/token/${tokenSearch.trim()}`);
+      
+      if (res.data.success) {
+        setSearchedBooking(res.data.data);
+      } else {
+        alert('Booking not found');
+        setSearchedBooking(null);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Booking not found');
+      setSearchedBooking(null);
+    } finally {
+      setSearchingToken(false);
+    }
+  };
+
+  // Frontdesk: Mark arrival
+  const handleMarkArrival = async () => {
+    if (!searchedBooking) return;
+
+    if (!confirm(`Mark arrival for ${searchedBooking.donorName}?`)) return;
+
+    try {
+      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+        status: 'confirmed',
+        arrived: true,
+        arrivalTime: new Date().toISOString()
+      });
+
+      if (res.data.success) {
+        alert('Arrival marked successfully!');
+        setSearchedBooking(res.data.data);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to mark arrival');
+    }
+  };
+
+  // Frontdesk: Mark rejection
+  const handleMarkRejection = async () => {
+    if (!searchedBooking) return;
+
+    const reason = prompt('Enter reason for rejection:');
+    if (reason === null) return;
+
+    try {
+      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+        status: 'rejected',
+        rejectionReason: reason
+      });
+
+      if (res.data.success) {
+        alert('Booking rejected');
+        setSearchedBooking(null);
+        setTokenSearch('');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject booking');
+    }
+  };
+
+  // Frontdesk: Mark completion
+  const handleMarkCompletion = async () => {
+    if (!searchedBooking) return;
+
+    if (!confirm(`Mark donation as completed for ${searchedBooking.donorName}?`)) return;
+
+    try {
+      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+        status: 'completed',
+        completedAt: new Date().toISOString()
+      });
+
+      if (res.data.success) {
+        alert('✅ Donation completed! Thank you for saving lives! 🎉');
+        setSearchedBooking(null);
+        setTokenSearch('');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to mark completion');
     }
   };
 
@@ -1038,14 +1133,205 @@ export default function BloodBankDashboard() {
                 🖥️ Frontdesk Management
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Manage walk-in donors and frontdesk operations
+                Search donors by token number and manage arrivals
               </p>
             </div>
 
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">Frontdesk features coming soon...</p>
+            {/* Token Search */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🔍</span>
+                  Search by Token Number
+                </h3>
+                
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="Enter token number (e.g., 25)"
+                    value={tokenSearch}
+                    onChange={(e) => setTokenSearch(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleTokenSearch()}
+                    className="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 font-mono text-lg"
+                  />
+                  <button
+                    onClick={handleTokenSearch}
+                    disabled={searchingToken}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                  >
+                    {searchingToken ? (
+                      <>
+                        <span className="inline-block animate-spin">⏳</span>
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <span>🔍</span>
+                        Search
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
+
+            {/* Booking Details */}
+            {searchedBooking ? (
+              <div className="max-w-4xl mx-auto">
+                <div className="rounded-2xl border-2 border-green-300 dark:border-green-700 bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-green-900/20 p-6 shadow-2xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                      <span className="text-3xl">✅</span>
+                      Booking Found!
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setSearchedBooking(null);
+                        setTokenSearch('');
+                      }}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition"
+                    >
+                      Clear
+                    </button>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="mb-4">
+                    <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                      searchedBooking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                      searchedBooking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                      searchedBooking.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                    }`}>
+                      {searchedBooking.status.toUpperCase()}
+                      {searchedBooking.arrived && ' - ARRIVED'}
+                    </span>
+                  </div>
+
+                  {/* Booking Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-white/50 dark:bg-gray-700/50 rounded-xl">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">🎫 Token Number</span>
+                      <span className="text-2xl font-mono font-bold text-yellow-700 dark:text-yellow-400">#{searchedBooking.tokenNumber}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">📋 Booking ID</span>
+                      <span className="text-lg font-mono text-gray-900 dark:text-white">{searchedBooking.bookingId}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">👤 Donor Name</span>
+                      <span className="text-xl font-bold text-gray-900 dark:text-white">{searchedBooking.donorName}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">🩸 Blood Group</span>
+                      <span className="text-xl font-bold text-red-600 dark:text-red-400">{searchedBooking.bloodGroup}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">📧 Email</span>
+                      <span className="text-sm text-gray-900 dark:text-white">{searchedBooking.donorId?.userId?.email || 'N/A'}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">📱 Phone</span>
+                      <span className="text-sm text-gray-900 dark:text-white">{searchedBooking.donorId?.userId?.phone || searchedBooking.donorId?.contactNumber || 'N/A'}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">📅 Appointment Date</span>
+                      <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {new Date(searchedBooking.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">⏰ Time</span>
+                      <span className="text-lg font-semibold text-gray-900 dark:text-white">{searchedBooking.time}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">🙋 Patient Name</span>
+                      <span className="text-lg text-gray-900 dark:text-white">{searchedBooking.patientName || 'N/A'}</span>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-semibold">🏥 Patient MRID</span>
+                      <span className="text-lg font-mono text-gray-900 dark:text-white">{searchedBooking.patientMRID || 'N/A'}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  {searchedBooking.status !== 'completed' && searchedBooking.status !== 'rejected' && (
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      {!searchedBooking.arrived && (
+                        <button
+                          onClick={handleMarkArrival}
+                          className="px-6 py-3 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-xl font-semibold hover:from-green-700 hover:to-teal-600 transition flex items-center gap-2 shadow-lg"
+                        >
+                          <span className="text-xl">✅</span>
+                          Mark Arrival
+                        </button>
+                      )}
+                      
+                      {searchedBooking.arrived && (
+                        <button
+                          onClick={handleMarkCompletion}
+                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-600 transition flex items-center gap-2 shadow-lg"
+                        >
+                          <span className="text-xl">🎉</span>
+                          Mark Completed
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={handleMarkRejection}
+                        className="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-500 text-white rounded-xl font-semibold hover:from-red-700 hover:to-rose-600 transition flex items-center gap-2 shadow-lg"
+                      >
+                        <span className="text-xl">❌</span>
+                        Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {searchedBooking.status === 'completed' && (
+                    <div className="text-center p-6 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
+                        🎉 Donation Completed!
+                      </p>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                        Thank you for saving lives!
+                      </p>
+                    </div>
+                  )}
+
+                  {searchedBooking.status === 'rejected' && (
+                    <div className="text-center p-6 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                      <p className="text-2xl font-bold text-red-900 dark:text-red-200">
+                        ❌ Booking Rejected
+                      </p>
+                      {searchedBooking.rejectionReason && (
+                        <p className="text-sm text-red-700 dark:text-red-300 mt-2">
+                          Reason: {searchedBooking.rejectionReason}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎫</div>
+                <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                  Enter a token number to view booking details
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  Donors will present their token number when they arrive
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

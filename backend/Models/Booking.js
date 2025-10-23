@@ -15,6 +15,10 @@ const BookingSchema = new mongoose.Schema({
   bloodBankName: { type: String }, // Name of the blood bank
   bloodGroup: { type: String, enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] }, // Blood group
   patientMRID: { type: String }, // Patient's MRID
+  arrived: { type: Boolean, default: false }, // Has donor arrived at frontdesk
+  arrivalTime: { type: Date }, // Time when donor arrived
+  completedAt: { type: Date }, // Time when donation was completed
+  rejectionReason: { type: String }, // Reason for rejection
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", BookingSchema);
