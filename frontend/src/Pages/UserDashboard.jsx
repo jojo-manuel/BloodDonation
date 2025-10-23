@@ -396,6 +396,37 @@ export default function UserDashboard() {
   const [patientSearchMRID, setPatientSearchMRID] = useState(''); // For MRID search
   const [patientSearchBloodBank, setPatientSearchBloodBank] = useState(''); // For blood bank filter
 
+  // Auto-populate patient when blood bank + MRID uniquely identify a patient
+  useEffect(() => {
+    if (!patientSearchBloodBank || !patientSearchMRID || patients.length === 0) {
+      return; // Need both blood bank and MRID to auto-populate
+    }
+
+    // Filter patients by blood bank and MRID
+    let filteredPatients = patients.filter(p => {
+      const bbId = p.bloodBankId?._id || p.bloodBankId;
+      const matchesBloodBank = bbId === patientSearchBloodBank;
+      const matchesMRID = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
+      return matchesBloodBank && matchesMRID;
+    });
+
+    // If exactly 1 patient matches, auto-select it
+    if (filteredPatients.length === 1) {
+      const patient = filteredPatients[0];
+      console.log('🎯 Auto-selecting patient:', patient.name, 'MRID:', patient.mrid);
+      setSelectedPatient(patient._id);
+      setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
+    } else if (filteredPatients.length === 0) {
+      // No matches - clear selection
+      console.log('❌ No patients found with MRID:', patientSearchMRID);
+      setSelectedPatient('');
+    } else {
+      // Multiple matches - user needs to choose
+      console.log(`📋 Found ${filteredPatients.length} patients with MRID containing "${patientSearchMRID}"`);
+      // Don't auto-select, let user choose from dropdown
+    }
+  }, [patients, patientSearchBloodBank, patientSearchMRID]);
+
   const handleBookSlot = async (request) => {
     // Open booking modal with request details
     setBookingModal(request);
