@@ -31,6 +31,13 @@ router.get(
   bloodBankController.getDonationRequests
 );
 
+// Confirm/accept a donation request and create a booking
+router.post(
+  "/bookings/confirm",
+  authMiddleware,
+  bloodBankController.createBooking
+);
+
 // Get all bookings for the blood bank (confirmed bookings)
 router.get(
   "/bookings",
