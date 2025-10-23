@@ -38,6 +38,13 @@ router.get(
   bloodBankController.getBookingByToken
 );
 
+// Get all donors who have visited with their visit history
+router.get(
+  "/visited-donors",
+  authMiddleware,
+  bloodBankController.getVisitedDonors
+);
+
 // Update booking status (confirm/reject/cancel/complete)
 router.put(
   "/bookings/:bookingId/status",
