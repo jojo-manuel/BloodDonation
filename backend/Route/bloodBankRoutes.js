@@ -31,6 +31,13 @@ router.get(
   bloodBankController.getBookingsForBloodBank
 );
 
+// Get booking by token number (frontdesk)
+router.get(
+  "/bookings/token/:tokenNumber",
+  authMiddleware,
+  bloodBankController.getBookingByToken
+);
+
 // Update booking status (confirm/reject/cancel/complete)
 router.put(
   "/bookings/:bookingId/status",
