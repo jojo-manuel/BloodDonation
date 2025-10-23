@@ -1292,92 +1292,383 @@ export default function UserDashboard() {
                 👤 My Profile
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Update your profile information
+                View and update your profile information
               </p>
             </div>
 
-            <div className="max-w-md mx-auto">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={profileData.name || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your name"
-                  />
+            <div className="max-w-4xl mx-auto">
+              {/* Profile Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-gradient-to-br from-pink-500/20 to-purple-500/20 p-6 rounded-xl border border-pink-200 dark:border-pink-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white text-xl font-bold">
+                      {profileData.name ? profileData.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Account Status</div>
+                      <div className="font-bold text-lg text-gray-900 dark:text-white">
+                        {profileData.isSuspended ? '⏸️ Suspended' : '✅ Active'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={profileData.phone || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your phone number"
-                  />
+
+                <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">📧</div>
+                    <div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">Email Verified</div>
+                      <div className="font-bold text-lg text-gray-900 dark:text-white">
+                        {profileData.isEmailVerified ? '✅ Yes' : '⏳ Pending'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={profileData.email || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your email"
-                    readOnly
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
-                  <input
-                    type="text"
-                    value={profileData.username || ''}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Enter your username"
-                    readOnly
-                  />
+
+                <div className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 p-6 rounded-xl border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">👤</div>
+                    <div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">User Role</div>
+                      <div className="font-bold text-lg text-gray-900 dark:text-white capitalize">
+                        {profileData.role || 'User'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              {/* Edit Profile Form */}
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span>✏️</span>
+                  Edit Profile Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.name || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={profileData.phone || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="+91 9876543210"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Email Address 🔒
+                    </label>
+                    <input
+                      type="email"
+                      value={profileData.email || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
+                      readOnly
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Username 🔒
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.username || ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
+                      readOnly
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Username cannot be changed</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Details */}
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span>ℹ️</span>
+                  Account Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Account ID:</span>
+                    <span className="font-mono text-gray-900 dark:text-white">{profileData._id || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Created On:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Last Updated:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString() : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Provider:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                      {profileData.provider || 'Local'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleUpdateProfile}
                   disabled={updatingProfile}
-                  className="flex-1 bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 disabled:opacity-50"
+                  className="flex-1 min-w-[200px] bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-pink-700 hover:to-purple-700 disabled:opacity-50 font-semibold shadow-lg"
                 >
-                  {updatingProfile ? 'Updating...' : 'Update Profile'}
+                  {updatingProfile ? '⏳ Updating...' : '💾 Update Profile'}
                 </button>
+
                 {profileData.isSuspended ? (
-                  <>
-                    <button
-                      onClick={handleUnsuspendAccount}
-                      disabled={deletingAccount}
-                      className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50"
-                    >
-                      {deletingAccount ? 'Unsuspending...' : 'Unsuspend Account'}
-                    </button>
-                    <div className="flex-1 bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded-lg text-sm">
-                      Account suspended - you can login but won't appear in donor searches
-                    </div>
-                  </>
+                  <button
+                    onClick={handleUnsuspendAccount}
+                    disabled={deletingAccount}
+                    className="flex-1 min-w-[200px] bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 font-semibold shadow-lg"
+                  >
+                    {deletingAccount ? '⏳ Processing...' : '▶️ Unsuspend Account'}
+                  </button>
                 ) : (
                   <button
                     onClick={handleSuspendAccount}
                     disabled={deletingAccount}
-                    className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                    className="flex-1 min-w-[200px] bg-gradient-to-r from-orange-600 to-amber-600 text-white py-3 px-6 rounded-lg hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 font-semibold shadow-lg"
                   >
-                    {deletingAccount ? 'Suspending...' : 'Suspend Account (3 Months)'}
+                    {deletingAccount ? '⏳ Processing...' : '⏸️ Suspend Account (3 Months)'}
                   </button>
                 )}
+
                 <button
                   onClick={handleDeleteAccount}
                   disabled={deletingAccount}
-                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 min-w-[200px] bg-gradient-to-r from-red-600 to-rose-600 text-white py-3 px-6 rounded-lg hover:from-red-700 hover:to-rose-700 disabled:opacity-50 font-semibold shadow-lg"
                 >
-                  {deletingAccount ? 'Deleting...' : 'Delete Account'}
+                  {deletingAccount ? '⏳ Deleting...' : '🗑️ Delete Account'}
+                </button>
+              </div>
+
+              {profileData.isSuspended && (
+                <div className="mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded">
+                  <p className="font-semibold">⚠️ Account Suspended</p>
+                  <p className="text-sm mt-1">You can login but won't appear in donor searches until {profileData.suspendedUntil ? new Date(profileData.suspendedUntil).toLocaleDateString() : 'reactivated'}.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <div className="mb-6 text-center">
+              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                ⚙️ Settings
+              </h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Customize your account preferences and privacy settings
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-6">
+              {/* Notification Settings */}
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span>🔔</span>
+                  Notification Preferences
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">Email Notifications</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Receive donation requests via email</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.emailNotifications}
+                        onChange={(e) => setSettingsData(prev => ({...prev, emailNotifications: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">SMS Notifications</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Receive urgent alerts via SMS</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.smsNotifications}
+                        onChange={(e) => setSettingsData(prev => ({...prev, smsNotifications: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">Push Notifications</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Browser push notifications</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.pushNotifications}
+                        onChange={(e) => setSettingsData(prev => ({...prev, pushNotifications: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">Donation Reminders</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Periodic reminders to donate blood</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.donationReminders}
+                        onChange={(e) => setSettingsData(prev => ({...prev, donationReminders: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span>🔒</span>
+                  Privacy & Security
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">Two-Factor Authentication</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Add extra security to your account</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.twoFactorAuth}
+                        onChange={(e) => setSettingsData(prev => ({...prev, twoFactorAuth: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">Marketing Emails</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Receive promotional emails and updates</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settingsData.marketingEmails}
+                        onChange={(e) => setSettingsData(prev => ({...prev, marketingEmails: e.target.checked}))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Appearance Settings */}
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span>🎨</span>
+                  Appearance
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Language
+                    </label>
+                    <select
+                      value={settingsData.language}
+                      onChange={(e) => setSettingsData(prev => ({...prev, language: e.target.value}))}
+                      className="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">हिन्दी (Hindi)</option>
+                      <option value="ta">தமிழ் (Tamil)</option>
+                      <option value="te">తెలుగు (Telugu)</option>
+                      <option value="ml">മലയാളം (Malayalam)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Timezone
+                    </label>
+                    <select
+                      value={settingsData.timezone}
+                      onChange={(e) => setSettingsData(prev => ({...prev, timezone: e.target.value}))}
+                      className="w-full md:w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                      <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                      <option value="Europe/London">Europe/London (GMT)</option>
+                      <option value="America/New_York">America/New_York (EST)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Settings Button */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => alert('Settings saved successfully!')}
+                  className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-pink-700 hover:to-purple-700 font-semibold shadow-lg"
+                >
+                  💾 Save Settings
+                </button>
+                <button
+                  onClick={() => setSettingsData({
+                    emailNotifications: true,
+                    smsNotifications: false,
+                    pushNotifications: true,
+                    donationReminders: true,
+                    marketingEmails: false,
+                    twoFactorAuth: false,
+                    darkMode: false,
+                    language: 'en',
+                    timezone: 'Asia/Kolkata'
+                  })}
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+                >
+                  🔄 Reset to Default
                 </button>
               </div>
             </div>
