@@ -233,8 +233,10 @@ export default function DonorRegister() {
       }
     });
 
+    // Skip validation for optional fields
+    const optionalFields = ["lastDonationDate", "houseAddress", "localBody", "state"];
     Object.entries(formData).forEach(([key, value]) => {
-      if (typeof value === "string" && value.trim() === "") {
+      if (typeof value === "string" && value.trim() === "" && !optionalFields.includes(key)) {
         errors.push(`${key.charAt(0).toUpperCase() + key.slice(1)} cannot be empty or only spaces`);
       }
     });
@@ -312,7 +314,6 @@ export default function DonorRegister() {
           localBody: "",
           city: "",
           district: "",
-          postalCode: "",
           pincode: "",
           workAddress: "",
           weight: "",
@@ -383,7 +384,6 @@ export default function DonorRegister() {
               localBody: formData.localBody,
               city: formData.city,
               district: formData.district,
-              postalCode: formData.postalCode,
               pincode: formData.pincode,
             },
             workAddress: formData.workAddress,
