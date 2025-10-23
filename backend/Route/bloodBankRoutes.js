@@ -31,7 +31,21 @@ router.get(
   bloodBankController.getBookingsForBloodBank
 );
 
-// Reschedule a booking
+// Update booking status (confirm/reject/cancel/complete)
+router.put(
+  "/bookings/:bookingId/status",
+  authMiddleware,
+  bloodBankController.updateBookingStatus
+);
+
+// Reschedule a specific booking
+router.put(
+  "/bookings/:bookingId/reschedule",
+  authMiddleware,
+  bloodBankController.rescheduleBooking
+);
+
+// Old reschedule route (keeping for backwards compatibility)
 router.put(
   "/bookings/reschedule",
   authMiddleware,
