@@ -1776,38 +1776,33 @@ export default function UserDashboard() {
                       onChange={(e) => {
                         setSelectedPatient(e.target.value);
                         // Auto-select blood bank from patient
-                        const patient = patients.find(p => p._id === e.target.value);
+                        // Check both searchedPatients and patients arrays
+                        const allPatients = [...searchedPatients, ...patients];
+                        const patient = allPatients.find(p => p._id === e.target.value);
                         if (patient && patient.bloodBankId) {
                           setSelectedBloodBank(patient.bloodBankId._id || patient.bloodBankId);
                         }
                       }}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                      disabled={searchingPatients}
                     >
-                      <option value="">-- Select Patient --</option>
+                      <option value="">
+                        {searchingPatients ? '⏳ Searching database...' : '-- Select Patient --'}
+                      </option>
                       {(() => {
-                        // Filter patients based on search criteria
-                        let filteredPatients = patients;
-                        
-                        // Filter by Blood Bank (required)
-                        if (patientSearchBloodBank) {
-                          filteredPatients = filteredPatients.filter(p => {
-                            const bbId = p.bloodBankId?._id || p.bloodBankId;
-                            return bbId === patientSearchBloodBank;
-                          });
-                        }
-                        
-                        // Filter by MRID (optional)
-                        if (patientSearchMRID) {
-                          filteredPatients = filteredPatients.filter(p => 
-                            p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
-                          );
-                        }
+                        // Use searched patients if MRID is entered, otherwise filter from loaded patients
+                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0) 
+                          ? searchedPatients 
+                          : patients.filter(p => {
+                              const bbId = p.bloodBankId?._id || p.bloodBankId;
+                              return bbId === patientSearchBloodBank;
+                            });
                         
                         // If no results
-                        if (filteredPatients.length === 0) {
+                        if (filteredPatients.length === 0 && !searchingPatients) {
                           return <option value="" disabled>
                             {patientSearchMRID 
-                              ? `No patients found with MRID "${patientSearchMRID}" in selected blood bank`
+                              ? `No patients found with MRID "${patientSearchMRID}" in database`
                               : 'No patients found in selected blood bank'}
                           </option>;
                         }
@@ -1817,6 +1812,7 @@ export default function UserDashboard() {
                           <option key={patient._id} value={patient._id}>
                             {patient.name || patient.patientName} - {patient.bloodGroup} 
                             {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
+                            {patient.bloodBankId?.name ? ` | ${patient.bloodBankId.name}` : ''}
                           </option>
                         ));
                       })()}
