@@ -787,14 +787,46 @@ export default function DonorRegister() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Donation Date</label>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Donation Date (Optional)</label>
             <input
               type="date"
               name="lastDonationDate"
               className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
               value={formData.lastDonationDate}
               onChange={handleChange}
+              min={formData.dob ? (() => {
+                const dobDate = new Date(formData.dob);
+                dobDate.setFullYear(dobDate.getFullYear() + 18);
+                return dobDate.toISOString().split('T')[0];
+              })() : ''}
+              max={new Date().toISOString().split('T')[0]}
+              title={formData.dob ? "Select a date between when you turned 18 and today" : "Please select date of birth first"}
             />
+            {formData.lastDonationDate && formData.dob && (() => {
+              const donationDate = new Date(formData.lastDonationDate);
+              const dobDate = new Date(formData.dob);
+              const today = new Date();
+              const age18Date = new Date(dobDate);
+              age18Date.setFullYear(age18Date.getFullYear() + 18);
+              
+              if (donationDate < age18Date) {
+                return <p className="mt-1 text-xs text-red-500">⚠️ Donation date must be after you turned 18</p>;
+              }
+              if (donationDate > today) {
+                return <p className="mt-1 text-xs text-red-500">⚠️ Donation date cannot be in the future</p>;
+              }
+              return null;
+            })()}
+            {formData.lastDonationDate && !formData.dob && (
+              <p className="mt-1 text-xs text-yellow-500">⚠️ Please select your date of birth first</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {formData.dob ? `You turned 18 on ${(() => {
+                const dobDate = new Date(formData.dob);
+                dobDate.setFullYear(dobDate.getFullYear() + 18);
+                return dobDate.toLocaleDateString();
+              })()}` : 'Enter date of birth to see when you turned 18'}
+            </p>
           </div>
 
           <div className="md:col-span-2">
