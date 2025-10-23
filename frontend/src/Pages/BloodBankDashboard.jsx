@@ -752,31 +752,127 @@ export default function BloodBankDashboard() {
                 📅 Booked Slots
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                View all booked donation slots and requests
+                View and manage all confirmed booking slots
               </p>
             </div>
 
-            {donationRequests.length === 0 ? (
+            {bookings.length === 0 ? (
               <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">No donation requests found.</p>
+                <div className="text-4xl mb-4">📭</div>
+                <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">No bookings yet</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Bookings will appear here once donors book their slots</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {donationRequests.map((request) => (
-                  <div key={request._id} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-                    <div className="flex-1">
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white">{request.donorName || request.name}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        <p><strong>To:</strong> {request.donorName || request.name}</p>
-                        <p>📧 Email: {request.email}</p>
-                        <p>📱 Phone: {request.phone}</p>
-                        <p>🩸 Blood Group: {request.bloodGroup}</p>
-                        <p>📍 Address: {formatAddress(request.address)}</p>
-                        <p>📅 Donation Date: {new Date(request.donationDate).toLocaleDateString()}</p>
-                        <p>⏰ Time Slot: {request.timeSlot}</p>
-                        <p>🏥 Blood Bank: {request.bloodBankName}</p>
-                        <p>📝 Status: <span className={`font-semibold ${request.status === 'confirmed' ? 'text-green-600' : request.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}`}>{request.status}</span></p>
+                {bookings.map((booking) => (
+                  <div key={booking._id} className="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 hover:border-pink-300 dark:hover:border-pink-700 transition">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 className="font-bold text-xl text-gray-900 dark:text-white">
+                            Booking ID: {booking.bookingId}
+                          </h4>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                            booking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                            booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
+                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {booking.status.toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">🎫 Token:</span>
+                            <span className="font-mono bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded font-bold text-yellow-900 dark:text-yellow-200">
+                              #{booking.tokenNumber || 'N/A'}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">👤 Donor:</span>
+                            <span>{booking.donorName || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">🩸 Blood Group:</span>
+                            <span className="font-bold text-red-600 dark:text-red-400">{booking.bloodGroup}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">📧 Email:</span>
+                            <span className="text-xs">{booking.donorId?.userId?.email || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">📱 Phone:</span>
+                            <span>{booking.donorId?.userId?.phone || booking.donorId?.contactNumber || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">📅 Date:</span>
+                            <span className="font-semibold">{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">⏰ Time:</span>
+                            <span className="font-semibold">{booking.time}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">🙋 Patient:</span>
+                            <span>{booking.patientName || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">🏥 MRID:</span>
+                            <span className="font-mono">{booking.patientMRID || 'N/A'}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">📝 Requester:</span>
+                            <span>{booking.requesterName || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 ml-4">
+                        {booking.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => setRescheduleModal(booking)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <span>📅</span>
+                              Reschedule
+                            </button>
+                            <button
+                              onClick={() => handleConfirmBooking(booking)}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <span>✅</span>
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => handleRejectBooking(booking)}
+                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <span>❌</span>
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {booking.status === 'confirmed' && (
+                          <button
+                            onClick={() => setRescheduleModal(booking)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <span>📅</span>
+                            Reschedule
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
