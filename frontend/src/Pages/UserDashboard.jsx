@@ -288,16 +288,42 @@ export default function UserDashboard() {
   const sendRequest = async () => {
     if (!requestModal) return;
 
+    // Validate patient is selected
+    if (!selectedPatient) {
+      alert('⚠️ Please select a patient before sending the request!');
+      return;
+    }
+
+    // Get patient details for confirmation
+    const patient = patients.find(p => p._id === selectedPatient);
+    
     try {
       setRequestingId(requestModal._id);
       const body = {
         bloodGroup: requestModal.bloodGroup,
-        patientId: selectedPatient || null,
+        patientId: selectedPatient,
       };
       
+      // Debug logging
+      console.log('📤 Sending donation request:');
+      console.log('  Donor ID:', requestModal._id);
+      console.log('  Patient ID:', selectedPatient);
+      console.log('  Patient Name:', patient?.name || patient?.patientName);
+      console.log('  Patient MRID:', patient?.mrid);
+      console.log('  Blood Bank:', patient?.bloodBankId?.name);
+      console.log('  Request Body:', body);
+      
       const res = await api.post(`/donors/${requestModal._id}/requests`, body);
+      
+      console.log('✅ Request response:', res.data);
+      
       if (res.data.success) {
-        alert('Request sent successfully with patient and blood bank details!');
+        const successMsg = patient 
+          ? `✅ Request sent successfully!\n\n👤 Patient: ${patient.name || patient.patientName}\n🔢 MRID: ${patient.mrid}\n🏥 Blood Bank: ${patient.bloodBankId?.name || 'N/A'}`
+          : 'Request sent successfully with patient and blood bank details!';
+        
+        alert(successMsg);
+        
         // Close modal and reset
         setRequestModal(null);
         setSelectedPatient('');
@@ -311,6 +337,8 @@ export default function UserDashboard() {
         alert(res.data.message || 'Failed to send request');
       }
     } catch (e) {
+      console.error('❌ Error sending request:', e);
+      console.error('Error response:', e?.response?.data);
       alert(e?.response?.data?.message || 'Failed to send request');
     } finally {
       setRequestingId(null);
