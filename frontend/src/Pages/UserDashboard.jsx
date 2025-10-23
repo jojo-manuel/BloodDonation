@@ -249,14 +249,24 @@ export default function UserDashboard() {
         api.get('/bloodbank/approved')
       ]);
       
+      console.log('📊 Patients Response:', patientsRes.data);
+      console.log('🏥 Blood Banks Response:', bloodBanksRes.data);
+      
       if (patientsRes.data.success) {
-        setPatients(patientsRes.data.data || patientsRes.data.patients || []);
+        const patientsData = patientsRes.data.data || patientsRes.data.patients || [];
+        console.log('✅ Patients loaded:', patientsData.length);
+        setPatients(patientsData);
       }
+      
       if (bloodBanksRes.data.success) {
-        setBloodBanks(bloodBanksRes.data.data || []);
+        const bloodBanksData = bloodBanksRes.data.data || bloodBanksRes.data.bloodBanks || [];
+        console.log('✅ Blood Banks loaded:', bloodBanksData.length);
+        console.log('🏥 Blood Banks data:', bloodBanksData);
+        setBloodBanks(bloodBanksData);
       }
     } catch (error) {
-      console.error('Error fetching patients/blood banks:', error);
+      console.error('❌ Error fetching patients/blood banks:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
