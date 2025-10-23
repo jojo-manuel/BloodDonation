@@ -49,6 +49,17 @@ export default function UserDashboard() {
   const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
   const [notifications, setNotifications] = useState([]); // For notifications
   const [taxiBookingModal, setTaxiBookingModal] = useState(null); // For taxi booking modal
+  const [settingsData, setSettingsData] = useState({
+    emailNotifications: true,
+    smsNotifications: false,
+    pushNotifications: true,
+    donationReminders: true,
+    marketingEmails: false,
+    twoFactorAuth: false,
+    darkMode: false,
+    language: 'en',
+    timezone: 'Asia/Kolkata'
+  });
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
 
   // Status badge component
@@ -739,8 +750,56 @@ export default function UserDashboard() {
         </div>
       )}
 
+      {/* User Header with Avatar */}
+      <div className="mx-auto w-full max-w-6xl mb-8">
+        <div className="rounded-2xl border border-white/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 p-6 shadow-xl backdrop-blur-2xl transition dark:border-white/10">
+          <div className="flex items-center gap-6">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg ring-4 ring-white/20">
+                {profileData.name ? profileData.name.charAt(0).toUpperCase() : loginUsername.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                Welcome back, {profileData.name || loginUsername || 'User'}! 👋
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                {profileData.email || 'Manage your profile, find donors, and track donation requests'}
+              </p>
+              <div className="flex gap-3 mt-2">
+                {profileData.phone && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-xs font-semibold">
+                    📱 {profileData.phone}
+                  </span>
+                )}
+                {profileData.role && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 rounded-full text-xs font-semibold">
+                    👤 {profileData.role.charAt(0).toUpperCase() + profileData.role.slice(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="hidden lg:flex gap-4">
+              <div className="text-center px-4 py-2 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                <div className="text-2xl font-bold text-pink-600 dark:text-pink-400">{sentRequests.length}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Sent</div>
+              </div>
+              <div className="text-center px-4 py-2 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{receivedRequests.length}</div>
+                <div className="text-xs text-gray-600 dark:text-gray-400">Received</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-center mb-6">
-        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+        <div className="flex flex-wrap bg-white/20 rounded-full p-1 backdrop-blur-md gap-1">
           <button
             onClick={() => setActiveTab("findDonors")}
             className={`px-6 py-2 rounded-full font-semibold transition ${
@@ -780,6 +839,14 @@ export default function UserDashboard() {
             }`}
           >
             👤 Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              activeTab === "settings" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+            }`}
+          >
+            ⚙️ Settings
           </button>
         </div>
       </div>
