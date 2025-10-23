@@ -10,7 +10,11 @@
     "preview": "vite preview",
     "test": "jest --transformIgnorePatterns \"node_modules/(?!@testing-library)\"",
     "test:selenium": "jest --config tests/jest-selenium.config.js",
-    "test:e2e": "npm run test:selenium"
+    "test:e2e": "npm run test:selenium",
+    "test:playwright": "playwright test",
+    "test:playwright:ui": "playwright test --ui",
+    "test:playwright:headed": "playwright test --headed",
+    "test:playwright:debug": "playwright test --debug"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

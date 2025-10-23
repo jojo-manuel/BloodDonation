@@ -403,7 +403,7 @@ Blood Donation Team
   }
 });
 
-// Helper function to generate token number based on time
+// Helper function to generate token number based on time (15-50 range)
 function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
   // Parse time string (e.g., "10:00 AM")
   const timeMatch = requestedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -422,7 +422,7 @@ function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
   const minMinutes = 9 * 60; // 540
   const maxMinutes = 16 * 60; // 960
   const minToken = 15;
-  const maxToken = 70;
+  const maxToken = 50; // Changed from 70 to 50
 
   // Linear interpolation
   let baseToken = minToken + ((totalMinutes - minMinutes) / (maxMinutes - minMinutes)) * (maxToken - minToken);
@@ -433,6 +433,24 @@ function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
   if (baseToken > maxToken) baseToken = maxToken;
 
   return baseToken;
+}
+
+// Helper function to generate custom booking ID (4 alphabets + 4 numbers)
+function generateBookingId() {
+  const alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const numbers = '0123456789';
+
+  let bookingId = '';
+  // Generate 4 random alphabets
+  for (let i = 0; i < 4; i++) {
+    bookingId += alphabets.charAt(Math.floor(Math.random() * alphabets.length));
+  }
+  // Generate 4 random numbers
+  for (let i = 0; i < 4; i++) {
+    bookingId += numbers.charAt(Math.floor(Math.random() * numbers.length));
+  }
+
+  return bookingId;
 }
 
 /**
@@ -486,11 +504,32 @@ exports.directBookSlot = asyncHandler(async (req, res) => {
       });
     }
 
-    // Generate token number based on time
+    // Check booking constraints
+    // 1. Max 3 bookings per slot (same date/time/bloodBank)
+    const bookingDate = new Date(requestedDate);
+    const slotBookings = await Booking.find({
+      bloodBankId,
+      date: {
+        $gte: new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate()),
+        $lt: new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate() + 1)
+      },
+      time: requestedTime
+    });
+
+    if (slotBookings.length >= 3) {
+      return res.status(400).json({ success: false, message: 'Maximum 3 bookings allowed per time slot.' });
+    }
+
+    // 2. Max 35 total bookings per blood bank
+    const totalBloodBankBookings = await Booking.countDocuments({ bloodBankId });
+    if (totalBloodBankBookings >= 35) {
+      return res.status(400).json({ success: false, message: 'Maximum booking capacity reached for this blood bank.' });
+    }
+
+    // Generate token number based on time (15-50 range)
     let tokenNumber = generateTokenNumber(requestedTime, bloodBankId, requestedDate);
 
     // Check for existing tokens on the same day and increment if necessary
-    const bookingDate = new Date(requestedDate);
     const existingBookings = await Booking.find({
       bloodBankId,
       date: {
@@ -500,21 +539,39 @@ exports.directBookSlot = asyncHandler(async (req, res) => {
     }).sort({ tokenNumber: -1 });
 
     const existingTokens = existingBookings.map(b => parseInt(b.tokenNumber)).filter(t => !isNaN(t));
-    while (existingTokens.includes(tokenNumber) && tokenNumber < 70) {
+    while (existingTokens.includes(tokenNumber) && tokenNumber < 50) {
       tokenNumber++;
     }
 
-    if (tokenNumber > 70) {
+    if (tokenNumber > 50) {
       return res.status(400).json({ success: false, message: 'No slots available for this date. Maximum token number reached.' });
     }
 
     tokenNumber = tokenNumber.toString();
+
+    // Generate custom booking ID
+    let bookingId;
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 100) {
+      bookingId = generateBookingId();
+      const existingBooking = await Booking.findOne({ bookingId });
+      if (!existingBooking) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (!isUnique) {
+      return res.status(500).json({ success: false, message: 'Failed to generate unique booking ID.' });
+    }
 
     // Get patient details if donationRequest has patientId
     const patient = donationRequest.patientId ? await require('../Models/Patient').findById(donationRequest.patientId) : null;
 
     // Create booking record
     const booking = await Booking.create({
+      bookingId,
       bloodBankId,
       date: new Date(requestedDate),
       time: requestedTime,
@@ -523,9 +580,9 @@ exports.directBookSlot = asyncHandler(async (req, res) => {
       donationRequestId,
       tokenNumber,
       patientName: patientName || patient?.name || 'N/A',
-      donorName: donorName || donor.userId?.name || 'N/A',
+      donorName: donorName || donor.name || donor.userId?.name || 'N/A',
       requesterName: requesterName || 'N/A',
-      bloodBankName: bloodBank.name,
+      bloodBankName: donor.bloodBankName || bloodBank.name,
       bloodGroup: donor.bloodGroup,
       patientMRID: patient?.mrid || 'N/A'
     });

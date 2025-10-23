@@ -204,7 +204,7 @@ function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
 
 exports.bookSlot = asyncHandler(async (req, res) => {
   const { donorId, requestId } = req.params;
-  const { requestedDate, requestedTime } = req.body;
+  const { requestedDate, requestedTime, bloodBankName } = req.body;
   const userId = req.user.id;
 
   // Validate time slot: only between 9 AM and 4 PM
@@ -225,19 +225,25 @@ exports.bookSlot = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, message: 'Not authorized' });
   }
 
+  // Accept the request if it's pending or pending_booking
+  if (request.status === 'pending' || request.status === 'pending_booking') {
+    request.status = 'accepted';
+    request.respondedAt = new Date();
+  }
+
   // Update the request
   request.requestedDate = new Date(requestedDate);
   request.requestedTime = requestedTime;
   request.status = 'booked';
   await request.save();
 
-  // Create booking if bloodBankId exists
-  let booking = null;
-  if (request.bloodBankId) {
-    const Booking = require('../Models/Booking');
+  // Always create booking
+  const Booking = require('../Models/Booking');
 
-    // Generate token number based on time
-    let tokenNumber = generateTokenNumber(requestedTime, request.bloodBankId, requestedDate);
+  // Generate token number based on time if bloodBankId exists, else set to 'N/A'
+  let tokenNumber = 'N/A';
+  if (request.bloodBankId) {
+    tokenNumber = generateTokenNumber(requestedTime, request.bloodBankId, requestedDate);
 
     // Check for existing tokens on the same day and increment if necessary
     const bookingDate = new Date(requestedDate);
@@ -259,33 +265,32 @@ exports.bookSlot = asyncHandler(async (req, res) => {
     }
 
     tokenNumber = tokenNumber.toString();
-
-    // Populate names and details for booking
-    const donor = await require('../Models/donor').findById(request.donorId).populate('userId', 'username name');
-    const requester = await require('../Models/User').findById(request.senderId);
-    const patient = request.patientId ? await require('../Models/Patient').findById(request.patientId) : null;
-    const bloodBank = await require('../Models/BloodBank').findById(request.bloodBankId);
-
-    booking = await Booking.create({
-      donorId: request.donorId,
-      bloodBankId: request.bloodBankId,
-      date: new Date(requestedDate),
-      time: requestedTime,
-      donationRequestId: request._id,
-      tokenNumber,
-      status: 'confirmed',
-      patientName: patient ? patient.name : 'N/A',
-      donorName: donor ? donor.userId.name : 'N/A',
-      requesterName: requester ? requester.username : 'N/A',
-      bloodBankName: bloodBank ? bloodBank.name : 'N/A',
-      bloodGroup: donor ? donor.bloodGroup : 'N/A',
-      patientMRID: patient ? patient.mrid : 'N/A'
-    });
   }
+
+  // Populate names and details for booking
+  const donor = await require('../Models/donor').findById(request.donorId).populate('userId', 'username name');
+  const requester = await require('../Models/User').findById(request.senderId);
+  const patient = request.patientId ? await require('../Models/Patient').findById(request.patientId) : null;
+  const bloodBank = request.bloodBankId ? await require('../Models/BloodBank').findById(request.bloodBankId) : null;
+
+  const booking = await Booking.create({
+    donorId: request.donorId,
+    bloodBankId: request.bloodBankId || null,
+    date: new Date(requestedDate),
+    time: requestedTime,
+    donationRequestId: request._id,
+    tokenNumber,
+    status: 'confirmed',
+    patientName: patient ? patient.name : 'N/A',
+    donorName: donor ? donor.userId.name : 'N/A',
+    requesterName: requester ? requester.username : 'N/A',
+    bloodBankName: bloodBankName || (bloodBank ? bloodBank.name : 'N/A'),
+    bloodGroup: donor ? donor.bloodGroup : 'N/A',
+    patientMRID: patient ? patient.mrid : 'N/A'
+  });
 
   // Generate PDF if booking was created
   let pdfUrl = null;
-  if (booking) {
     try {
       const PDFDocument = require('pdfkit');
       const QRCode = require('qrcode');
@@ -341,7 +346,6 @@ exports.bookSlot = asyncHandler(async (req, res) => {
       console.error('PDF generation error:', pdfError);
       // Don't fail the booking if PDF fails
     }
-  }
 
   return res.json({
     success: true,

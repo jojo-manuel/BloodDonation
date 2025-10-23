@@ -177,6 +177,12 @@ const completeProfileBody = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Phone must be a valid 10-digit Indian number'),
 });
 
+const bookSlotBody = z.object({
+  requestedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => new Date(val) >= new Date(), "Requested date cannot be in the past"),
+  requestedTime: z.string().regex(/^\d{1,2}:\d{2}\s*(AM|PM)$/i, "Time must be in HH:MM AM/PM format"),
+  bloodBankName: z.string().min(1).max(100).optional(),
+});
+
 module.exports = {
   registerBody,
   loginBody,
@@ -194,4 +200,5 @@ module.exports = {
   requestDonationBody,
   updateAvailabilityBody,
   completeProfileBody,
+  bookSlotBody,
 };

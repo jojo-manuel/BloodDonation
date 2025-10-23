@@ -37,7 +37,7 @@ export default function UserProfile() {
 
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete your account? Your account will be deactivated and you will be logged out. You can contact support to restore it if needed."
+      "Are you sure you want to deactivate your account? Your account will be deactivated and you will be logged out. You can contact support to restore it if needed."
     );
 
     if (!confirmed) return;
@@ -45,15 +45,15 @@ export default function UserProfile() {
     try {
       const response = await api.delete('/users/me');
       if (response.data.success) {
-        alert("Account deleted successfully. You have been logged out.");
+        alert("Account deactivated successfully. You have been logged out.");
         localStorage.clear();
         navigate("/login");
       } else {
-        alert("Failed to delete account: " + (response.data.message || "Unknown error"));
+        alert("Failed to deactivate account: " + (response.data.message || "Unknown error"));
       }
     } catch (error) {
-      console.error('Error deleting account:', error);
-      alert("Error deleting account: " + (error.response?.data?.message || error.message));
+      console.error('Error deactivating account:', error);
+      alert("Error deactivating account: " + (error.response?.data?.message || error.message));
     }
   };
 

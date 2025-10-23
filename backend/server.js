@@ -1,7 +1,7 @@
 // server.js
 // Entry point: loads environment, connects to DB, starts HTTP server.
 
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 const connectDB = require("./Database/db");
 const app = require('./app');
 

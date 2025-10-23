@@ -52,6 +52,7 @@ const DonorSchema = new mongoose.Schema({
   availability: { type: Boolean, default: true },
   contactPreference: { type: String, enum: ["phone", "email"], default: "phone" },
   phone: { type: String },
+  bloodBankName: { type: String }, // Name of the associated blood bank
   lastDonatedDate: { type: Date },
   priorityPoints: { type: Number, default: 0, min: 0 },
   donatedDates: [{ type: Date }],
