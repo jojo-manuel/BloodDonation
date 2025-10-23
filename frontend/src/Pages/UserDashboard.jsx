@@ -1484,95 +1484,117 @@ export default function UserDashboard() {
                 </p>
               </div>
               
-              {/* Clear Filters Button */}
+              {/* Step 3: Select Patient from Matching Results */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <span className="text-xl">👤</span> Step 3: Select Patient
+                </label>
+                
+                {!patientSearchBloodBank ? (
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm">
+                    ⚠️ Please select a blood bank first to see available patients
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      value={selectedPatient}
+                      onChange={(e) => {
+                        setSelectedPatient(e.target.value);
+                        // Auto-select blood bank from patient
+                        const patient = patients.find(p => p._id === e.target.value);
+                        if (patient && patient.bloodBankId) {
+                          setSelectedBloodBank(patient.bloodBankId._id || patient.bloodBankId);
+                        }
+                      }}
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">-- Select Patient --</option>
+                      {(() => {
+                        // Filter patients based on search criteria
+                        let filteredPatients = patients;
+                        
+                        // Filter by Blood Bank (required)
+                        if (patientSearchBloodBank) {
+                          filteredPatients = filteredPatients.filter(p => {
+                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            return bbId === patientSearchBloodBank;
+                          });
+                        }
+                        
+                        // Filter by MRID (optional)
+                        if (patientSearchMRID) {
+                          filteredPatients = filteredPatients.filter(p => 
+                            p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
+                          );
+                        }
+                        
+                        // If no results
+                        if (filteredPatients.length === 0) {
+                          return <option value="" disabled>
+                            {patientSearchMRID 
+                              ? `No patients found with MRID "${patientSearchMRID}" in selected blood bank`
+                              : 'No patients found in selected blood bank'}
+                          </option>;
+                        }
+                        
+                        // Display filtered patients with complete details
+                        return filteredPatients.map(patient => (
+                          <option key={patient._id} value={patient._id}>
+                            {patient.name || patient.patientName} - {patient.bloodGroup} 
+                            {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
+                          </option>
+                        ));
+                      })()}
+                    </select>
+                    
+                    {/* Results Counter */}
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      {(() => {
+                        let filteredPatients = patients;
+                        
+                        // Filter by Blood Bank
+                        if (patientSearchBloodBank) {
+                          filteredPatients = filteredPatients.filter(p => {
+                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            return bbId === patientSearchBloodBank;
+                          });
+                        }
+                        
+                        // Filter by MRID
+                        if (patientSearchMRID) {
+                          filteredPatients = filteredPatients.filter(p => 
+                            p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
+                          );
+                        }
+                        
+                        const count = filteredPatients.length;
+                        const selectedBB = bloodBanks.find(bb => bb._id === patientSearchBloodBank);
+                        
+                        return (
+                          <>
+                            📊 Found {count} patient{count !== 1 ? 's' : ''} 
+                            {patientSearchMRID && ` with MRID "${patientSearchMRID}"`}
+                            {selectedBB && ` in ${selectedBB.name}`}
+                          </>
+                        );
+                      })()}
+                    </p>
+                  </>
+                )}
+              </div>
+              
+              {/* Clear Search Button */}
               {(patientSearchMRID || patientSearchBloodBank) && (
                 <button
                   onClick={() => {
                     setPatientSearchMRID('');
                     setPatientSearchBloodBank('');
+                    setSelectedPatient('');
                   }}
-                  className="mb-2 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium"
+                  className="mb-3 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium flex items-center gap-1"
                 >
-                  ✕ Clear filters
+                  ✕ Clear search and start over
                 </button>
-              )}
-              
-              {/* Patient Dropdown */}
-              <select
-                value={selectedPatient}
-                onChange={(e) => {
-                  setSelectedPatient(e.target.value);
-                  // Auto-select blood bank from patient
-                  const patient = patients.find(p => p._id === e.target.value);
-                  if (patient && patient.bloodBankId) {
-                    setSelectedBloodBank(patient.bloodBankId._id || patient.bloodBankId);
-                  }
-                }}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">-- Select Patient --</option>
-                {(() => {
-                  // Filter patients based on search criteria
-                  let filteredPatients = patients;
-                  
-                  // Filter by MRID
-                  if (patientSearchMRID) {
-                    filteredPatients = filteredPatients.filter(p => 
-                      p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
-                    );
-                  }
-                  
-                  // Filter by Blood Bank
-                  if (patientSearchBloodBank) {
-                    filteredPatients = filteredPatients.filter(p => {
-                      const bbId = p.bloodBankId?._id || p.bloodBankId;
-                      return bbId === patientSearchBloodBank;
-                    });
-                  }
-                  
-                  // If no results
-                  if (filteredPatients.length === 0) {
-                    return <option value="" disabled>No patients found matching filters</option>;
-                  }
-                  
-                  // Display filtered patients with blood bank name and MRID
-                  return filteredPatients.map(patient => (
-                    <option key={patient._id} value={patient._id}>
-                      {patient.name || patient.patientName} - {patient.bloodGroup} 
-                      {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
-                      {patient.bloodBankId?.name ? ` | 🏥 ${patient.bloodBankId.name}` : ''}
-                    </option>
-                  ));
-                })()}
-              </select>
-              
-              {/* Results Counter */}
-              {(patientSearchMRID || patientSearchBloodBank) && (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  {(() => {
-                    let count = patients.length;
-                    if (patientSearchMRID) {
-                      count = patients.filter(p => 
-                        p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
-                      ).length;
-                    }
-                    if (patientSearchBloodBank) {
-                      count = patients.filter(p => {
-                        const bbId = p.bloodBankId?._id || p.bloodBankId;
-                        return bbId === patientSearchBloodBank;
-                      }).length;
-                    }
-                    if (patientSearchMRID && patientSearchBloodBank) {
-                      count = patients.filter(p => {
-                        const mridMatch = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
-                        const bbId = p.bloodBankId?._id || p.bloodBankId;
-                        const bbMatch = bbId === patientSearchBloodBank;
-                        return mridMatch && bbMatch;
-                      }).length;
-                    }
-                    return `📊 Showing ${count} patient${count !== 1 ? 's' : ''}`;
-                  })()}
-                </p>
               )}
             </div>
 
