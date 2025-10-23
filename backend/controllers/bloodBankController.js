@@ -772,6 +772,34 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
     });
   }
 
+  // If donation is completed, increment patient's units received
+  if (status === 'completed' && oldStatus !== 'completed' && booking.donationRequestId) {
+    try {
+      // Fetch the donation request to get the patient ID
+      const donationRequest = await DonationRequest.findById(booking.donationRequestId)
+        .populate('patientId');
+      
+      if (donationRequest && donationRequest.patientId) {
+        const patient = await Patient.findById(donationRequest.patientId);
+        
+        if (patient) {
+          // Increment units received (assuming 1 unit per donation)
+          patient.unitsReceived += 1;
+          await patient.save(); // Pre-save hook will check if needs are fulfilled
+          
+          console.log(`✅ Patient ${patient.name} (MRID: ${patient.mrid}) received 1 unit. Total: ${patient.unitsReceived}/${patient.unitsRequired}`);
+          
+          if (patient.isFulfilled) {
+            console.log(`🎉 Patient ${patient.name} needs are now fulfilled!`);
+          }
+        }
+      }
+    } catch (patientUpdateError) {
+      // Log error but don't fail the booking status update
+      console.error('Error updating patient units:', patientUpdateError);
+    }
+  }
+
   // Log activity
   await Activity.create({
     userId: req.user._id,

@@ -135,6 +135,9 @@ router.get("/", authMiddleware, async (req, res) => {
     // For regular users and admins: return ALL patients from all blood banks
     // (so they can select any patient when making donation requests)
     
+    // Exclude fulfilled patients (those who have received all needed units)
+    query.isFulfilled = { $ne: true };
+    
     const patients = await Patient.find(query).populate('bloodBankId', 'name address');
 
     // Get patient IDs
@@ -217,6 +220,9 @@ router.get("/search", authMiddleware, async (req, res) => {
       // Case-insensitive partial match for MRID
       query.mrid = { $regex: mrid, $options: 'i' };
     }
+
+    // Exclude fulfilled patients (those who have received all needed units)
+    query.isFulfilled = { $ne: true };
 
     console.log('  Search Query:', JSON.stringify(query));
 
