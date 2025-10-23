@@ -454,6 +454,15 @@ export default function DonorRegister() {
   const handleChange = (e) => {
     const { name, value: inputValue } = e.target;
     let processedValue = inputValue;
+    
+    // Validate pincode - only allow 6 digits
+    if (name === "pincode") {
+      // Remove all non-numeric characters
+      processedValue = inputValue.replace(/[^0-9]/g, "");
+      // Limit to 6 digits
+      processedValue = processedValue.slice(0, 6);
+    }
+    
     if (name === "firstName" || name === "lastName") {
       processedValue = inputValue.replace(/[^a-zA-Z\s]/g, "");
       processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
