@@ -471,6 +471,98 @@ exports.getBookingByToken = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get all donors who have visited this blood bank with their visit history
+ * GET /api/bloodbank/visited-donors
+ */
+exports.getVisitedDonors = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'bloodbank') {
+    return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
+  }
+
+  const bloodBank = await BloodBank.findOne({ userId: req.user._id });
+  if (!bloodBank) {
+    return res.status(404).json({ success: false, message: 'Blood bank not found' });
+  }
+
+  // Get all bookings for this blood bank
+  const bookings = await Booking.find({ bloodBankId: bloodBank._id })
+    .populate('donorId', 'userId name bloodGroup houseAddress contactNumber')
+    .populate({
+      path: 'donorId',
+      populate: {
+        path: 'userId',
+        select: 'username name email phone'
+      }
+    })
+    .sort({ date: -1 }); // Most recent first
+
+  // Group bookings by donor
+  const donorVisitsMap = new Map();
+
+  for (const booking of bookings) {
+    if (!booking.donorId) continue;
+
+    const donorId = booking.donorId._id.toString();
+    
+    if (!donorVisitsMap.has(donorId)) {
+      donorVisitsMap.set(donorId, {
+        donor: {
+          _id: booking.donorId._id,
+          name: booking.donorName || booking.donorId.name,
+          bloodGroup: booking.bloodGroup || booking.donorId.bloodGroup,
+          email: booking.donorId.userId?.email,
+          phone: booking.donorId.userId?.phone || booking.donorId.contactNumber,
+          address: booking.donorId.houseAddress
+        },
+        visits: [],
+        totalVisits: 0,
+        completedDonations: 0,
+        pendingBookings: 0,
+        rejectedBookings: 0,
+        lastVisit: null
+      });
+    }
+
+    const donorData = donorVisitsMap.get(donorId);
+    
+    // Add visit details
+    donorData.visits.push({
+      bookingId: booking.bookingId,
+      tokenNumber: booking.tokenNumber,
+      date: booking.date,
+      time: booking.time,
+      status: booking.status,
+      arrived: booking.arrived,
+      arrivalTime: booking.arrivalTime,
+      completedAt: booking.completedAt,
+      rejectionReason: booking.rejectionReason,
+      patientName: booking.patientName,
+      patientMRID: booking.patientMRID
+    });
+
+    // Update statistics
+    donorData.totalVisits++;
+    if (booking.status === 'completed') donorData.completedDonations++;
+    if (booking.status === 'pending' || booking.status === 'confirmed') donorData.pendingBookings++;
+    if (booking.status === 'rejected') donorData.rejectedBookings++;
+    
+    // Update last visit
+    if (!donorData.lastVisit || new Date(booking.date) > new Date(donorData.lastVisit)) {
+      donorData.lastVisit = booking.date;
+    }
+  }
+
+  // Convert map to array
+  const visitedDonors = Array.from(donorVisitsMap.values());
+
+  res.json({ 
+    success: true, 
+    data: visitedDonors,
+    count: visitedDonors.length 
+  });
+});
+
+/**
  * Reschedule a booking
  * Route param: bookingId (optional, for new format)
  * Body: { bookingId, newDate, newTime } (bookingId optional if in route param)
