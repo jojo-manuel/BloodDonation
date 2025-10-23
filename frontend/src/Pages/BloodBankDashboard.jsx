@@ -1165,6 +1165,145 @@ export default function BloodBankDashboard() {
                 ))}
               </div>
             )}
+              </>
+            ) : (
+              // Visit History View
+              <div>
+                {visitedDonors.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📭</div>
+                    <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                      No donor visits yet
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                      Donors who visit your blood bank will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {visitedDonors.map((donorData) => (
+                      <div 
+                        key={donorData.donor._id} 
+                        className="rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 p-6 shadow-xl"
+                      >
+                        {/* Donor Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                              <span className="text-3xl">🩸</span>
+                              {donorData.donor.name}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3 text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300">Blood Group:</span>
+                                <span className="px-3 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 font-bold">
+                                  {donorData.donor.bloodGroup}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">📧</span>
+                                <span>{donorData.donor.email || 'N/A'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">📱</span>
+                                <span>{donorData.donor.phone || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button
+                            onClick={() => setExpandedDonor(expandedDonor === donorData.donor._id ? null : donorData.donor._id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm"
+                          >
+                            {expandedDonor === donorData.donor._id ? '▲ Hide Visits' : '▼ View Visits'}
+                          </button>
+                        </div>
+
+                        {/* Statistics */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                          <div className="bg-white/50 dark:bg-gray-700/50 p-3 rounded-xl text-center">
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{donorData.totalVisits}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Total Visits</p>
+                          </div>
+                          <div className="bg-white/50 dark:bg-gray-700/50 p-3 rounded-xl text-center">
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{donorData.completedDonations}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Completed</p>
+                          </div>
+                          <div className="bg-white/50 dark:bg-gray-700/50 p-3 rounded-xl text-center">
+                            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{donorData.pendingBookings}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">Pending</p>
+                          </div>
+                          <div className="bg-white/50 dark:bg-gray-700/50 p-3 rounded-xl text-center">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Last Visit</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                              {donorData.lastVisit ? new Date(donorData.lastVisit).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Visit Details (Expandable) */}
+                        {expandedDonor === donorData.donor._id && (
+                          <div className="mt-4 space-y-3 animate-fadeIn">
+                            <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                              <span>📋</span>
+                              Visit History ({donorData.visits.length})
+                            </h4>
+                            
+                            {donorData.visits.map((visit, index) => (
+                              <div 
+                                key={visit.bookingId || index} 
+                                className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-xl">{index + 1}.</span>
+                                    <div>
+                                      <p className="font-semibold text-gray-900 dark:text-white">
+                                        {new Date(visit.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                      </p>
+                                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {visit.time} • Token #{visit.tokenNumber || 'N/A'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    visit.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                    visit.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                    visit.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                  }`}>
+                                    {visit.status.toUpperCase()}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 mt-3">
+                                  {visit.patientName && (
+                                    <p><span className="font-semibold">🙋 Patient:</span> {visit.patientName}</p>
+                                  )}
+                                  {visit.patientMRID && (
+                                    <p><span className="font-semibold">🏥 MRID:</span> {visit.patientMRID}</p>
+                                  )}
+                                  {visit.arrived && (
+                                    <p><span className="font-semibold">✅ Arrived:</span> {new Date(visit.arrivalTime).toLocaleString()}</p>
+                                  )}
+                                  {visit.completedAt && (
+                                    <p><span className="font-semibold">🎉 Completed:</span> {new Date(visit.completedAt).toLocaleString()}</p>
+                                  )}
+                                  {visit.rejectionReason && (
+                                    <p className="col-span-2"><span className="font-semibold">❌ Rejection Reason:</span> {visit.rejectionReason}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
