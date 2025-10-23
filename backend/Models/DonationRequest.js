@@ -28,6 +28,7 @@ const DonationRequestSchema = new mongoose.Schema({
   bloodBankUsername: { type: String },
   bloodBankAddress: { type: String },
   patientUsername: { type: String },
+  patientMRID: { type: String }, // Patient MRID for easy display
   userPhone: { type: String },
   // Link to booking when slot is booked
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
