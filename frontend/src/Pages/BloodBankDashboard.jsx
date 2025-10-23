@@ -1050,6 +1050,88 @@ export default function BloodBankDashboard() {
         )}
       </div>
 
+      {/* Reschedule Modal */}
+      {rescheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-w-md w-full rounded-2xl border border-white/30 bg-white p-6 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-gray-800">
+            <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+              📅 Reschedule Booking
+            </h3>
+
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                <strong>Booking ID:</strong> {rescheduleModal.bookingId}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                <strong>Donor:</strong> {rescheduleModal.donorName}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                <strong>Current Date:</strong> {new Date(rescheduleModal.date).toLocaleDateString()}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                <strong>Current Time:</strong> {rescheduleModal.time}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                New Date
+              </label>
+              <input
+                type="date"
+                id="reschedule-date"
+                min={new Date().toISOString().split('T')[0]}
+                defaultValue={new Date(rescheduleModal.date).toISOString().split('T')[0]}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                New Time
+              </label>
+              <input
+                type="time"
+                id="reschedule-time"
+                defaultValue={rescheduleModal.time}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const newDate = document.getElementById('reschedule-date').value;
+                  const newTime = document.getElementById('reschedule-time').value;
+                  if (!newDate || !newTime) {
+                    alert('Please select both date and time');
+                    return;
+                  }
+                  handleRescheduleBooking(newDate, newTime);
+                }}
+                disabled={rescheduling}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {rescheduling ? (
+                  <>
+                    <span className="inline-block animate-spin mr-2">⏳</span>
+                    Rescheduling...
+                  </>
+                ) : (
+                  <>✅ Confirm Reschedule</>
+                )}
+              </button>
+              <button
+                onClick={() => setRescheduleModal(null)}
+                className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 text-center">
         <button
           onClick={handleLogout}
