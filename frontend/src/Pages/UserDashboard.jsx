@@ -1459,12 +1459,22 @@ export default function UserDashboard() {
                   className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="">-- Select Blood Bank --</option>
-                  {bloodBanks.map(bb => (
-                    <option key={bb._id} value={bb._id}>
-                      {bb.name} {bb.address ? `- ${bb.address}` : ''}
-                    </option>
-                  ))}
+                  {bloodBanks && bloodBanks.length > 0 ? (
+                    bloodBanks.map(bb => (
+                      <option key={bb._id} value={bb._id}>
+                        {bb.name || bb.bloodBankName || 'Unnamed Blood Bank'}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>Loading blood banks...</option>
+                  )}
                 </select>
+                {/* Debug Info */}
+                {bloodBanks.length === 0 && (
+                  <p className="mt-1 text-xs text-red-500">
+                    ⚠️ No blood banks found. Click "Request Donation" to load blood banks.
+                  </p>
+                )}
               </div>
               
               {/* Step 2: Enter MRID */}
