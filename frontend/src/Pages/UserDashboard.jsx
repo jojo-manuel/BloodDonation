@@ -1440,11 +1440,58 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Patient Selection */}
+            {/* Patient Selection with Search */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <span className="text-xl">🏥</span> Select Patient (Optional)
               </label>
+              
+              {/* Search Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                {/* MRID Search */}
+                <div>
+                  <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">🔍 Search by MRID</label>
+                  <input
+                    type="text"
+                    placeholder="Enter MRID..."
+                    value={patientSearchMRID}
+                    onChange={(e) => setPatientSearchMRID(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+                
+                {/* Blood Bank Filter */}
+                <div>
+                  <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">🏥 Filter by Blood Bank</label>
+                  <select
+                    value={patientSearchBloodBank}
+                    onChange={(e) => setPatientSearchBloodBank(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                  >
+                    <option value="">All Blood Banks</option>
+                    {bloodBanks.map(bb => (
+                      <option key={bb._id} value={bb._id}>
+                        {bb.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Clear Filters Button */}
+              {(patientSearchMRID || patientSearchBloodBank) && (
+                <button
+                  onClick={() => {
+                    setPatientSearchMRID('');
+                    setPatientSearchBloodBank('');
+                  }}
+                  className="mb-2 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium"
+                >
+                  ✕ Clear filters
+                </button>
+              )}
+              
+              {/* Patient Dropdown */}
               <select
                 value={selectedPatient}
                 onChange={(e) => {
@@ -1458,13 +1505,70 @@ export default function UserDashboard() {
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
               >
                 <option value="">-- Select Patient --</option>
-                {patients.map(patient => (
-                  <option key={patient._id} value={patient._id}>
-                    {patient.name || patient.patientName} - {patient.bloodGroup} 
-                    {patient.mrid ? ` (MRID: ${patient.mrid})` : ''}
-                  </option>
-                ))}
+                {(() => {
+                  // Filter patients based on search criteria
+                  let filteredPatients = patients;
+                  
+                  // Filter by MRID
+                  if (patientSearchMRID) {
+                    filteredPatients = filteredPatients.filter(p => 
+                      p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
+                    );
+                  }
+                  
+                  // Filter by Blood Bank
+                  if (patientSearchBloodBank) {
+                    filteredPatients = filteredPatients.filter(p => {
+                      const bbId = p.bloodBankId?._id || p.bloodBankId;
+                      return bbId === patientSearchBloodBank;
+                    });
+                  }
+                  
+                  // If no results
+                  if (filteredPatients.length === 0) {
+                    return <option value="" disabled>No patients found matching filters</option>;
+                  }
+                  
+                  // Display filtered patients with blood bank name and MRID
+                  return filteredPatients.map(patient => (
+                    <option key={patient._id} value={patient._id}>
+                      {patient.name || patient.patientName} - {patient.bloodGroup} 
+                      {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
+                      {patient.bloodBankId?.name ? ` | 🏥 ${patient.bloodBankId.name}` : ''}
+                    </option>
+                  ));
+                })()}
               </select>
+              
+              {/* Results Counter */}
+              {(patientSearchMRID || patientSearchBloodBank) && (
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {(() => {
+                    let count = patients.length;
+                    if (patientSearchMRID) {
+                      count = patients.filter(p => 
+                        p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase())
+                      ).length;
+                    }
+                    if (patientSearchBloodBank) {
+                      count = patients.filter(p => {
+                        const bbId = p.bloodBankId?._id || p.bloodBankId;
+                        return bbId === patientSearchBloodBank;
+                      }).length;
+                    }
+                    if (patientSearchMRID && patientSearchBloodBank) {
+                      count = patients.filter(p => {
+                        const mridMatch = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
+                        const bbId = p.bloodBankId?._id || p.bloodBankId;
+                        const bbMatch = bbId === patientSearchBloodBank;
+                        return mridMatch && bbMatch;
+                      }).length;
+                    }
+                    return `📊 Showing ${count} patient${count !== 1 ? 's' : ''}`;
+                  })()}
+                </p>
+              )}
+            </select>
               {selectedPatient && (() => {
                 const patient = patients.find(p => p._id === selectedPatient);
                 return patient ? (
@@ -1544,6 +1648,8 @@ export default function UserDashboard() {
                   setRequestModal(null);
                   setSelectedPatient('');
                   setSelectedBloodBank('');
+                  setPatientSearchMRID('');
+                  setPatientSearchBloodBank('');
                 }}
                 className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition"
               >
