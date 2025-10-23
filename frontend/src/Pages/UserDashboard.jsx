@@ -1570,7 +1570,10 @@ export default function UserDashboard() {
                   })()}
                 </p>
               )}
-            </select>
+            </div>
+
+            {/* Selected Patient Details */}
+            <div className="mb-4">
               {selectedPatient && (() => {
                 const patient = patients.find(p => p._id === selectedPatient);
                 return patient ? (
