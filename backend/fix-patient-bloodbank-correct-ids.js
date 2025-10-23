@@ -44,8 +44,13 @@ async function fixPatientBloodBankIds() {
           // Check if ID is different
           if (patient.bloodBankId?.toString() !== bloodBank._id.toString()) {
             console.log(`   🔄 Updating bloodBankId: ${patient.bloodBankId} → ${bloodBank._id}`);
-            patient.bloodBankId = bloodBank._id;
-            await patient.save();
+            
+            // Update directly without validation to avoid dateNeeded issues
+            await Patient.updateOne(
+              { _id: patient._id },
+              { $set: { bloodBankId: bloodBank._id } }
+            );
+            
             fixedCount++;
             console.log(`   ✅ Updated!`);
           } else {
