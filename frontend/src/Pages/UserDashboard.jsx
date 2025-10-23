@@ -2026,6 +2026,20 @@ export default function UserDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Taxi Booking Modal */}
+      {taxiBookingModal && (
+        <TaxiBookingModal
+          donationRequest={taxiBookingModal}
+          onClose={() => setTaxiBookingModal(null)}
+          onSuccess={(booking) => {
+            console.log('Taxi booked:', booking);
+            setTaxiBookingModal(null);
+            // Optionally refresh sent requests to show taxi booking status
+            fetchSent();
+          }}
+        />
+      )}
     </Layout>
   );
 }
