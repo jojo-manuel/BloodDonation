@@ -1638,6 +1638,11 @@ export default function UserDashboard() {
                             📊 Found {count} patient{count !== 1 ? 's' : ''} 
                             {patientSearchMRID && ` with MRID "${patientSearchMRID}"`}
                             {selectedBB && ` in ${selectedBB.name}`}
+                            {count === 1 && patientSearchMRID && (
+                              <span className="ml-2 text-green-600 dark:text-green-400 font-semibold">
+                                ✅ Auto-selected!
+                              </span>
+                            )}
                           </>
                         );
                       })()}
