@@ -30,18 +30,33 @@ exports.createRequest = asyncHandler(async (req, res) => {
   let patient = null;
   let patientUsername = null;
   let patientMRID = null;
+  
+  console.log('📥 Received donation request:');
+  console.log('  Patient ID:', patientId);
+  
   if (patientId) {
     const Patient = require('../Models/Patient');
     patient = await Patient.findById(patientId).populate('bloodBankId', 'name address');
+    
+    console.log('  Patient found:', !!patient);
+    
     if (patient) {
       patientUsername = patient.name || patient.patientName;
       patientMRID = patient.mrid;
+      
+      console.log('  Patient Name:', patientUsername);
+      console.log('  Patient MRID:', patientMRID);
+      console.log('  Patient Blood Bank:', patient.bloodBankId?.name);
+      
       // If no blood bank from sender, get it from patient
       if (!bloodBankId && patient.bloodBankId) {
         bloodBankId = patient.bloodBankId._id;
         bloodBankName = patient.bloodBankId.name;
+        console.log('  Blood Bank from patient:', bloodBankName);
       }
     }
+  } else {
+    console.log('  ⚠️ No patient ID provided in request');
   }
 
   const payload = {
@@ -64,7 +79,16 @@ exports.createRequest = asyncHandler(async (req, res) => {
     isActive: true,
   };
 
+  console.log('💾 Saving donation request with:');
+  console.log('  patientUsername:', payload.patientUsername);
+  console.log('  patientMRID:', payload.patientMRID);
+  console.log('  bloodBankName:', payload.bloodBankName);
+
   const request = await DonationRequest.create(payload);
+  
+  console.log('✅ Donation request created successfully');
+  console.log('  Request ID:', request._id);
+  
   return res.status(201).json({ success: true, message: 'Request sent', data: request });
 });
 

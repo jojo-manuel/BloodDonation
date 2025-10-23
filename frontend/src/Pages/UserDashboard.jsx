@@ -426,7 +426,13 @@ export default function UserDashboard() {
 
   // Auto-populate patient when blood bank + MRID uniquely identify a patient
   useEffect(() => {
+    console.log('🔍 Auto-selection check triggered:');
+    console.log('  Blood Bank Selected:', patientSearchBloodBank);
+    console.log('  MRID Entered:', patientSearchMRID);
+    console.log('  Total Patients Loaded:', patients.length);
+    
     if (!patientSearchBloodBank || !patientSearchMRID || patients.length === 0) {
+      console.log('⏸️ Skipping auto-selection (missing criteria)');
       return; // Need both blood bank and MRID to auto-populate
     }
 
@@ -435,13 +441,24 @@ export default function UserDashboard() {
       const bbId = p.bloodBankId?._id || p.bloodBankId;
       const matchesBloodBank = bbId === patientSearchBloodBank;
       const matchesMRID = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
+      
+      console.log(`  Checking patient: ${p.name} (MRID: ${p.mrid})`);
+      console.log(`    Blood Bank Match: ${matchesBloodBank} (${bbId} === ${patientSearchBloodBank})`);
+      console.log(`    MRID Match: ${matchesMRID}`);
+      
       return matchesBloodBank && matchesMRID;
     });
+
+    console.log(`📊 Filtered Results: ${filteredPatients.length} patient(s)`);
 
     // If exactly 1 patient matches, auto-select it
     if (filteredPatients.length === 1) {
       const patient = filteredPatients[0];
-      console.log('🎯 Auto-selecting patient:', patient.name, 'MRID:', patient.mrid);
+      console.log('🎯 Auto-selecting patient:');
+      console.log('  Name:', patient.name || patient.patientName);
+      console.log('  MRID:', patient.mrid);
+      console.log('  Blood Group:', patient.bloodGroup);
+      console.log('  Blood Bank:', patient.bloodBankId?.name);
       setSelectedPatient(patient._id);
       setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
     } else if (filteredPatients.length === 0) {
@@ -451,6 +468,10 @@ export default function UserDashboard() {
     } else {
       // Multiple matches - user needs to choose
       console.log(`📋 Found ${filteredPatients.length} patients with MRID containing "${patientSearchMRID}"`);
+      console.log('  Patient options:');
+      filteredPatients.forEach((p, i) => {
+        console.log(`    ${i + 1}. ${p.name || p.patientName} - MRID: ${p.mrid}`);
+      });
       // Don't auto-select, let user choose from dropdown
     }
   }, [patients, patientSearchBloodBank, patientSearchMRID]);
