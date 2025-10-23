@@ -5,7 +5,7 @@ const User = require("../Models/User");
 const Donor = require("../Models/donor");
 const BloodBank = require("../Models/BloodBank");
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("../middleware/asyncHandler");
+const asyncHandler = require("../Middleware/asyncHandler");
 
 /**
  * Create a short-lived access token used for API authorization
