@@ -1646,19 +1646,38 @@ export default function UserDashboard() {
                 <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-300 dark:border-blue-700">
                   <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                     <span className="text-2xl">📋</span>
-                    Available Patients in {bloodBanks.find(bb => bb._id === patientSearchBloodBank)?.name}
+                    {patientSearchMRID 
+                      ? `Search Results${searchedPatients.length > 0 ? ` (${searchedPatients.length})` : ''}`
+                      : `Available Patients in ${bloodBanks.find(bb => bb._id === patientSearchBloodBank)?.name || 'Blood Bank'}`
+                    }
                   </h4>
-                  {(() => {
-                    const filteredPatients = patients.filter(p => {
-                      const bbId = p.bloodBankId?._id || p.bloodBankId;
-                      return bbId === patientSearchBloodBank;
-                    });
+                  {searchingPatients ? (
+                    <div className="text-center py-4">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <p className="mt-2 text-gray-600 dark:text-gray-400">Searching database...</p>
+                    </div>
+                  ) : (() => {
+                    // Use searched patients if MRID is entered, otherwise filter from loaded patients
+                    const displayPatients = (patientSearchMRID && searchedPatients.length > 0) 
+                      ? searchedPatients 
+                      : patients.filter(p => {
+                          const bbId = p.bloodBankId?._id || p.bloodBankId;
+                          return bbId === patientSearchBloodBank;
+                        });
 
-                    if (filteredPatients.length === 0) {
+                    if (displayPatients.length === 0) {
                       return (
                         <div className="text-center py-4 text-gray-600 dark:text-gray-400">
-                          <p className="text-lg">📭 No patients found in this blood bank</p>
-                          <p className="text-sm mt-2">This blood bank hasn't registered any patients yet.</p>
+                          <p className="text-lg">
+                            {patientSearchMRID 
+                              ? `📭 No patients found with MRID "${patientSearchMRID}"`
+                              : '📭 No patients found in this blood bank'}
+                          </p>
+                          <p className="text-sm mt-2">
+                            {patientSearchMRID 
+                              ? 'Try a different MRID or check the blood bank selection.'
+                              : 'This blood bank hasn\'t registered any patients yet.'}
+                          </p>
                         </div>
                       );
                     }
@@ -1666,21 +1685,32 @@ export default function UserDashboard() {
                     return (
                       <>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                          📊 Found {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''} - Click on MRID to auto-fill
+                          {patientSearchMRID 
+                            ? `🔍 Found ${displayPatients.length} patient${displayPatients.length !== 1 ? 's' : ''} matching "${patientSearchMRID}"`
+                            : `📊 Found ${displayPatients.length} patient${displayPatients.length !== 1 ? 's' : ''}`
+                          } - Click to select
                         </p>
                         <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-                          {filteredPatients.map((patient, index) => (
+                          {displayPatients.map((patient, index) => (
                             <div
                               key={patient._id}
                               onClick={() => {
                                 setPatientSearchMRID(patient.mrid);
                                 setSelectedPatient(patient._id);
+                                setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
                               }}
-                              className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:border-blue-500 dark:hover:border-blue-500 cursor-pointer transition-all hover:shadow-md group"
+                              className={`p-3 bg-white dark:bg-gray-800 rounded-lg border ${
+                                selectedPatient === patient._id 
+                                  ? 'border-green-500 dark:border-green-500 ring-2 ring-green-200 dark:ring-green-800' 
+                                  : 'border-blue-200 dark:border-blue-700 hover:border-blue-500 dark:hover:border-blue-500'
+                              } cursor-pointer transition-all hover:shadow-md group`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
+                                    {selectedPatient === patient._id && (
+                                      <span className="text-green-600 dark:text-green-400 text-lg">✅</span>
+                                    )}
                                     <span className="font-semibold text-gray-900 dark:text-white">
                                       {index + 1}. {patient.name || patient.patientName}
                                     </span>
@@ -1692,14 +1722,14 @@ export default function UserDashboard() {
                                     <span className="font-mono bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded text-yellow-900 dark:text-yellow-200 font-bold">
                                       MRID: {patient.mrid}
                                     </span>
-                                    {patient.bloodBankId?.address && (
-                                      <span className="text-xs">📍 {patient.bloodBankId.address.substring(0, 30)}...</span>
+                                    {patient.bloodBankId?.name && (
+                                      <span className="text-xs">🏥 {patient.bloodBankId.name}</span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className={`${selectedPatient === patient._id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                                   <span className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
-                                    Click to select →
+                                    {selectedPatient === patient._id ? 'Selected ✓' : 'Click to select →'}
                                   </span>
                                 </div>
                               </div>
