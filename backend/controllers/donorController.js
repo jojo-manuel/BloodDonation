@@ -167,6 +167,13 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
   const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
   filter.userId = { $nin: suspendedUserIds };
 
+  // Exclude donors who have completed donations
+  const Booking = require('../Models/Booking');
+  const completedDonorIds = await Booking.find({ status: 'completed' }).distinct('donorId');
+  if (completedDonorIds.length > 0) {
+    filter._id = { $nin: completedDonorIds };
+  }
+
   const donors = await Donor.find(filter).populate('userId', 'username email').sort({ updatedAt: -1 });
 
   return res.json({ success: true, message: 'Donors found', data: donors });
