@@ -292,6 +292,8 @@ export default function UserDashboard() {
         setRequestModal(null);
         setSelectedPatient('');
         setSelectedBloodBank('');
+        setPatientSearchMRID('');
+        setPatientSearchBloodBank('');
         // Refresh the requests lists
         fetchRequests();
         fetchReceivedRequests();
