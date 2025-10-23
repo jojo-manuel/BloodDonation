@@ -637,8 +637,12 @@ Blood Donation Team
     `;
 
     try {
-      await sendEmail(bloodBank.email, emailSubject, emailBody);
-      console.log('Booking notification email sent successfully to blood bank:', bloodBank.email);
+      if (bloodBank.email) {
+        await sendEmail(bloodBank.email, emailSubject, emailBody);
+        console.log('Booking notification email sent successfully to blood bank:', bloodBank.email);
+      } else {
+        console.warn('⚠️ Blood bank has no email address, skipping notification');
+      }
     } catch (emailError) {
       console.error('Failed to send booking email:', emailError);
       // Don't fail the booking if email fails, just log it
