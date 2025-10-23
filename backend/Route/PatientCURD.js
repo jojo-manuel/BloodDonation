@@ -194,6 +194,62 @@ router.get("/admin/all", authMiddleware, async (req, res) => {
 });
 
 /**
+ * @route   GET /api/patients/search
+ * @desc    Search patients by blood bank ID and MRID
+ * @access  Private (User)
+ */
+router.get("/search", authMiddleware, async (req, res) => {
+  try {
+    const { bloodBankId, mrid } = req.query;
+
+    console.log('🔍 Patient Search Request:');
+    console.log('  Blood Bank ID:', bloodBankId);
+    console.log('  MRID:', mrid);
+
+    // Build search query
+    const query = {};
+    
+    if (bloodBankId) {
+      query.bloodBankId = bloodBankId;
+    }
+    
+    if (mrid) {
+      // Case-insensitive partial match for MRID
+      query.mrid = { $regex: mrid, $options: 'i' };
+    }
+
+    console.log('  Search Query:', JSON.stringify(query));
+
+    // Search patients
+    const patients = await Patient.find(query)
+      .populate('bloodBankId', 'name address')
+      .sort({ name: 1 });
+
+    console.log('  Found Patients:', patients.length);
+    
+    if (patients.length > 0) {
+      console.log('  Patient Details:');
+      patients.forEach((p, index) => {
+        console.log(`    ${index + 1}. ${p.name} | MRID: ${p.mrid} | Blood Bank: ${p.bloodBankId?.name}`);
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      data: patients,
+      count: patients.length 
+    });
+  } catch (err) {
+    console.error("❌ Patient Search Error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error while searching patients",
+      error: err.message 
+    });
+  }
+});
+
+/**
  * @route   GET /api/patients/mrid/:mrid
  * @desc    Get a patient by MRID (only user with matching MRID can view)
  * @access  Private (User with MRID only)
