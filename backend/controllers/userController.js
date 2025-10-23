@@ -288,7 +288,7 @@ const { sendEmail } = require('../utils/email');
  * Request donation from a donor
  */
 exports.requestDonation = asyncHandler(async (req, res) => {
-  const { donorId, bloodBankId, requestedDate, requestedTime, message } = req.body;
+  const { donorId, bloodBankId, requestedDate, requestedTime, message, patientId } = req.body;
 
   // Validate required fields
   if (!donorId || !bloodBankId || !requestedDate || !requestedTime) {
@@ -326,11 +326,19 @@ exports.requestDonation = asyncHandler(async (req, res) => {
       });
     }
 
+    // Get patient details if patientId provided
+    let patient = null;
+    if (patientId) {
+      patient = await require('../Models/Patient').findById(patientId);
+    }
+
     // Create the donation request
     const donationRequest = await DonationRequest.create({
       requesterId: req.user.id,
+      senderId: req.user.id,
       donorId,
       bloodBankId,
+      patientId: patientId || null,
       status: 'pending',
       requestedDate: new Date(requestedDate),
       requestedTime,
@@ -340,6 +348,8 @@ exports.requestDonation = asyncHandler(async (req, res) => {
       donorUsername: donor.name,
       bloodBankUsername: bloodBank.name,
       bloodBankAddress: bloodBank.address,
+      bloodBankName: bloodBank.name,
+      patientUsername: patient ? patient.name : null,
       userPhone: requester.phone
     });
 
