@@ -1874,9 +1874,11 @@ export default function UserDashboard() {
             {/* Selected Patient Details */}
             <div className="mb-4">
               {selectedPatient && (() => {
-                const patient = patients.find(p => p._id === selectedPatient);
+                // Check both searchedPatients and patients arrays
+                const allPatients = [...searchedPatients, ...patients];
+                const patient = allPatients.find(p => p._id === selectedPatient);
                 // Check if patient was auto-selected (blood bank + MRID both provided)
-                const wasAutoSelected = patientSearchBloodBank && patientSearchMRID;
+                const wasAutoSelected = patientSearchBloodBank && patientSearchMRID && searchedPatients.length === 1;
                 
                 return patient ? (
                   <div className="mt-2 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border-2 border-blue-300 dark:border-blue-700 shadow-md">
@@ -1887,7 +1889,7 @@ export default function UserDashboard() {
                       </h4>
                       {wasAutoSelected && (
                         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-500 text-white animate-pulse">
-                          🎯 Auto-Selected
+                          🎯 Auto-Selected (DB Search)
                         </span>
                       )}
                     </div>
@@ -1904,7 +1906,9 @@ export default function UserDashboard() {
 
             {/* Blood Bank Info (Auto-populated or Display) */}
             {selectedPatient && (() => {
-              const patient = patients.find(p => p._id === selectedPatient);
+              // Check both searchedPatients and patients arrays
+              const allPatients = [...searchedPatients, ...patients];
+              const patient = allPatients.find(p => p._id === selectedPatient);
               const bloodBankName = patient?.bloodBankId?.name || 'Not Specified';
               return (
                 <div className="mb-4 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
