@@ -55,6 +55,7 @@ exports.createRequest = asyncHandler(async (req, res) => {
     bloodBankName: bloodBankName, // Name of the blood bank issuing the request
     bloodBankUsername: bloodBankName, // Fallback for display
     patientUsername: patientUsername, // Patient name for display
+    patientMRID: patientMRID, // Patient MRID for display
     donorUsername: donor.name || donor.userId?.name, // Donor name for display
     requesterUsername: sender.username || sender.name, // Requester name for display
     status: 'pending',
