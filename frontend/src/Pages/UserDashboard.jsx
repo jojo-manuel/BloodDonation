@@ -235,12 +235,27 @@ export default function UserDashboard() {
   };
 
   useEffect(() => {
+    // Fetch profile data on mount for avatar display
+    fetchProfileData();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === "myRequests") {
       fetchRequests();
       fetchReceivedRequests();
 
     } else if (activeTab === "profile") {
       fetchProfileData();
+    } else if (activeTab === "settings") {
+      // Load settings from localStorage if available
+      const savedSettings = localStorage.getItem('userSettings');
+      if (savedSettings) {
+        try {
+          setSettingsData(JSON.parse(savedSettings));
+        } catch (e) {
+          console.error('Failed to load settings', e);
+        }
+      }
     }
   }, [activeTab]);
 
