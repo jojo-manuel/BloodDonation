@@ -427,14 +427,18 @@ exports.getBookingsForBloodBank = asyncHandler(async (req, res) => {
 
 /**
  * Reschedule a booking
- * Body: { bookingId, newDate, newTime }
+ * Route param: bookingId (optional, for new format)
+ * Body: { bookingId, newDate, newTime } (bookingId optional if in route param)
  */
 exports.rescheduleBooking = asyncHandler(async (req, res) => {
   if (req.user.role !== 'bloodbank') {
     return res.status(403).json({ success: false, message: 'Access denied. Blood bank role required.' });
   }
 
-  const { bookingId, newDate, newTime } = req.body;
+  // Support both old format (bookingId in body) and new format (bookingId in params)
+  const bookingId = req.params.bookingId || req.body.bookingId;
+  const { newDate, newTime } = req.body;
+  
   if (!bookingId || !newDate || !newTime) {
     return res.status(400).json({ success: false, message: 'bookingId, newDate, and newTime are required' });
   }
