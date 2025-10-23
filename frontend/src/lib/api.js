@@ -3,9 +3,22 @@
 
 import axios from 'axios';
 
+// Get API URL from environment variables
+// Support both VITE_API_URL and VITE_API_BASE_URL for backward compatibility
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+
+// Log configuration in development
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:');
+  console.log('  API URL:', API_URL);
+  console.log('  Base URL:', API_BASE_URL);
+  console.log('  Mode:', import.meta.env.MODE);
+}
+
 // Create a pre-configured axios client
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
