@@ -109,6 +109,13 @@ export default function BloodBankDashboard() {
     }
   }, [activeTab]);
 
+  // Refetch bookings when filters change
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchBookings();
+    }
+  }, [filterDate, filterBloodGroup, filterPatientName, filterPatientMRID, filterStatus]);
+
   // Fetch users
   const fetchUsers = async () => {
     try {
