@@ -114,7 +114,22 @@ exports.listSent = asyncHandler(async (req, res) => {
   const requests = await DonationRequest.find({ senderId: userId })
     .populate('senderId', 'username name email')
     .populate('receiverId', 'username name email')
-    .populate('bloodBankId', 'name')
+    .populate('bloodBankId', 'name address')
+    .populate({
+      path: 'patientId',
+      select: 'name bloodGroup address bloodBankId dateNeeded unitsNeeded mrid',
+      populate: {
+        path: 'bloodBankId',
+        select: 'name address',
+      },
+    })
+    .populate({
+      path: 'donorId',
+      populate: {
+        path: 'userId',
+        select: 'username name email'
+      }
+    })
     .sort({ createdAt: -1 })
     .lean();
   return res.json({ success: true, data: requests });
