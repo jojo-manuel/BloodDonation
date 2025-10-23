@@ -141,6 +141,16 @@ export default function BloodBankDashboard() {
     }
   };
 
+  // Fetch visited donors with their visit history
+  const fetchVisitedDonors = async () => {
+    try {
+      const res = await api.get("/bloodbank/visited-donors");
+      if (res.data.success) setVisitedDonors(res.data.data);
+    } catch (err) {
+      console.error("Failed to fetch visited donors", err);
+    }
+  };
+
   // Handle confirm booking
   const handleConfirmBooking = async (booking) => {
     if (!confirm(`Confirm booking for ${booking.donorName}?`)) return;
