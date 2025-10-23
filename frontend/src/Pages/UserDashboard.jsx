@@ -381,6 +381,8 @@ export default function UserDashboard() {
   const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedBloodBank, setSelectedBloodBank] = useState('');
+  const [patientSearchMRID, setPatientSearchMRID] = useState(''); // For MRID search
+  const [patientSearchBloodBank, setPatientSearchBloodBank] = useState(''); // For blood bank filter
 
   const handleBookSlot = async (request) => {
     // Open booking modal with request details
