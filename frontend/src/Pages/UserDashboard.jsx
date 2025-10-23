@@ -423,6 +423,68 @@ export default function UserDashboard() {
   const [selectedBloodBank, setSelectedBloodBank] = useState('');
   const [patientSearchMRID, setPatientSearchMRID] = useState(''); // For MRID search
   const [patientSearchBloodBank, setPatientSearchBloodBank] = useState(''); // For blood bank filter
+  const [searchedPatients, setSearchedPatients] = useState([]); // Patients from database search
+  const [searchingPatients, setSearchingPatients] = useState(false); // Loading state for search
+
+  // Function to search patients in database by blood bank and MRID
+  const searchPatientsInDatabase = async (bloodBankId, mrid) => {
+    if (!bloodBankId && !mrid) {
+      setSearchedPatients([]);
+      return;
+    }
+
+    try {
+      setSearchingPatients(true);
+      console.log('🔍 Searching database for patients:');
+      console.log('  Blood Bank ID:', bloodBankId);
+      console.log('  MRID:', mrid);
+
+      const params = new URLSearchParams();
+      if (bloodBankId) params.append('bloodBankId', bloodBankId);
+      if (mrid) params.append('mrid', mrid);
+
+      const res = await api.get(`/patients/search?${params.toString()}`);
+      
+      if (res.data.success) {
+        console.log('✅ Found patients:', res.data.count);
+        setSearchedPatients(res.data.data);
+        
+        // Auto-select if only one patient found
+        if (res.data.count === 1) {
+          const patient = res.data.data[0];
+          console.log('🎯 Auto-selecting patient:', patient.name, '| MRID:', patient.mrid);
+          setSelectedPatient(patient._id);
+          setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
+        } else if (res.data.count === 0) {
+          console.log('❌ No patients found matching criteria');
+          setSelectedPatient('');
+        } else {
+          console.log(`📋 Found ${res.data.count} patients - user needs to select one`);
+        }
+      } else {
+        setSearchedPatients([]);
+      }
+    } catch (error) {
+      console.error('❌ Error searching patients:', error);
+      setSearchedPatients([]);
+    } finally {
+      setSearchingPatients(false);
+    }
+  };
+
+  // Trigger database search when blood bank or MRID changes
+  useEffect(() => {
+    if (patientSearchBloodBank || patientSearchMRID) {
+      // Debounce search by 500ms to avoid too many requests
+      const timeoutId = setTimeout(() => {
+        searchPatientsInDatabase(patientSearchBloodBank, patientSearchMRID);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSearchedPatients([]);
+    }
+  }, [patientSearchBloodBank, patientSearchMRID]);
 
   // Auto-populate patient when blood bank + MRID uniquely identify a patient
   useEffect(() => {
