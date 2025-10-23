@@ -196,8 +196,12 @@ const handleFirebaseSignIn = async () => {
           }
       })
       .catch((err) => {
+        console.error('❌ Login error:', err);
+        console.error('❌ Error response:', err.response?.data);
+        console.error('❌ Error status:', err.response?.status);
+        
         const msg = err?.response?.data?.message || 'Login failed';
-        alert(msg);
+        alert(`Login Failed: ${msg}\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com`);
       });
   };
 
