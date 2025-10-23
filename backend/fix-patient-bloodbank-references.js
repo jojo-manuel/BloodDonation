@@ -13,13 +13,17 @@ async function fixPatientBloodBankReferences() {
     await mongoose.connect(MONGO_URI);
     console.log('✅ Connected to MongoDB\n');
 
-    // Get all patients with null bloodBankId but have bloodBankName
-    const patientsToFix = await Patient.find({
-      $or: [
-        { bloodBankId: null },
-        { bloodBankId: { $exists: false } }
-      ],
-      bloodBankName: { $exists: true, $ne: null }
+    // Get ALL patients first
+    const allPatients = await Patient.find({});
+    console.log(`📋 Total patients in database: ${allPatients.length}\n`);
+    
+    // Filter patients that need fixing (bloodBankId is null/undefined but bloodBankName exists)
+    const patientsToFix = allPatients.filter(p => {
+      const needsFix = (!p.bloodBankId || p.bloodBankId === null) && p.bloodBankName;
+      if (needsFix) {
+        console.log(`   → ${p.name || p.patientName} needs fix (has name: "${p.bloodBankName}", but ID: ${p.bloodBankId})`);
+      }
+      return needsFix;
     });
 
     console.log(`📋 Found ${patientsToFix.length} patients to fix:\n`);
