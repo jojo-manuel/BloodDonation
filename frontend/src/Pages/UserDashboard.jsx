@@ -1411,6 +1411,146 @@ export default function UserDashboard() {
         )}
       </div>
 
+      {/* Enhanced Request Modal */}
+      {requestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-2xl border border-white/30 bg-white p-6 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-gray-800">
+            <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+              🩸 Send Donation Request
+            </h3>
+
+            {/* Donor Information */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+              <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-2 flex items-center gap-2">
+                <span className="text-2xl">👤</span>
+                Donor Information
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <p><strong>Name:</strong> {requestModal.name || requestModal.userId?.name || 'N/A'}</p>
+                <p><strong>Blood Group:</strong> <span className="text-red-600 dark:text-red-400 font-bold">{requestModal.bloodGroup}</span></p>
+                <p><strong>City:</strong> {requestModal.houseAddress?.city || 'N/A'}</p>
+                <p><strong>Contact:</strong> {requestModal.contactNumber || 'N/A'}</p>
+              </div>
+            </div>
+
+            {/* Patient Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <span className="text-xl">🏥</span> Select Patient (Optional)
+              </label>
+              <select
+                value={selectedPatient}
+                onChange={(e) => {
+                  setSelectedPatient(e.target.value);
+                  // Auto-select blood bank from patient
+                  const patient = patients.find(p => p._id === e.target.value);
+                  if (patient && patient.bloodBankId) {
+                    setSelectedBloodBank(patient.bloodBankId._id || patient.bloodBankId);
+                  }
+                }}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="">-- Select Patient --</option>
+                {patients.map(patient => (
+                  <option key={patient._id} value={patient._id}>
+                    {patient.name || patient.patientName} - {patient.bloodGroup} 
+                    {patient.mrid ? ` (MRID: ${patient.mrid})` : ''}
+                  </option>
+                ))}
+              </select>
+              {selectedPatient && (() => {
+                const patient = patients.find(p => p._id === selectedPatient);
+                return patient ? (
+                  <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm"><strong>Patient Name:</strong> {patient.name || patient.patientName}</p>
+                    <p className="text-sm"><strong>Blood Group:</strong> {patient.bloodGroup}</p>
+                    {patient.mrid && <p className="text-sm"><strong>MRID:</strong> {patient.mrid}</p>}
+                    {patient.bloodBankId?.name && <p className="text-sm"><strong>Blood Bank:</strong> {patient.bloodBankId.name}</p>}
+                  </div>
+                ) : null;
+              })()}
+            </div>
+
+            {/* Blood Bank Info (Auto-populated or Display) */}
+            {selectedPatient && (() => {
+              const patient = patients.find(p => p._id === selectedPatient);
+              const bloodBankName = patient?.bloodBankId?.name || 'Not Specified';
+              return (
+                <div className="mb-4 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
+                  <h4 className="font-semibold text-pink-900 dark:text-pink-100 mb-2 flex items-center gap-2">
+                    <span className="text-2xl">🏥</span>
+                    Blood Bank (Auto-selected from Patient)
+                  </h4>
+                  <p className="text-lg font-bold text-pink-800 dark:text-pink-200">{bloodBankName}</p>
+                  {patient?.bloodBankId?.address && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      📍 {patient.bloodBankId.address}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Request Details Summary */}
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">📋 Request Summary</h4>
+              <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
+                <li>✅ <strong>Donor:</strong> {requestModal.name || requestModal.userId?.name}</li>
+                <li>✅ <strong>Blood Group:</strong> {requestModal.bloodGroup}</li>
+                <li>
+                  {selectedPatient ? (
+                    <>✅ <strong>Patient:</strong> {patients.find(p => p._id === selectedPatient)?.name || 'Selected'}</>
+                  ) : (
+                    <>⚠️ <strong>Patient:</strong> Not specified</>
+                  )}
+                </li>
+                <li>
+                  {selectedPatient ? (
+                    <>✅ <strong>Blood Bank:</strong> {patients.find(p => p._id === selectedPatient)?.bloodBankId?.name || 'Auto-selected'}</>
+                  ) : (
+                    <>⚠️ <strong>Blood Bank:</strong> Not specified</>
+                  )}
+                </li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={sendRequest}
+                disabled={requestingId === requestModal._id}
+                className="flex-1 bg-gradient-to-r from-pink-600 to-purple-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-pink-700 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {requestingId === requestModal._id ? (
+                  <>
+                    <span className="inline-block animate-spin mr-2">⏳</span>
+                    Sending Request...
+                  </>
+                ) : (
+                  <>
+                    ❤️ Send Donation Request
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setRequestModal(null);
+                  setSelectedPatient('');
+                  setSelectedBloodBank('');
+                }}
+                className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+              💡 Tip: Selecting a patient will auto-populate blood bank information and help track the donation request.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 text-center">
         <Link
           to="/donor-register"
