@@ -122,7 +122,18 @@ export default function BloodBankDashboard() {
   // Fetch bookings for "Booked Slots" tab
   const fetchBookings = async () => {
     try {
-      const res = await api.get("/bloodbank/bookings");
+      // Build query string with filters
+      const params = new URLSearchParams();
+      if (filterDate) params.append('date', filterDate);
+      if (filterBloodGroup) params.append('bloodGroup', filterBloodGroup);
+      if (filterPatientName) params.append('patientName', filterPatientName);
+      if (filterPatientMRID) params.append('patientMRID', filterPatientMRID);
+      if (filterStatus) params.append('status', filterStatus);
+
+      const queryString = params.toString();
+      const url = queryString ? `/bloodbank/bookings?${queryString}` : '/bloodbank/bookings';
+      
+      const res = await api.get(url);
       if (res.data.success) setBookings(res.data.data);
     } catch (err) {
       console.error("Failed to fetch bookings", err);
