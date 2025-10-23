@@ -29,11 +29,13 @@ exports.createRequest = asyncHandler(async (req, res) => {
   // Get patient details if patientId is provided
   let patient = null;
   let patientUsername = null;
+  let patientMRID = null;
   if (patientId) {
     const Patient = require('../Models/Patient');
-    patient = await Patient.findById(patientId).populate('bloodBankId', 'name');
+    patient = await Patient.findById(patientId).populate('bloodBankId', 'name address');
     if (patient) {
-      patientUsername = patient.name;
+      patientUsername = patient.name || patient.patientName;
+      patientMRID = patient.mrid;
       // If no blood bank from sender, get it from patient
       if (!bloodBankId && patient.bloodBankId) {
         bloodBankId = patient.bloodBankId._id;
@@ -51,6 +53,7 @@ exports.createRequest = asyncHandler(async (req, res) => {
     patientId: patientId || null, // Patient ID if provided
     bloodGroup: bloodGroup || donor.bloodGroup,
     bloodBankName: bloodBankName, // Name of the blood bank issuing the request
+    bloodBankUsername: bloodBankName, // Fallback for display
     patientUsername: patientUsername, // Patient name for display
     donorUsername: donor.name || donor.userId?.name, // Donor name for display
     requesterUsername: sender.username || sender.name, // Requester name for display
