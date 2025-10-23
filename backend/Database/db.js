@@ -4,7 +4,8 @@
 const mongoose = require('mongoose');
 
 // Get MongoDB URI from environment variables with database name
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/blooddonation?retryWrites=true&w=majority&appName=Cluster0";
+// Using "test" database where all your users are stored
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://jojomanuelp2026:zUuZEnV4baqSWUge@cluster0.iqr2jjj.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
 
 // Mongoose connection options (removed deprecated options)
 const mongooseOptions = {
@@ -23,8 +24,8 @@ const connectDB = async () => {
     // Add database name if not present in URI
     let connectionUri = MONGO_URI;
     if (!connectionUri.includes('mongodb.net/') || connectionUri.match(/mongodb\.net\/\?/)) {
-      connectionUri = connectionUri.replace('mongodb.net/?', 'mongodb.net/blooddonation?');
-      connectionUri = connectionUri.replace('mongodb.net?', 'mongodb.net/blooddonation?');
+      connectionUri = connectionUri.replace('mongodb.net/?', 'mongodb.net/test?');
+      connectionUri = connectionUri.replace('mongodb.net?', 'mongodb.net/test?');
     }
     
     await mongoose.connect(connectionUri, mongooseOptions);
