@@ -63,6 +63,13 @@ export default function BloodBankDashboard() {
   const [searchPlace, setSearchPlace] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Filter states for booked slots
+  const [filterDate, setFilterDate] = useState('');
+  const [filterBloodGroup, setFilterBloodGroup] = useState('');
+  const [filterPatientName, setFilterPatientName] = useState('');
+  const [filterPatientMRID, setFilterPatientMRID] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
   // Fetch patients list
   const fetchPatients = async () => {
     try {
