@@ -1055,26 +1055,54 @@ export default function BloodBankDashboard() {
                 🩸 Donors Management
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Manage donor accounts and their status
+                Manage donor accounts and view visit history
               </p>
             </div>
 
-            {/* Search Form */}
-            <DonorSearchForm
-              searchBloodGroup={searchBloodGroup}
-              setSearchBloodGroup={setSearchBloodGroup}
-              searchPlace={searchPlace}
-              setSearchPlace={setSearchPlace}
-              searchEmail={searchDonorEmail}
-              setSearchEmail={setSearchDonorEmail}
-              showDropdown={showDropdown}
-              setShowDropdown={setShowDropdown}
-              onClear={() => {
-                setSearchBloodGroup('');
-                setSearchDonorEmail('');
-                setSearchPlace('');
-              }}
-            />
+            {/* Toggle View Button */}
+            <div className="mb-6 flex justify-center gap-4">
+              <button
+                onClick={() => setShowVisitHistory(false)}
+                className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                  !showVisitHistory
+                    ? 'bg-gradient-to-r from-pink-600 to-rose-500 text-white shadow-lg'
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <span>👥</span>
+                All Donors
+              </button>
+              <button
+                onClick={() => setShowVisitHistory(true)}
+                className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                  showVisitHistory
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-500 text-white shadow-lg'
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                }`}
+              >
+                <span>📊</span>
+                Visit History ({visitedDonors.length})
+              </button>
+            </div>
+
+            {!showVisitHistory ? (
+              <>
+                {/* Search Form */}
+                <DonorSearchForm
+                  searchBloodGroup={searchBloodGroup}
+                  setSearchBloodGroup={setSearchBloodGroup}
+                  searchPlace={searchPlace}
+                  setSearchPlace={setSearchPlace}
+                  searchEmail={searchDonorEmail}
+                  setSearchEmail={setSearchDonorEmail}
+                  showDropdown={showDropdown}
+                  setShowDropdown={setShowDropdown}
+                  onClear={() => {
+                    setSearchBloodGroup('');
+                    setSearchDonorEmail('');
+                    setSearchPlace('');
+                  }}
+                />
 
             {donors.length === 0 ? (
               <div className="text-center py-8">
