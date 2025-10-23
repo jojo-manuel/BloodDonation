@@ -4,10 +4,10 @@ const asyncHandler = require('../Middleware/asyncHandler');
 
 exports.createRequest = asyncHandler(async (req, res) => {
   const { donorId } = req.params;
-  const { bloodGroup, issuedAt } = req.body;
+  const { bloodGroup, issuedAt, patientId } = req.body;
 
   // Validate donor exists
-  const donor = await Donor.findById(donorId).populate('userId', 'role');
+  const donor = await Donor.findById(donorId).populate('userId', 'role name email');
   if (!donor) {
     return res.status(404).json({ success: false, message: 'Donor not found' });
   }
@@ -26,14 +26,34 @@ exports.createRequest = asyncHandler(async (req, res) => {
     }
   }
 
+  // Get patient details if patientId is provided
+  let patient = null;
+  let patientUsername = null;
+  if (patientId) {
+    const Patient = require('../Models/Patient');
+    patient = await Patient.findById(patientId).populate('bloodBankId', 'name');
+    if (patient) {
+      patientUsername = patient.name;
+      // If no blood bank from sender, get it from patient
+      if (!bloodBankId && patient.bloodBankId) {
+        bloodBankId = patient.bloodBankId._id;
+        bloodBankName = patient.bloodBankId.name;
+      }
+    }
+  }
+
   const payload = {
     senderId: req.user.id,
-    receiverId: donor.userId,
-    donorUserId: donor.userId, // User ID of the donor
+    receiverId: donor.userId._id || donor.userId,
+    donorUserId: donor.userId._id || donor.userId, // User ID of the donor
     donorId: donor._id,
     bloodBankId: bloodBankId, // ID of the blood bank issuing the request
+    patientId: patientId || null, // Patient ID if provided
     bloodGroup: bloodGroup || donor.bloodGroup,
     bloodBankName: bloodBankName, // Name of the blood bank issuing the request
+    patientUsername: patientUsername, // Patient name for display
+    donorUsername: donor.name || donor.userId?.name, // Donor name for display
+    requesterUsername: sender.username || sender.name, // Requester name for display
     status: 'pending',
     requestedAt: new Date(),
     issuedAt: issuedAt ? new Date(issuedAt) : undefined,
