@@ -415,16 +415,34 @@ Blood Donation Team
 
 // Helper function to generate token number based on time (15-50 range)
 function generateTokenNumber(requestedTime, bloodBankId, requestedDate) {
-  // Parse time string (e.g., "10:00 AM")
-  const timeMatch = requestedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!timeMatch) throw new Error('Invalid time format');
-
-  let hour = parseInt(timeMatch[1]);
-  const minute = parseInt(timeMatch[2]);
-  const ampm = timeMatch[3].toUpperCase();
-
-  if (ampm === 'PM' && hour !== 12) hour += 12;
-  if (ampm === 'AM' && hour === 12) hour = 0;
+  let hour, minute;
+  
+  // Try to parse 12-hour format first (e.g., "10:00 AM")
+  const time12Match = requestedTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  
+  if (time12Match) {
+    // 12-hour format
+    hour = parseInt(time12Match[1]);
+    minute = parseInt(time12Match[2]);
+    const ampm = time12Match[3].toUpperCase();
+    
+    if (ampm === 'PM' && hour !== 12) hour += 12;
+    if (ampm === 'AM' && hour === 12) hour = 0;
+  } else {
+    // Try 24-hour format (e.g., "14:30")
+    const time24Match = requestedTime.match(/(\d+):(\d+)/);
+    if (!time24Match) {
+      throw new Error('Invalid time format. Expected formats: "10:00 AM" or "14:30"');
+    }
+    
+    hour = parseInt(time24Match[1]);
+    minute = parseInt(time24Match[2]);
+    
+    // Validate 24-hour format
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      throw new Error('Invalid time values. Hour must be 0-23, minute must be 0-59');
+    }
+  }
 
   const totalMinutes = hour * 60 + minute;
 
