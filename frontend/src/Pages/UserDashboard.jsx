@@ -1664,23 +1664,31 @@ export default function UserDashboard() {
               {/* Save Settings Button */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => alert('Settings saved successfully!')}
+                  onClick={() => {
+                    localStorage.setItem('userSettings', JSON.stringify(settingsData));
+                    alert('✅ Settings saved successfully!');
+                  }}
                   className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-pink-700 hover:to-purple-700 font-semibold shadow-lg"
                 >
                   💾 Save Settings
                 </button>
                 <button
-                  onClick={() => setSettingsData({
-                    emailNotifications: true,
-                    smsNotifications: false,
-                    pushNotifications: true,
-                    donationReminders: true,
-                    marketingEmails: false,
-                    twoFactorAuth: false,
-                    darkMode: false,
-                    language: 'en',
-                    timezone: 'Asia/Kolkata'
-                  })}
+                  onClick={() => {
+                    const defaultSettings = {
+                      emailNotifications: true,
+                      smsNotifications: false,
+                      pushNotifications: true,
+                      donationReminders: true,
+                      marketingEmails: false,
+                      twoFactorAuth: false,
+                      darkMode: false,
+                      language: 'en',
+                      timezone: 'Asia/Kolkata'
+                    };
+                    setSettingsData(defaultSettings);
+                    localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
+                    alert('🔄 Settings reset to default!');
+                  }}
                   className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
                 >
                   🔄 Reset to Default
