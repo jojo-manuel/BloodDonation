@@ -1046,6 +1046,7 @@ export default function UserDashboard() {
                               <th className="px-2 py-1">Blood Bank</th>
                               <th className="px-2 py-1">Patient</th>
                               <th className="px-2 py-1">Update Status</th>
+                              <th className="px-2 py-1">Taxi</th>
                             </tr>
                           </thead>
                           <tbody className="text-gray-800 dark:text-gray-200">
@@ -1091,6 +1092,17 @@ export default function UserDashboard() {
                                   >
                                     {updatingId === request._id ? 'Updating...' : 'Update'}
                                   </button>
+                                </td>
+                                <td className="px-2 py-1">
+                                  {(request.status === 'booked' || request.status === 'accepted') && (
+                                    <button
+                                      onClick={() => setTaxiBookingModal(request)}
+                                      className="px-3 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition font-semibold flex items-center gap-1 whitespace-nowrap"
+                                    >
+                                      <span>🚖</span>
+                                      Book Taxi
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             ))}
