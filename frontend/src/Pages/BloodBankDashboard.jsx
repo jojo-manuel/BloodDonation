@@ -82,10 +82,12 @@ export default function BloodBankDashboard() {
     }
   };
 
-  // Fetch donation requests and donors when tab changes
+  // Fetch bookings, donation requests and donors when tab changes
   useEffect(() => {
     if (activeTab === 'users') {
-      fetchDonationRequests();
+      fetchBookings(); // Fetch actual bookings
+    } else if (activeTab === 'received') {
+      fetchDonationRequests(); // Fetch received donation requests
     } else if (activeTab === 'donors') {
       fetchDonors();
     }
@@ -101,7 +103,17 @@ export default function BloodBankDashboard() {
     }
   };
 
-  // Fetch donation requests
+  // Fetch bookings for "Booked Slots" tab
+  const fetchBookings = async () => {
+    try {
+      const res = await api.get("/bloodbank/bookings");
+      if (res.data.success) setBookings(res.data.data);
+    } catch (err) {
+      console.error("Failed to fetch bookings", err);
+    }
+  };
+
+  // Fetch donation requests for "Received Requests" tab
   const fetchDonationRequests = async () => {
     try {
       const res = await api.get("/bloodbank/donation-requests");
