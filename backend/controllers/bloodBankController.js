@@ -570,7 +570,7 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
   }
 
   const { bookingId } = req.params;
-  const { status, rejectionReason } = req.body;
+  const { status, rejectionReason, arrived, arrivalTime, completedAt } = req.body;
 
   if (!status) {
     return res.status(400).json({ success: false, message: 'status is required' });
@@ -586,7 +586,16 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Blood bank not found' });
   }
 
-  const booking = await Booking.findById(bookingId);
+  const booking = await Booking.findById(bookingId)
+    .populate('donorId', 'userId name bloodGroup houseAddress contactNumber')
+    .populate({
+      path: 'donorId',
+      populate: {
+        path: 'userId',
+        select: 'username name email phone'
+      }
+    });
+    
   if (!booking || booking.bloodBankId.toString() !== bloodBank._id.toString()) {
     return res.status(404).json({ success: false, message: 'Booking not found or not owned by this blood bank' });
   }
@@ -595,6 +604,19 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
 
   // Update status
   booking.status = status;
+  
+  // Update frontdesk-related fields
+  if (arrived !== undefined) {
+    booking.arrived = arrived;
+  }
+  
+  if (arrivalTime) {
+    booking.arrivalTime = new Date(arrivalTime);
+  }
+  
+  if (completedAt) {
+    booking.completedAt = new Date(completedAt);
+  }
   
   if (status === 'rejected' && rejectionReason) {
     booking.rejectionReason = rejectionReason;
