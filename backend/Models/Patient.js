@@ -87,8 +87,14 @@ const patientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to remove any encryptedMrid field that might cause issues
+// Pre-save hook to check if patient needs are fulfilled
 patientSchema.pre('save', function(next) {
+  // Check if patient has received enough units
+  if (this.unitsReceived >= this.unitsRequired && !this.isFulfilled) {
+    this.isFulfilled = true;
+    this.fulfilledAt = new Date();
+  }
+  
   // Remove encryptedMrid field if it exists to prevent index conflicts
   if (this.encryptedMrid !== undefined) {
     delete this.encryptedMrid;
