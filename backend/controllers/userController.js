@@ -487,32 +487,41 @@ exports.directBookSlot = asyncHandler(async (req, res) => {
   }
 
   try {
+    console.log('📅 Processing booking request:', { donorId, bloodBankId, requestedDate, requestedTime });
+    
     // Get donor details
-    const donor = await Donor.findById(donorId).populate('userId', 'username name');
+    const donor = await Donor.findById(donorId).populate('userId', 'username name email');
     if (!donor) {
+      console.error('❌ Donor not found:', donorId);
       return res.status(404).json({
         success: false,
         message: 'Donor not found'
       });
     }
+    console.log('✅ Donor found:', donor.name);
 
     // Get blood bank details
     const bloodBank = await BloodBank.findById(bloodBankId);
     if (!bloodBank) {
+      console.error('❌ Blood bank not found:', bloodBankId);
       return res.status(404).json({
         success: false,
         message: 'Blood bank not found'
       });
     }
+    console.log('✅ Blood bank found:', bloodBank.name);
 
     // Get donation request details
     const donationRequest = await DonationRequest.findById(donationRequestId);
     if (!donationRequest) {
+      console.error('❌ Donation request not found:', donationRequestId);
       return res.status(404).json({
         success: false,
         message: 'Donation request not found'
       });
     }
+    console.log('✅ Donation request found');
+
 
     // Check booking constraints
     // 1. Max 3 bookings per slot (same date/time/bloodBank)
