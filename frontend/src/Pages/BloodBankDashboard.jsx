@@ -14,6 +14,8 @@ export default function BloodBankDashboard() {
   const [donors, setDonors] = useState([]);
   const [bloodBankDetails, setBloodBankDetails] = useState(null);
   const [editingPatient, setEditingPatient] = useState(null);
+  const [rescheduleModal, setRescheduleModal] = useState(null); // For reschedule modal
+  const [rescheduling, setRescheduling] = useState(false);
   const [formData, setFormData] = useState({
     patientName: "",
     address: {
