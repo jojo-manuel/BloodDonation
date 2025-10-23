@@ -19,6 +19,9 @@ export default function BloodBankDashboard() {
   const [tokenSearch, setTokenSearch] = useState(''); // Frontdesk token search
   const [searchedBooking, setSearchedBooking] = useState(null); // Found booking
   const [searchingToken, setSearchingToken] = useState(false); // Loading state
+  const [visitedDonors, setVisitedDonors] = useState([]); // Donors who visited
+  const [showVisitHistory, setShowVisitHistory] = useState(false); // Toggle visit history view
+  const [expandedDonor, setExpandedDonor] = useState(null); // Expanded donor for visit details
   const [formData, setFormData] = useState({
     patientName: "",
     address: {
