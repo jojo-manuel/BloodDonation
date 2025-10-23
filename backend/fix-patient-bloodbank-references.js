@@ -17,9 +17,22 @@ async function fixPatientBloodBankReferences() {
     const allPatients = await Patient.find({});
     console.log(`📋 Total patients in database: ${allPatients.length}\n`);
     
+    // Debug: Log each patient's blood bank fields
+    console.log('🔍 Checking each patient:\n');
+    allPatients.forEach((p, idx) => {
+      console.log(`${idx + 1}. ${p.name || p.patientName} (MRID: ${p.mrid})`);
+      console.log(`   bloodBankId: ${p.bloodBankId} (type: ${typeof p.bloodBankId})`);
+      console.log(`   bloodBankName: "${p.bloodBankName}" (type: ${typeof p.bloodBankName}, exists: ${!!p.bloodBankName})`);
+      console.log(`   Has bloodBankName field: ${p.hasOwnProperty('bloodBankName') || 'bloodBankName' in p}`);
+      console.log('');
+    });
+    
     // Filter patients that need fixing (bloodBankId is null/undefined but bloodBankName exists)
     const patientsToFix = allPatients.filter(p => {
-      const needsFix = (!p.bloodBankId || p.bloodBankId === null) && p.bloodBankName;
+      const hasBBName = p.bloodBankName && p.bloodBankName !== '' && p.bloodBankName !== null && p.bloodBankName !== undefined;
+      const needsBBId = !p.bloodBankId || p.bloodBankId === null;
+      const needsFix = needsBBId && hasBBName;
+      
       if (needsFix) {
         console.log(`   → ${p.name || p.patientName} needs fix (has name: "${p.bloodBankName}", but ID: ${p.bloodBankId})`);
       }
