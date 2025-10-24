@@ -287,11 +287,22 @@ export default function BloodBankDashboard() {
     }
   };
 
-  // Frontdesk: Fetch all tokens for selected date
-  const fetchAllTokens = async (date = selectedTokenDate) => {
+  // Frontdesk: Fetch all tokens based on filter
+  const fetchAllTokens = async () => {
     try {
       setLoadingTokens(true);
-      const res = await api.get(`/bloodbank/bookings?date=${date}`);
+      let url = '/bloodbank/bookings';
+      
+      // Apply filter
+      if (tokenFilter === 'today') {
+        const today = new Date().toISOString().split('T')[0];
+        url += `?date=${today}`;
+      } else if (tokenFilter === 'date' && selectedTokenDate) {
+        url += `?date=${selectedTokenDate}`;
+      }
+      // If 'all', no date filter applied
+      
+      const res = await api.get(url);
       
       if (res.data.success) {
         setAllTokens(res.data.data || []);
@@ -306,12 +317,12 @@ export default function BloodBankDashboard() {
     }
   };
 
-  // Load tokens when date changes or tab becomes active
+  // Load tokens when filter changes or tab becomes active
   useEffect(() => {
     if (activeTab === 'frontdesk' && showAllTokens) {
-      fetchAllTokens(selectedTokenDate);
+      fetchAllTokens();
     }
-  }, [activeTab, selectedTokenDate, showAllTokens]);
+  }, [activeTab, tokenFilter, selectedTokenDate, showAllTokens]);
 
   // Frontdesk: Mark arrival
   const handleMarkArrival = async () => {
