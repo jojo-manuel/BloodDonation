@@ -350,28 +350,28 @@ export default function UserProfile() {
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📊 Donation Statistics</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-red-500/20 to-pink-500/20 p-6 shadow-xl backdrop-blur-2xl">
+              <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-500/20 dark:to-pink-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
                 <div className="text-5xl font-bold text-red-600 dark:text-red-400 mb-2">{totalDonations}</div>
-                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Donations</div>
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Total Donations</div>
               </div>
               
-              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-2xl">
+              <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
                 <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">{patientsHelped.length}</div>
-                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Patients Helped</div>
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Patients Helped</div>
               </div>
               
-              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 p-6 shadow-xl backdrop-blur-2xl">
+              <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
                 </div>
-                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Donation</div>
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Last Donation</div>
               </div>
               
-              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-6 shadow-xl backdrop-blur-2xl">
+              <div className="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
                   {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}
                 </div>
-                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Next Eligible Date</div>
+                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Next Eligible Date</div>
               </div>
             </div>
 
