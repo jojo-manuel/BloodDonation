@@ -80,6 +80,7 @@ app.get('/api/health', (req, res) =>
 // Mount routes (note: auth routes are behind rate limiter)
 app.use('/api/auth', authLimiter, require('./Route/authRoutes'));
 app.use('/api/users', require('./Route/userRoutes'));
+app.use('/api/settings', require('./Route/settingsRoutes'));
 app.use('/api/donors', require('./Route/donorRoutes'));
 app.use('/api/reviews', require('./Route/reviewRoutes'));
 app.use('/api/admin', require('./Route/adminRoutes'));
