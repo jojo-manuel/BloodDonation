@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import UserAvatar from "../components/UserAvatar";
 import api from "../lib/api";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from "../firebase";
@@ -21,10 +22,13 @@ function ProgressBar() {
           Blood Bank Login
         </span>
       </div>
-      <span className="flex items-center gap-2 text-pink-400 font-bold">
-        <span className="bg-pink-400/20 rounded-full p-2"><span className="text-xl">❤️</span></span>
-        Hope Web
-      </span>
+      <div className="flex items-center gap-3">
+        <span className="flex items-center gap-2 text-pink-400 font-bold">
+          <span className="bg-pink-400/20 rounded-full p-2"><span className="text-xl">❤️</span></span>
+          Hope Web
+        </span>
+        <UserAvatar />
+      </div>
     </div>
   );
 }

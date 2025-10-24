@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import UserAvatar from "../components/UserAvatar";
 import api from "../lib/api";
 
 export default function Register() {
@@ -81,7 +82,10 @@ export default function Register() {
           <span className="text-2xl">🩸</span>
           <span className="font-bold">Blood Donation</span>
         </Link>
-        <div className="text-white text-sm">Step 1 of 2</div>
+        <div className="flex items-center gap-3">
+          <div className="text-white text-sm">Step 1 of 2</div>
+          <UserAvatar />
+        </div>
       </div>
 
       <main className="mx-auto w-full max-w-2xl px-4">

@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import UserAvatar from '../components/UserAvatar';
 import api from '../lib/api';
 
 function Navbar() {
@@ -17,6 +18,7 @@ function Navbar() {
           <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
         </div>
       </Link>
+      <UserAvatar />
     </nav>
   );
 }
@@ -124,7 +126,4 @@ export default function ResetPassword() {
             <Link to="/login" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">← Back to Login</Link>
           </div>
         </form>
-      </main>
-    </div>
-  );
-}
+      </main

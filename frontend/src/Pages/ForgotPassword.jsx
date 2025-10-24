@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import UserAvatar from '../components/UserAvatar';
 import api from '../lib/api';
 import { auth, sendPasswordResetEmail } from '../firebase';
 
@@ -18,6 +19,7 @@ function Navbar() {
           <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
         </div>
       </Link>
+      <UserAvatar />
     </nav>
   );
 }

@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import UserAvatar from "../components/UserAvatar";
 import api from "../lib/api";
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
@@ -29,6 +30,7 @@ function Navbar() {
           <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
         </div>
       </Link>
+      <UserAvatar />
     </nav>
   );
 }

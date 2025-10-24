@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import UserAvatar from "../components/UserAvatar";
 import api, { getAddressByPostalCode, getAddressFromPincodeAPI } from "../lib/api";
 
 // Allowed values and regex patterns for client-side validation
@@ -33,6 +34,7 @@ function Navbar() {
           <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
         </div>
       </Link>
+      <UserAvatar />
     </nav>
   );
 }
