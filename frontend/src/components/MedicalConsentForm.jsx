@@ -80,8 +80,23 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
   };
 
   const checkEligibility = () => {
-    // Check if all required questions are answered
-    const allAnswered = Object.values(formData).every(val => val !== null);
+    // Check if gender is selected
+    if (!gender) {
+      alert('⚠️ Please select your gender before proceeding.');
+      return false;
+    }
+
+    // Check if all required questions are answered (excluding gender-specific ones)
+    const requiredFields = Object.keys(formData).filter(field => {
+      // If male, exclude female-only questions
+      if (gender === 'male') {
+        const femaleOnlyFields = ['pregnant', 'lactating', 'delivery', 'abortion'];
+        return !femaleOnlyFields.includes(field);
+      }
+      return true; // Include all fields for females
+    });
+    
+    const allAnswered = requiredFields.every(field => formData[field] !== null);
     if (!allAnswered) {
       alert(t('answerAllQuestions'));
       return false;
