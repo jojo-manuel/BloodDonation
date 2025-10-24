@@ -2381,10 +2381,13 @@ export default function BloodBankDashboard() {
 
                   <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                      <strong>📄 File Format:</strong> CSV (Comma-Separated Values)
+                      <strong>📄 File Formats:</strong> CSV (spreadsheet) or PDF (formatted report)
                     </p>
                     <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
                       <strong>📊 Included Data:</strong> Token #, Date, Time, Donor Details, Patient Info, Status, and more
+                    </p>
+                    <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                      <strong>💡 Tip:</strong> Use CSV for data analysis, PDF for printing/sharing
                     </p>
                   </div>
                 </div>
