@@ -131,6 +131,110 @@ exports.me = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get comprehensive user profile with donation history
+ * Includes: user info, donor status, donations, patients helped, next donation date
+ */
+exports.getComprehensiveProfile = asyncHandler(async (req, res) => {
+  const Booking = require('../Models/Booking');
+  const Patient = require('../Models/Patient');
+  
+  // Get user basic info
+  const user = await User.findById(req.user.id).select('-password');
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+  // Initialize response data
+  const profileData = {
+    user: user.toObject(),
+    isDonor: false,
+    donorInfo: null,
+    donations: [],
+    patientsHelped: [],
+    nextDonationDate: null,
+    totalDonations: 0
+  };
+
+  // Check if user is a donor
+  if (user.role === 'donor') {
+    const donor = await Donor.findOne({ userId: user._id });
+    if (donor) {
+      profileData.isDonor = true;
+      profileData.donorInfo = {
+        bloodGroup: donor.bloodGroup,
+        availability: donor.availability,
+        lastDonatedDate: donor.lastDonatedDate,
+        donatedDates: donor.donatedDates,
+        contactNumber: donor.contactNumber,
+        weight: donor.weight,
+        address: donor.houseAddress,
+        priorityPoints: donor.priorityPoints
+      };
+
+      // Get all bookings/donations made by this donor
+      const donations = await Booking.find({ 
+        donorId: donor._id 
+      })
+        .populate('bloodBankId', 'name address')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      profileData.donations = donations.map(booking => ({
+        id: booking._id,
+        bookingId: booking.bookingId,
+        date: booking.date,
+        time: booking.time,
+        status: booking.status,
+        bloodBank: booking.bloodBankId,
+        bloodBankName: booking.bloodBankName,
+        patientName: booking.patientName,
+        patientMRID: booking.patientMRID,
+        bloodGroup: booking.bloodGroup,
+        completedAt: booking.completedAt,
+        arrived: booking.arrived,
+        arrivalTime: booking.arrivalTime
+      }));
+
+      profileData.totalDonations = donations.filter(d => d.status === 'completed').length;
+
+      // Get list of unique patients helped
+      const completedBookings = donations.filter(d => d.status === 'completed' && d.patientName);
+      const uniquePatients = [...new Set(completedBookings.map(b => b.patientName))];
+      profileData.patientsHelped = uniquePatients.map(patientName => {
+        const booking = completedBookings.find(b => b.patientName === patientName);
+        return {
+          patientName,
+          patientMRID: booking?.patientMRID,
+          donationDate: booking?.completedAt || booking?.date,
+          bloodGroup: booking?.bloodGroup
+        };
+      });
+
+      // Calculate next eligible donation date (3 months after last completed donation)
+      const completedDonations = donations.filter(d => d.status === 'completed' && d.completedAt);
+      if (completedDonations.length > 0) {
+        // Sort by completion date to get the most recent
+        const sortedCompletedDonations = completedDonations.sort((a, b) => 
+          new Date(b.completedAt) - new Date(a.completedAt)
+        );
+        const lastCompletedDonation = sortedCompletedDonations[0];
+        const lastDonationDate = new Date(lastCompletedDonation.completedAt);
+        
+        // Add 3 months (90 days) to the last donation date
+        const nextEligibleDate = new Date(lastDonationDate);
+        nextEligibleDate.setDate(nextEligibleDate.getDate() + 90);
+        
+        profileData.nextDonationDate = nextEligibleDate;
+      }
+    }
+  }
+
+  res.json({ 
+    success: true, 
+    message: 'Profile data retrieved successfully', 
+    data: profileData 
+  });
+});
+
+/**
  * Update current authenticated user's profile
  * Body fields supported: name, phone, address
  */
