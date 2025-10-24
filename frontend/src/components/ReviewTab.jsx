@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getReviewableDonors, getReviewableBloodBanks, createReview, getMyReviews, updateReview, deleteReview, getDonorReviews, getBloodBankReviews } from '../lib/api';
+import { getReviewableBloodBanks, createReview, getMyReviews, updateReview, deleteReview, getBloodBankReviews } from '../lib/api';
 
 const ReviewTab = () => {
   const [activeSubTab, setActiveSubTab] = useState('write');
-  const [reviewableDonors, setReviewableDonors] = useState([]);
   const [reviewableBloodBanks, setReviewableBloodBanks] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [donorReviews, setDonorReviews] = useState([]);
@@ -33,21 +32,6 @@ const ReviewTab = () => {
     }
   }, [activeSubTab]);
 
-  const fetchReviewableDonors = async () => {
-    try {
-      setLoading(true);
-      const response = await getReviewableDonors();
-      if (response.success) {
-        setReviewableDonors(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching reviewable donors:', error);
-      alert('Failed to load reviewable donors');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchReviewableBloodBanks = async () => {
     try {
       const response = await getReviewableBloodBanks();
@@ -70,22 +54,6 @@ const ReviewTab = () => {
     } catch (error) {
       console.error('Error fetching my reviews:', error);
       alert('Failed to load your reviews');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDonorReviews = async (donorId) => {
-    try {
-      setLoading(true);
-      const response = await getDonorReviews(donorId);
-      if (response.success) {
-        setDonorReviews(response.data.reviews);
-        setSelectedDonor({ ...response.data.stats, type: 'donor' });
-      }
-    } catch (error) {
-      console.error('Error fetching donor reviews:', error);
-      alert('Failed to load donor reviews');
     } finally {
       setLoading(false);
     }
