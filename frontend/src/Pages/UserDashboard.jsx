@@ -52,6 +52,7 @@ export default function UserDashboard() {
   const [filterDate, setFilterDate] = useState('');
   const [filterBloodGroup, setFilterBloodGroup] = useState('all');
   const [filterBloodBankName, setFilterBloodBankName] = useState('');
+  const [showFilters, setShowFilters] = useState(false); // Toggle filter panel visibility
   const [profileData, setProfileData] = useState({});
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
