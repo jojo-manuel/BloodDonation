@@ -1242,11 +1242,10 @@ export default function UserDashboard() {
                               <th className="px-2 py-1">Blood Group</th>
                               <th className="px-2 py-1">Status</th>
                               <th className="px-2 py-1">Requested</th>
-                              <th className="px-2 py-1">Issued</th>
                               <th className="px-2 py-1">Active</th>
                               <th className="px-2 py-1">Blood Bank</th>
                               <th className="px-2 py-1">Patient</th>
-                              <th className="px-2 py-1">Update Status</th>
+                              <th className="px-2 py-1">Actions</th>
                               <th className="px-2 py-1">Taxi</th>
                             </tr>
                           </thead>
