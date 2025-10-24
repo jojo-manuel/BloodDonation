@@ -159,71 +159,46 @@ export default function BloodBankRegister() {
 
   return (
     <Layout>
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
-          <button
-            onClick={() => setIsRegister(true)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              isRegister ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Register Blood Bank
-          </button>
-          <button
-            onClick={() => setIsRegister(false)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              !isRegister ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            Update Details
-          </button>
-        </div>
-      </div>
-
       <form
-        onSubmit={isRegister ? handleRegister : handleUpdate}
+        onSubmit={handleRegister}
         className="mx-auto w-full max-w-3xl rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-10 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-transparent"
       >
         <div className="mb-8 text-center">
           <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">
-            {isRegister ? "🏥 Register Blood Bank" : "🔄 Update Blood Bank Details"}
+            🏥 Register Blood Bank
           </h2>
           <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base">
-            {isRegister ? "Join our network of life-saving blood banks" : "Update your blood bank information"}
+            Join our network of life-saving blood banks
           </p>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {isRegister && (
-            <>
-              <div>
-              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (Email)</label>
-              <input
-                type="email"
-                name="username"
-                placeholder="Enter your email address"
-                className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Username (Email)</label>
+            <input
+              type="email"
+              name="username"
+              placeholder="Enter your email address"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password (min 6 characters)"
-                  className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                  value={formData.password}
-                  onChange={handleChange}
-                  minLength={6}
-                  required
-                />
-              </div>
-            </>
-          )}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password (min 6 characters)"
+              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
+              value={formData.password}
+              onChange={handleChange}
+              minLength={6}
+              required
+            />
+          </div>
 
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Bank Name</label>
