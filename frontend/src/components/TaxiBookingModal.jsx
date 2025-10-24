@@ -255,15 +255,34 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                 </h3>
                 
                 {fareData.donationDate && fareData.donationTime && (
-                  <div className="mb-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">
-                      ℹ️ Donation Appointment
+                  <div className={`mb-3 p-3 rounded-lg ${
+                    fareData.isBookedSlot 
+                      ? 'bg-green-100 dark:bg-green-900/30' 
+                      : 'bg-blue-100 dark:bg-blue-900/30'
+                  }`}>
+                    <p className={`text-sm font-semibold mb-1 ${
+                      fareData.isBookedSlot 
+                        ? 'text-green-900 dark:text-green-200' 
+                        : 'text-blue-900 dark:text-blue-200'
+                    }`}>
+                      {fareData.isBookedSlot ? '✅ Confirmed Slot' : 'ℹ️ Requested Appointment'}
                     </p>
-                    <p className="text-sm text-blue-800 dark:text-blue-300">
+                    <p className={`text-sm ${
+                      fareData.isBookedSlot 
+                        ? 'text-green-800 dark:text-green-300' 
+                        : 'text-blue-800 dark:text-blue-300'
+                    }`}>
                       📅 {new Date(fareData.donationDate).toLocaleDateString()} at ⏰ {fareData.donationTime}
                     </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
-                      💡 Pickup time calculated to arrive ~{fareData.estimatedTravelMinutes} minutes before appointment
+                    <p className={`text-xs mt-1 ${
+                      fareData.isBookedSlot 
+                        ? 'text-green-700 dark:text-green-400' 
+                        : 'text-blue-700 dark:text-blue-400'
+                    }`}>
+                      {fareData.isBookedSlot 
+                        ? `💡 Pickup calculated for confirmed slot (~${fareData.estimatedTravelMinutes} min travel + 15 min buffer)`
+                        : `💡 Pickup time based on requested appointment (~${fareData.estimatedTravelMinutes} min travel + 15 min buffer)`
+                      }
                     </p>
                   </div>
                 )}
