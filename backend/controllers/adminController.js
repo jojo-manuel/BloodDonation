@@ -3,6 +3,7 @@ const Donor = require("../Models/donor");
 const BloodBank = require("../Models/BloodBank");
 const Patient = require("../Models/Patient");
 const DonationRequest = require("../Models/DonationRequest");
+const Activity = require("../Models/Activity");
 const { sendEmail } = require("../utils/email");
 const asyncHandler = require("../Middleware/asyncHandler");
 
