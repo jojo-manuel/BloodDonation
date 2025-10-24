@@ -1,13 +1,10 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ThemeContext } from "../context/ThemeContext";
-import ThemeToggle from "../components/ThemeToggle";
 import "../styles/reflective-effects.css";
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { theme } = useContext(ThemeContext);
-  const isDarkMode = theme === 'dark';
+  const isDarkMode = true; // Always use dark mode
 
   // Dummy stats for demonstration
   const stats = [
@@ -61,7 +58,6 @@ export default function LandingPage() {
             <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Hope Web</span>
           </div>
           <div className="flex gap-3">
-            <ThemeToggle />
             <button
               onClick={() => navigate("/dashboard")}
               className={`px-4 sm:px-5 py-2 rounded-full glass-button text-sm font-medium shadow-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}

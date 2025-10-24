@@ -11,13 +11,6 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-// Mock ThemeToggle component
-jest.mock('../../components/ThemeToggle', () => {
-  return function MockThemeToggle() {
-    return <div data-testid="theme-toggle">Theme Toggle</div>;
-  };
-});
-
 describe('LandingPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -118,12 +111,6 @@ describe('LandingPage', () => {
     fireEvent.click(bloodBankLoginButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/bloodbank-login');
-  });
-
-  test('renders theme toggle component', () => {
-    renderComponent();
-
-    expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
   });
 
   test('renders footer correctly', () => {

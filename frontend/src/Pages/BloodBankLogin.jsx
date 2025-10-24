@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
@@ -38,6 +38,12 @@ export default function BloodBankLogin() {
   const navigate = useNavigate();
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
+
+  // Always use dark mode
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

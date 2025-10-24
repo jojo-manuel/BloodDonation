@@ -43,6 +43,12 @@ export default function Login() {
 
   const navigate = useNavigate();
 
+  // Always use dark mode
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }, []);
+
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
