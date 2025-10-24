@@ -911,12 +911,10 @@ export default function UserDashboard() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Location</label>
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="Enter city"
+                    <CitySearchDropdown
                       value={searchParams.city}
-                      onChange={handleChange}
+                      onChange={(city) => setSearchParams(prev => ({ ...prev, city }))}
+                      placeholder="Search city with donors..."
                       className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
                     />
                   </div>
