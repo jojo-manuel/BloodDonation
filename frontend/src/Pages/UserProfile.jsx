@@ -215,11 +215,11 @@ export default function UserProfile() {
         </div>
 
         {/* Profile Overview Section */}
-        <div className="mb-8 rounded-2xl border border-white/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 p-8 shadow-2xl backdrop-blur-2xl transition dark:border-white/10">
+        <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 p-8 shadow-xl transition dark:border-white/10 dark:from-pink-500/10 dark:via-purple-500/10 dark:to-blue-500/10 dark:backdrop-blur-2xl">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar and Basic Info */}
             <div className="flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-xl ring-4 ring-white/20 mb-4">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-2xl ring-4 ring-rose-200 dark:ring-white/20 mb-4">
                 <span className="text-white font-bold text-5xl">
                   {user?.username ? user.username.charAt(0).toUpperCase() : user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
