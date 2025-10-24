@@ -82,7 +82,7 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     // Check if all required questions are answered
     const allAnswered = Object.values(formData).every(val => val !== null);
     if (!allAnswered) {
-      alert('Please answer all questions before proceeding.');
+      alert(t('answerAllQuestions'));
       return false;
     }
 
@@ -93,7 +93,7 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     ];
     for (let condition of permanentDeferrals) {
       if (formData[condition] === true) {
-        alert(`You are not eligible to donate blood due to medical history. Please consult with medical staff for more information.`);
+        alert(t('notEligiblePermanent'));
         return false;
       }
     }
@@ -108,20 +108,20 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     ];
     for (let condition of temporaryDeferrals) {
       if (formData[condition] === true) {
-        alert(`You may be temporarily deferred from donating blood. Please consult with the blood bank medical officer for clearance.`);
+        alert(t('notEligibleTemporary'));
         return false;
       }
     }
 
     // Check basic eligibility (must be YES)
     if (!formData.ageEligible || !formData.weightEligible || !formData.feelingWell) {
-      alert('You must meet basic eligibility criteria (age 18-65, weight > 45kg, feeling well).');
+      alert(t('mustMeetCriteria'));
       return false;
     }
 
     // Check consent (must be YES)
     if (!formData.informationTruthful || !formData.consentToDonate) {
-      alert('You must confirm that your information is truthful and consent to donate.');
+      alert(t('mustConsent'));
       return false;
     }
 
