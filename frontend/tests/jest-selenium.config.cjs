@@ -2,8 +2,10 @@
 const config = {
   preset: null,
   testEnvironment: 'node',
+  rootDir: '../',
   testMatch: [
-    '<rootDir>/tests/**/*.test.js'
+    '**/tests/**/*.test.js',
+    '!**/tests/playwright/**'
   ],
   testTimeout: 30000,
   setupFilesAfterEnv: [],
