@@ -429,13 +429,13 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* Patients Helped (Only for Donors) */}
+        {/* Patients Helped (Only for Donors) - Glassmorphic */}
         {isDonor && patientsHelped.length > 0 && (
-          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💝 Patients You Helped</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {patientsHelped.map((patient, index) => (
-                <div key={index} className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-500/10 dark:to-purple-500/10 rounded-xl p-5 border-2 border-pink-200 dark:border-pink-800 shadow-lg hover:shadow-xl transition-all">
+                <div key={index} className="bg-gradient-to-br from-pink-100/60 to-purple-100/60 backdrop-blur-lg dark:from-pink-500/10 dark:to-purple-500/10 rounded-2xl p-5 border border-pink-200/60 dark:border-pink-800 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
                   <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{patient.patientName}</h4>
                   {patient.patientMRID && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -456,9 +456,9 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* No Donation History Message */}
+        {/* No Donation History Message - Glassmorphic */}
         {isDonor && donations.length === 0 && (
-          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-8 shadow-xl transition dark:border-white/10 dark:bg-white/5 text-center">
+          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-8 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 text-center">
             <div className="text-6xl mb-4">🩸</div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Donation History Yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
