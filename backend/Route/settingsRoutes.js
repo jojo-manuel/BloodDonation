@@ -3,21 +3,13 @@
 
 const express = require('express');
 const router = express.Router();
-const settingsController = require('../controllers/settingsController');
-
-console.log('settingsController exports:', settingsController);
-console.log('getSettings:', settingsController.getSettings);
-
 const {
   getSettings,
   updateSettings,
   resetSettings,
   updateSettingCategory
-} = settingsController;
+} = require('../controllers/settingsController');
 const { protect } = require('../Middleware/authMiddleware');
-
-console.log('protect middleware:', protect);
-console.log('getSettings after destructure:', getSettings);
 
 /**
  * @route   GET /api/settings
