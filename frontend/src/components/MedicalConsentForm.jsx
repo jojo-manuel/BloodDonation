@@ -170,9 +170,21 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-6 py-4 rounded-t-xl">
-          <h2 className="text-2xl font-bold">🩺 Medical Consent Form</h2>
-          <p className="text-sm opacity-90 mt-1">Blood Donor Eligibility Screening</p>
-          <p className="text-xs opacity-75 mt-1">Donor: <span className="font-semibold">{donorName}</span></p>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold">🩺 {t('title')}</h2>
+              <p className="text-sm opacity-90 mt-1">{t('subtitle')}</p>
+              <p className="text-xs opacity-75 mt-1">{t('donorLabel')} <span className="font-semibold">{donorName}</span></p>
+            </div>
+            <button
+              onClick={toggleLanguage}
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2"
+              title="Switch Language"
+            >
+              <span className="text-xl">🌐</span>
+              <span>{language === 'en' ? 'മലയാളം' : 'English'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
@@ -183,22 +195,22 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
           {/* Introduction */}
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-4 mb-4">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              <strong>Important:</strong> Please answer all questions honestly. This information is confidential and is used to ensure the safety of both donors and recipients. Providing false information may endanger lives.
+              <strong>{t('importantLabel')}</strong> {t('importantText')}
             </p>
           </div>
 
           {/* Basic Eligibility */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">✓</span> Basic Eligibility
+              <span className="text-2xl">✓</span> {t('basicEligibility')}
             </h3>
             <YesNoButton 
               field="ageEligible" 
-              label="Are you between 18-65 years of age?" 
+              questionKey="q_ageEligible" 
             />
             <YesNoButton 
               field="weightEligible" 
-              label="Do you weigh more than 45 kg (for 350ml donation) or 55 kg (for 450ml donation)?" 
+              questionKey="q_weightEligible" 
             />
           </div>
 
