@@ -34,6 +34,7 @@ const ReviewTab = () => {
 
   const fetchReviewableBloodBanks = async () => {
     try {
+      setLoading(true);
       const response = await getReviewableBloodBanks();
       if (response.success) {
         setReviewableBloodBanks(response.data);
@@ -41,6 +42,8 @@ const ReviewTab = () => {
     } catch (error) {
       console.error('Error fetching reviewable blood banks:', error);
       alert('Failed to load reviewable blood banks');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +68,7 @@ const ReviewTab = () => {
       const response = await getBloodBankReviews(bloodBankId);
       if (response.success) {
         setDonorReviews(response.data.reviews);
-        setSelectedDonor({ ...response.data.stats, type: 'bloodbank' });
+        setSelectedDonor({ ...response.data.stats, type: 'bloodbank', bloodBankId: bloodBankId });
       }
     } catch (error) {
       console.error('Error fetching blood bank reviews:', error);
@@ -182,10 +185,10 @@ const ReviewTab = () => {
     <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
       <div className="mb-6 text-center">
         <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-          ⭐ Leave Reviews
+          ⭐ Blood Bank Reviews
         </h2>
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          Share your experience and help others
+          Share your experience with blood banks you visited
         </p>
       </div>
 
