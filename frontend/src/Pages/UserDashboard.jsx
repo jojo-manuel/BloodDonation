@@ -844,7 +844,8 @@ export default function UserDashboard() {
     setSelectedDate(minDate.toISOString().split('T')[0]);
   };
 
-  const handleConfirmBooking = async () => {
+  // Step 1: Validate and show consent form
+  const handleConfirmBooking = () => {
     if (!selectedDate || !selectedTime) {
       alert('Please select both date and time');
       return;
@@ -865,8 +866,16 @@ export default function UserDashboard() {
       return;
     }
 
+    // Show consent form
+    setShowConsentForm(true);
+  };
+
+  // Step 2: Proceed with booking after consent
+  const proceedWithBooking = async (medicalConsentData) => {
     try {
       setBookingLoading(true);
+      setShowConsentForm(false);
+      setConsentData(medicalConsentData); // Store consent data
 
       // Create booking using the direct-book-slot endpoint
       const bookingData = {
@@ -877,7 +886,8 @@ export default function UserDashboard() {
         donationRequestId: bookingModal._id,
         patientName: bookingModal.patientId?.name || 'N/A',
         donorName: bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'N/A',
-        requesterName: bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A'
+        requesterName: bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A',
+        medicalConsent: medicalConsentData // Include consent data
       };
 
       const res = await api.post('/users/direct-book-slot', bookingData);
@@ -901,10 +911,11 @@ export default function UserDashboard() {
         // Generate PDF
         await generateBookingPDF(pdfData);
         
-        alert('Booking confirmed! Your confirmation PDF has been downloaded.');
+        alert('✅ Booking confirmed! Your confirmation PDF has been downloaded.');
         setBookingModal(null);
         setSelectedDate('');
         setSelectedTime('');
+        setConsentData(null);
         // Refresh requests
         fetchRequests();
         fetchReceivedRequests();
@@ -916,6 +927,12 @@ export default function UserDashboard() {
     } finally {
       setBookingLoading(false);
     }
+  };
+
+  // Handle consent form cancellation
+  const handleConsentCancel = () => {
+    setShowConsentForm(false);
+    alert('Booking cancelled. Please complete the medical consent form to proceed.');
   };
 
   // Fetch user profile data
