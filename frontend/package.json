@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "jest --transformIgnorePatterns \"node_modules/(?!@testing-library)\"",
-    "test:selenium": "jest --config tests/jest-selenium.config.js",
+    "test:selenium": "jest --config tests/jest-selenium.config.cjs",
     "test:e2e": "npm run test:selenium",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
