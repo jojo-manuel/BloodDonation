@@ -1,20 +1,22 @@
-module.exports = {
+// jest-selenium.config.js - CommonJS format for Jest configuration
+const config = {
   preset: null,
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/tests/**/*.test.js'
   ],
+  testTimeout: 30000,
   setupFilesAfterEnv: [],
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',
     '!src/main.jsx',
     '!src/firebase.js'
   ],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '\\.(jpg|jpeg|png|gif|svg)$': 'identity-obj-proxy'
   },
-  transform: {
-    '^.+\\.(js|jsx)$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-react'] }]
-  }
+  transform: {}
 };
+
+module.exports = config;
