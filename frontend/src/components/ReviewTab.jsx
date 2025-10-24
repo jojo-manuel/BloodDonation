@@ -109,9 +109,8 @@ const ReviewTab = () => {
 
   const handleCreateReview = async (e) => {
     e.preventDefault();
-    const targetId = reviewForm.type === 'donor' ? reviewForm.donorId : reviewForm.bloodBankId;
-    if (!targetId || !reviewForm.comment.trim()) {
-      alert(`Please select a ${reviewForm.type} and write a comment`);
+    if (!reviewForm.bloodBankId || !reviewForm.comment.trim()) {
+      alert('Please select a blood bank and write a comment');
       return;
     }
 
@@ -120,8 +119,7 @@ const ReviewTab = () => {
       const response = await createReview(reviewForm);
       if (response.success) {
         alert('Review submitted successfully!');
-        setReviewForm({ type: 'donor', donorId: '', bloodBankId: '', rating: 5, comment: '' });
-        fetchReviewableDonors(); // Refresh the list
+        setReviewForm({ type: 'bloodbank', bloodBankId: '', rating: 5, comment: '' });
         fetchReviewableBloodBanks(); // Refresh the list
       } else {
         alert(response.message || 'Failed to submit review');
