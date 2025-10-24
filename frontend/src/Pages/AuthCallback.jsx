@@ -5,6 +5,12 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Always use dark mode
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }, []);
+
   useEffect(() => {
     const handleCallback = async () => {
       try {
