@@ -12,10 +12,9 @@ const ReviewTab = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
 
-  // Form states
+  // Form states - Only blood bank reviews allowed
   const [reviewForm, setReviewForm] = useState({
-    type: 'donor',
-    donorId: '',
+    type: 'bloodbank',
     bloodBankId: '',
     rating: 5,
     comment: ''
