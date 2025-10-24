@@ -2163,6 +2163,31 @@ export default function UserDashboard() {
                   </>
                 )}
 
+                {selectedRequest.status === 'booked' && selectedRequest.bookingId && (
+                  <button
+                    onClick={async () => {
+                      const pdfData = {
+                        tokenNumber: selectedRequest.bookingId?.tokenNumber || 'N/A',
+                        donorName: selectedRequest.donorId?.name || selectedRequest.donorId?.userId?.username || 'N/A',
+                        donorPhone: selectedRequest.donorId?.userId?.phone || selectedRequest.donorId?.contactNumber || '',
+                        bloodGroup: selectedRequest.bloodGroup || selectedRequest.donorId?.bloodGroup || 'N/A',
+                        patientName: selectedRequest.patientId?.name || selectedRequest.patientName || 'N/A',
+                        patientMRID: selectedRequest.patientId?.mrid || selectedRequest.mrid || 'N/A',
+                        bloodBankName: selectedRequest.bloodBankId?.name || selectedRequest.bloodBankName || 'N/A',
+                        bloodBankAddress: selectedRequest.bloodBankId?.address || '',
+                        bloodBankPhone: selectedRequest.bloodBankId?.phone || '',
+                        date: selectedRequest.bookingId?.date || 'N/A',
+                        time: selectedRequest.bookingId?.time || 'N/A'
+                      };
+                      await generateBookingPDF(pdfData);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-red-700 hover:to-pink-700 font-semibold flex items-center justify-center gap-2"
+                  >
+                    <span>📕</span>
+                    Download Confirmation PDF
+                  </button>
+                )}
+
                 <button
                   onClick={() => setSelectedRequest(null)}
                   className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
