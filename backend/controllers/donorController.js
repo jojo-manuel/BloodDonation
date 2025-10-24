@@ -526,3 +526,49 @@ exports.getAddressByPostalCode = asyncHandler(async (req, res) => {
     return res.status(500).json({ success: false, message: 'Failed to fetch address details' });
   }
 });
+
+/**
+ * Get unique cities where donors are available
+ * Returns sorted list of cities with available donors
+ */
+exports.getAvailableCities = asyncHandler(async (req, res) => {
+  try {
+    // Exclude suspended donors
+    const User = require('../Models/User');
+    const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
+    
+    // Exclude donors who have completed donations
+    const Booking = require('../Models/Booking');
+    const completedDonorIds = await Booking.find({ status: 'completed' }).distinct('donorId');
+    
+    const filter = {
+      lastDonatedDate: { $lt: new Date() },
+      userId: { $nin: suspendedUserIds }
+    };
+    
+    if (completedDonorIds.length > 0) {
+      filter._id = { $nin: completedDonorIds };
+    }
+    
+    // Get unique cities from available donors
+    const cities = await Donor.distinct('houseAddress.city', filter);
+    
+    // Filter out empty/null cities and sort alphabetically
+    const validCities = cities
+      .filter(city => city && city.trim().length > 0)
+      .map(city => city.trim())
+      .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
+    
+    return res.json({ 
+      success: true, 
+      message: 'Available cities retrieved', 
+      data: validCities 
+    });
+  } catch (error) {
+    console.error('Error fetching available cities:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch available cities' 
+    });
+  }
+});
