@@ -1258,7 +1258,6 @@ export default function UserDashboard() {
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
                                 <td className="px-2 py-1">{getStatusBadge(request.status)}</td>
                                 <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
-                                <td className="px-2 py-1">{request.issuedAt ? new Date(request.issuedAt).toLocaleString() : '—'}</td>
                                 <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
                                 <td className="px-2 py-1">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
@@ -1274,24 +1273,38 @@ export default function UserDashboard() {
                                   </span>
                                 </td>
                                 <td className="px-2 py-1">
-                                  <select
-                                    value={newStatuses[request._id] || request.status}
-                                    onChange={(e) => handleStatusChange(request._id, e.target.value)}
-                                    className="mr-2 px-2 py-1 text-xs border rounded"
-                                  >
-                                    <option value="pending">Pending</option>
-                                    <option value="pending_booking">Pending Booking</option>
-                                    <option value="accepted">Accepted</option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="booked">Booked</option>
-                                  </select>
-                                  <button
-                                    onClick={() => handleUpdateStatus(request._id)}
-                                    disabled={updatingId === request._id}
-                                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50"
-                                  >
-                                    {updatingId === request._id ? 'Updating...' : 'Update'}
-                                  </button>
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-1">
+                                      <select
+                                        value={newStatuses[request._id] || request.status}
+                                        onChange={(e) => handleStatusChange(request._id, e.target.value)}
+                                        className="px-2 py-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600"
+                                      >
+                                        <option value="pending">Pending</option>
+                                        <option value="pending_booking">Pending Booking</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="booked">Booked</option>
+                                        <option value="cancelled">Cancelled</option>
+                                      </select>
+                                      <button
+                                        onClick={() => handleUpdateStatus(request._id)}
+                                        disabled={updatingId === request._id}
+                                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600"
+                                      >
+                                        {updatingId === request._id ? '...' : '✓'}
+                                      </button>
+                                    </div>
+                                    {request.status !== 'cancelled' && (
+                                      <button
+                                        onClick={() => handleCancelRequest(request._id)}
+                                        disabled={updatingId === request._id}
+                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50 hover:bg-red-600 w-full"
+                                      >
+                                        🚫 Cancel
+                                      </button>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="px-2 py-1">
                                   {(request.status === 'booked' || request.status === 'accepted') && (
