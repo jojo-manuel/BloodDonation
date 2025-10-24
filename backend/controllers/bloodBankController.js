@@ -772,7 +772,7 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  // If donation is completed, increment patient's units received
+  // If donation is completed, increment patient's units received AND donor's priority points
   if (status === 'completed' && oldStatus !== 'completed' && booking.donationRequestId) {
     try {
       // Fetch the donation request to get the patient ID
@@ -797,6 +797,24 @@ exports.updateBookingStatus = asyncHandler(async (req, res) => {
     } catch (patientUpdateError) {
       // Log error but don't fail the booking status update
       console.error('Error updating patient units:', patientUpdateError);
+    }
+
+    // Increment donor's priority points by 1
+    try {
+      if (booking.donorId) {
+        const donor = await Donor.findById(booking.donorId);
+        
+        if (donor) {
+          // Increment priority points by 1
+          donor.priorityPoints = (donor.priorityPoints || 0) + 1;
+          await donor.save();
+          
+          console.log(`🌟 Donor ${donor.name || 'N/A'} priority points increased to ${donor.priorityPoints}`);
+        }
+      }
+    } catch (donorUpdateError) {
+      // Log error but don't fail the booking status update
+      console.error('Error updating donor priority points:', donorUpdateError);
     }
   }
 
