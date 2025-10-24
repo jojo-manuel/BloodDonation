@@ -203,19 +203,22 @@ export default function UserProfile() {
 
   return (
     <Layout onLogout={handleLogout}>
+      {/* Glassmorphic background gradient */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-rose-100 via-pink-50 to-purple-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
+      
       <div className="mx-auto w-full max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-5xl">
+          <h1 className="mb-2 text-4xl font-extrabold tracking-tight bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 bg-clip-text text-transparent dark:from-rose-400 dark:via-pink-400 dark:to-purple-400 md:text-5xl">
             👤 My Profile
           </h1>
-          <p className="text-base text-gray-700 dark:text-gray-300">
+          <p className="text-base text-gray-700 dark:text-gray-300 font-medium">
             View and manage your account information and donation history
           </p>
         </div>
 
-        {/* Profile Overview Section */}
-        <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 p-8 shadow-xl transition dark:border-white/10 dark:from-pink-500/10 dark:via-purple-500/10 dark:to-blue-500/10 dark:backdrop-blur-2xl">
+        {/* Profile Overview Section - Glassmorphic */}
+        <div className="mb-8 rounded-3xl border border-white/40 bg-white/60 backdrop-blur-xl p-8 shadow-2xl transition-all hover:shadow-3xl hover:border-white/60 dark:border-white/10 dark:bg-white/5 dark:backdrop-blur-2xl">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar and Basic Info */}
             <div className="flex flex-col items-center">
