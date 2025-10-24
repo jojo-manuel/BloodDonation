@@ -2,6 +2,7 @@
 // App routing structure. Wraps protected pages with RequireAuth.
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import LandingPage from "./Pages/LandingPage";
 import Login from "./Pages/Login";
 import Register from "./Pages/Register";
@@ -17,8 +18,14 @@ import UserProfile from "./Pages/UserProfile";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AuthCallback from "./Pages/AuthCallback";
 import RequireAuth from "./components/RequireAuth";
+import { cleanupAuthState } from "./utils/authCleanup";
 
 function App() {
+  // Clean up invalid auth state on app startup
+  useEffect(() => {
+    cleanupAuthState();
+  }, []);
+  
   return (
     <Router>
       <div className="flex flex-col min-h-screen">
