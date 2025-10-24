@@ -2239,26 +2239,36 @@ export default function BloodBankDashboard() {
                   </div>
 
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    Choose the type of report you want to download. The report will be generated as a CSV file with all relevant details.
+                    Choose the type of report and format you want to download.
                   </p>
 
                   <div className="space-y-3">
                     {/* All Bookings */}
-                    <button
-                      onClick={() => downloadBookingsCSV('all')}
-                      className="w-full p-4 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40 transition flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="border-2 border-purple-300 dark:border-purple-700 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">📚</span>
-                        <div className="text-left">
+                        <div className="text-left flex-1">
                           <p className="font-bold text-gray-900 dark:text-white">All Bookings</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Download all bookings shown in current view ({allTokens.length} booking{allTokens.length !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => downloadBookingsCSV('all')}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📄 CSV
+                        </button>
+                        <button
+                          onClick={() => downloadBookingsPDF('all')}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📕 PDF
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Completed Bookings */}
                     <button
