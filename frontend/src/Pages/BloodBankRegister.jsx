@@ -11,7 +11,7 @@ const PHONE_IN_REGEX = /^[6-9]\d{9}$/;                            // Indian 10-d
 const LICENSE_REGEX = /^[A-Za-z0-9\s-]{5,50}$/;                   // license number format
 
 export default function BloodBankRegister() {
-  const [isRegister, setIsRegister] = useState(true);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -23,34 +23,6 @@ export default function BloodBankRegister() {
   });
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(localStorage.getItem('userId') || null);
-
-  useEffect(() => {
-    const fetchDetails = async () => {
-      if (!isRegister) {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          try {
-            const res = await api.get("/bloodbank/details");
-            if (res.data.success) {
-              const bb = res.data.data;
-              setFormData({
-                username: "",
-                password: "",
-                name: bb.name || "",
-                address: bb.address || "",
-                district: bb.district || "",
-                contactNumber: bb.contactNumber || "",
-                licenseNumber: bb.licenseNumber || "",
-              });
-            }
-          } catch (error) {
-            console.error("Error fetching blood bank details:", error);
-          }
-        }
-      }
-    };
-    fetchDetails();
-  }, [isRegister]);
 
   const validateForm = () => {
     const errors = [];
