@@ -134,11 +134,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     }
   };
 
-  const YesNoButton = ({ field, label, note }) => (
+  const YesNoButton = ({ field, questionKey, deferralKey }) => (
     <div className="border-b border-gray-200 dark:border-gray-700 py-3">
       <p className="text-sm text-gray-900 dark:text-gray-100 mb-2">
-        {label}
-        {note && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({note})</span>}
+        {t(questionKey)}
+        {deferralKey && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({t(deferralKey)})</span>}
       </p>
       <div className="flex gap-3">
         <button
@@ -149,7 +149,7 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
               : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
           }`}
         >
-          Yes
+          {t('yesButton')}
         </button>
         <button
           onClick={() => handleChange(field, false)}
@@ -159,7 +159,7 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
               : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
           }`}
         >
-          No
+          {t('noButton')}
         </button>
       </div>
     </div>
