@@ -139,13 +139,19 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     }
 
     // Check temporary deferral conditions - MUST BE NO
-    const temporaryDeferrals = [
+    let temporaryDeferrals = [
       'toothExtraction', 'earPiercing', 'tattoo', 'injection', 'surgery',
-      'animalBite', 'pregnant', 'lactating', 'delivery', 'abortion',
+      'animalBite',
       'malaria', 'std', 'tuberculosis', 'asthma', 'liverDisease',
       'kidneyDisease', 'liveVaccine', 'antiserumInjection', 'rabiesVaccine',
       'hormoneTherapy', 'aspirin', 'antibiotics', 'fever', 'fatigue'
     ];
+    
+    // Add female-specific conditions only for females
+    if (gender === 'female') {
+      temporaryDeferrals = [...temporaryDeferrals, 'pregnant', 'lactating', 'delivery', 'abortion'];
+    }
+    
     for (let condition of temporaryDeferrals) {
       if (formData[condition] === true) {
         alert('❌ TEMPORARY DEFERRAL\n\nYou may be temporarily deferred from donating blood.\n\nAll medical history questions (procedures, diseases, medications, current symptoms) must be answered NO.\n\nPlease consult with the blood bank medical officer for clearance and deferral period.');
