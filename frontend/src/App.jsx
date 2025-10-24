@@ -13,6 +13,7 @@ import BloodBankLogin from "./Pages/BloodBankLogin";
 import BloodBankDashboard from "./Pages/BloodBankDashboard";
 import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
+import UserProfile from "./Pages/UserProfile";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AuthCallback from "./Pages/AuthCallback";
 import RequireAuth from "./components/RequireAuth";
@@ -38,6 +39,8 @@ function App() {
             <Route path="/user-register" element={<RequireAuth><UserRegister /></RequireAuth>} />
             <Route path="/bloodbank-register" element={<RequireAuth><BloodBankRegister /></RequireAuth>} />
             <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
+            <Route path="/user-dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
+            <Route path="/user-profile" element={<RequireAuth><UserProfile /></RequireAuth>} />
             <Route path="/admin-dashboard" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
             <Route path="/bloodbank/dashboard" element={<RequireAuth><BloodBankDashboard /></RequireAuth>} />
             <Route path="/bloodbank-login" element={<BloodBankLogin />} />
