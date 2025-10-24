@@ -417,38 +417,17 @@ const ReviewTab = () => {
 
       {activeSubTab === 'browse' && (
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Browse Reviews</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Browse Blood Bank Reviews</h3>
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Browse Type
+              Select Blood Bank
             </label>
             <select
-              value={selectedDonor?.type || 'donor'}
-              onChange={(e) => {
-                setSelectedDonor({ type: e.target.value });
-                setDonorReviews([]);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="donor">Browse Donor Reviews</option>
-              <option value="bloodbank">Browse Blood Bank Reviews</option>
-            </select>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {selectedDonor?.type === 'bloodbank' ? 'Select Blood Bank' : 'Select Donor'}
-            </label>
-            <select
-              value={selectedDonor?.donorId || selectedDonor?.bloodBankId || ''}
+              value={selectedDonor?.bloodBankId || ''}
               onChange={(e) => {
                 if (e.target.value) {
-                  if (selectedDonor?.type === 'bloodbank') {
-                    fetchBloodBankReviews(e.target.value);
-                  } else {
-                    fetchDonorReviews(e.target.value);
-                  }
+                  fetchBloodBankReviews(e.target.value);
                 } else {
                   setSelectedDonor(null);
                   setDonorReviews([]);
@@ -457,23 +436,20 @@ const ReviewTab = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">
-                Choose a {selectedDonor?.type === 'bloodbank' ? 'blood bank' : 'donor'} to view reviews...
+                Choose a blood bank to view reviews...
               </option>
-              {(selectedDonor?.type === 'bloodbank' ? reviewableBloodBanks : reviewableDonors).map((entity) => (
+              {reviewableBloodBanks.map((entity) => (
                 <option key={entity._id} value={entity._id}>
-                  {selectedDonor?.type === 'bloodbank'
-                    ? `${entity.name} - ${entity.location || entity.district}`
-                    : `${entity.userId?.username} - ${entity.bloodGroup}`
-                  }
+                  {entity.name} - {entity.location || entity.district}
                 </option>
               ))}
             </select>
           </div>
 
-          {selectedDonor && (selectedDonor.donorId || selectedDonor.bloodBankId) && (
+          {selectedDonor && selectedDonor.bloodBankId && (
             <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <h4 className="font-semibold text-gray-900 dark:text-white">
-                {selectedDonor.type === 'bloodbank' ? (selectedDonor.bloodBankName || 'Selected Blood Bank') : (selectedDonor.donorName || 'Selected Donor')}
+                {selectedDonor.bloodBankName || 'Selected Blood Bank'}
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Average Rating: {selectedDonor.averageRating}/5 ({selectedDonor.totalReviews} reviews)
@@ -488,7 +464,7 @@ const ReviewTab = () => {
             </div>
           ) : donorReviews.length === 0 && selectedDonor ? (
             <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">No reviews found for this {selectedDonor?.type === 'bloodbank' ? 'blood bank' : 'donor'}.</p>
+              <p className="text-gray-600 dark:text-gray-400">No reviews found for this blood bank.</p>
             </div>
           ) : (
             <div className="space-y-4">
