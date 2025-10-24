@@ -341,7 +341,7 @@ export default function BloodBankDashboard() {
         alert('Arrival marked successfully!');
         setSearchedBooking(res.data.data);
         // Refresh token list
-        fetchAllTokens(selectedTokenDate);
+        fetchAllTokens();
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to mark arrival');
