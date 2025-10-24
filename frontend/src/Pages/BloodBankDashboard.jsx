@@ -286,6 +286,32 @@ export default function BloodBankDashboard() {
     }
   };
 
+  // Frontdesk: Fetch all tokens for selected date
+  const fetchAllTokens = async (date = selectedTokenDate) => {
+    try {
+      setLoadingTokens(true);
+      const res = await api.get(`/bloodbank/bookings?date=${date}`);
+      
+      if (res.data.success) {
+        setAllTokens(res.data.data || []);
+      } else {
+        setAllTokens([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch tokens:', err);
+      setAllTokens([]);
+    } finally {
+      setLoadingTokens(false);
+    }
+  };
+
+  // Load tokens when date changes or tab becomes active
+  useEffect(() => {
+    if (activeTab === 'frontdesk' && showAllTokens) {
+      fetchAllTokens(selectedTokenDate);
+    }
+  }, [activeTab, selectedTokenDate, showAllTokens]);
+
   // Frontdesk: Mark arrival
   const handleMarkArrival = async () => {
     if (!searchedBooking) return;
