@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { getTranslation, translations } from './MedicalConsentFormTranslations';
 
 const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
+  const [language, setLanguage] = useState('en'); // 'en' or 'ml'
   const [formData, setFormData] = useState({
     // Basic Eligibility
     ageEligible: null, // 18-65 years
@@ -56,6 +58,14 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
   });
 
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
+
+  // Helper function to get translated text
+  const t = (key) => getTranslation(language, key);
+
+  // Toggle language
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'ml' : 'en');
+  };
 
   const handleScroll = (e) => {
     const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
