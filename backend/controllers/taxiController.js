@@ -218,7 +218,9 @@ exports.calculateFare = asyncHandler(async (req, res) => {
       estimatedTravelMinutes,
       donationDate,
       donationTime,
-      suggestedPickupTime
+      suggestedPickupTime,
+      isBookedSlot: !!donationRequest.bookingId, // Indicates if using actual booked slot
+      bookingStatus: donationRequest.bookingId ? 'confirmed_slot' : 'requested_slot'
     }
   });
 });
