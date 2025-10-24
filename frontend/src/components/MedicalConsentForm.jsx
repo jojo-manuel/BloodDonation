@@ -230,6 +230,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span className="text-2xl">✓</span> {t('basicEligibility')}
             </h3>
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                ⭐ These 3 questions MUST be answered <strong className="text-green-600">YES</strong> to donate
+              </p>
+            </div>
             <YesNoButton 
               field="ageEligible" 
               questionKey="q_ageEligible" 
@@ -237,6 +242,10 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <YesNoButton 
               field="weightEligible" 
               questionKey="q_weightEligible" 
+            />
+            <YesNoButton 
+              field="feelingWell" 
+              questionKey="q_feelingWell" 
             />
           </div>
 
