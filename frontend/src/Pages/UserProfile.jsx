@@ -353,28 +353,28 @@ export default function UserProfile() {
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📊 Donation Statistics</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-500/20 dark:to-pink-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
-                <div className="text-5xl font-bold text-red-600 dark:text-red-400 mb-2">{totalDonations}</div>
-                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Total Donations</div>
+              <div className="rounded-3xl border border-red-200/60 bg-gradient-to-br from-red-100/60 to-pink-100/60 backdrop-blur-lg dark:from-red-500/20 dark:to-pink-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                <div className="text-5xl font-bold bg-gradient-to-br from-red-600 to-pink-600 bg-clip-text text-transparent dark:from-red-400 dark:to-pink-400 mb-2 group-hover:scale-110 transition-transform">{totalDonations}</div>
+                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Total Donations</div>
               </div>
               
-              <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
-                <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">{patientsHelped.length}</div>
-                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Patients Helped</div>
+              <div className="rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-100/60 to-cyan-100/60 backdrop-blur-lg dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                <div className="text-5xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400 mb-2 group-hover:scale-110 transition-transform">{patientsHelped.length}</div>
+                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Patients Helped</div>
               </div>
               
-              <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+              <div className="rounded-3xl border border-purple-200/60 bg-gradient-to-br from-purple-100/60 to-indigo-100/60 backdrop-blur-lg dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                <div className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400 mb-2 group-hover:scale-110 transition-transform">
                   {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
                 </div>
-                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Last Donation</div>
+                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Last Donation</div>
               </div>
               
-              <div className="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-lg hover:shadow-2xl transition-all">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
+              <div className="rounded-3xl border border-green-200/60 bg-gradient-to-br from-green-100/60 to-emerald-100/60 backdrop-blur-lg dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                <div className="text-2xl font-bold bg-gradient-to-br from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400 mb-2 group-hover:scale-110 transition-transform">
                   {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}
                 </div>
-                <div className="text-sm font-semibold text-gray-800 dark:text-gray-300">Next Eligible Date</div>
+                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Next Eligible Date</div>
               </div>
             </div>
 
@@ -389,9 +389,9 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* Donation History (Only for Donors) */}
+        {/* Donation History (Only for Donors) - Glassmorphic */}
         {isDonor && donations.length > 0 && (
-          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donation History</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
