@@ -226,18 +226,18 @@ export default function UserProfile() {
               </div>
               
               {isDonor && (
-                <div className="inline-flex items-center px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-md mb-3">
+                <div className="inline-flex items-center px-4 py-2 bg-red-100 border-2 border-red-300 dark:bg-red-900/30 dark:border-red-800 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-lg mb-3">
                   🩸 {donorInfo?.bloodGroup || 'N/A'}
                 </div>
               )}
 
               {/* User Type Badge */}
               {isDonor ? (
-                <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full font-semibold shadow-md">
+                <div className="inline-flex items-center px-4 py-2 bg-green-100 border-2 border-green-300 dark:bg-green-900/30 dark:border-green-800 text-green-800 dark:text-green-200 rounded-full font-semibold shadow-lg">
                   ✅ User (Donor)
                 </div>
               ) : (
-                <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full font-semibold shadow-md">
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 border-2 border-blue-300 dark:bg-blue-900/30 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded-full font-semibold shadow-lg">
                   👤 User
                 </div>
               )}
