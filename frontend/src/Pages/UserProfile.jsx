@@ -472,10 +472,10 @@ export default function UserProfile() {
 
         {/* Donor Info Card (Only for Donors) */}
         {isDonor && donorInfo && (
-          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donor Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Blood Group</label>
                 <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
               </div>
