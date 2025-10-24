@@ -14,11 +14,12 @@ console.log('All destructured:', { me, updateMe, updateDonorAvailability, upload
 
 const router = express.Router();
 
+// IMPORTANT: More specific routes must come before generic ones
+// Get comprehensive profile with donation history (must be before /me)
+router.get('/me/comprehensive', auth(true), getComprehensiveProfile);
+
 // Get current logged-in user's profile
 router.get('/me', auth(true), me);
-
-// Get comprehensive profile with donation history
-router.get('/me/comprehensive', auth(true), getComprehensiveProfile);
 
 // Update current user's profile (partial update)
 router.patch('/me', auth(true), validate({ body: userUpdateBody }), updateMe);
