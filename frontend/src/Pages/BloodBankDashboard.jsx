@@ -22,6 +22,10 @@ export default function BloodBankDashboard() {
   const [visitedDonors, setVisitedDonors] = useState([]); // Donors who visited
   const [showVisitHistory, setShowVisitHistory] = useState(false); // Toggle visit history view
   const [expandedDonor, setExpandedDonor] = useState(null); // Expanded donor for visit details
+  const [allTokens, setAllTokens] = useState([]); // All tokens for selected date
+  const [selectedTokenDate, setSelectedTokenDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
+  const [loadingTokens, setLoadingTokens] = useState(false); // Loading state for tokens
+  const [showAllTokens, setShowAllTokens] = useState(true); // Toggle between search and view all
   const [reviews, setReviews] = useState([]); // Reviews for this blood bank
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
