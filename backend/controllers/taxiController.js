@@ -136,28 +136,69 @@ exports.calculateFare = asyncHandler(async (req, res) => {
   const AVERAGE_SPEED_KMH = 50;
   const estimatedTravelMinutes = Math.ceil((distanceKm / AVERAGE_SPEED_KMH) * 60);
   
-  // Calculate suggested pickup time
+  // Calculate suggested pickup time based on booked slot
   let suggestedPickupTime = null;
   let donationDate = null;
   let donationTime = null;
   
-  if (donationRequest.requestedDate && donationRequest.requestedTime) {
-    donationDate = new Date(donationRequest.requestedDate).toISOString().split('T')[0];
-    donationTime = donationRequest.requestedTime;
+  // Priority 1: Use actual booking slot if available
+  let appointmentDate = null;
+  let appointmentTime = null;
+  
+  if (donationRequest.bookingId) {
+    // Use the actual booked slot
+    appointmentDate = donationRequest.bookingId.date;
+    appointmentTime = donationRequest.bookingId.time;
+  } else if (donationRequest.requestedDate && donationRequest.requestedTime) {
+    // Fallback to requested date/time if no booking yet
+    appointmentDate = donationRequest.requestedDate;
+    appointmentTime = donationRequest.requestedTime;
+  }
+  
+  if (appointmentDate && appointmentTime) {
+    donationDate = new Date(appointmentDate).toISOString().split('T')[0];
+    donationTime = appointmentTime;
     
-    // Parse donation time (assuming format like "14:30")
-    const [hours, minutes] = donationRequest.requestedTime.split(':').map(Number);
+    // Parse donation time - handle both "14:30" and "2:30 PM" formats
+    let hours, minutes;
+    
+    // Check if time contains AM/PM
+    if (appointmentTime.includes('AM') || appointmentTime.includes('PM')) {
+      // Parse "10:00 AM" or "2:30 PM" format
+      const timeRegex = /(\d+):(\d+)\s*(AM|PM)/i;
+      const match = appointmentTime.match(timeRegex);
+      
+      if (match) {
+        hours = parseInt(match[1]);
+        minutes = parseInt(match[2]);
+        const period = match[3].toUpperCase();
+        
+        // Convert to 24-hour format
+        if (period === 'PM' && hours !== 12) {
+          hours += 12;
+        } else if (period === 'AM' && hours === 12) {
+          hours = 0;
+        }
+      } else {
+        // Fallback
+        hours = 0;
+        minutes = 0;
+      }
+    } else {
+      // Parse "14:30" format (24-hour)
+      [hours, minutes] = appointmentTime.split(':').map(Number);
+    }
     
     // Calculate pickup time: donation time - travel time - 15 min buffer
     const BUFFER_MINUTES = 15;
     const totalMinutesToSubtract = estimatedTravelMinutes + BUFFER_MINUTES;
     
-    const donationDateTime = new Date(donationRequest.requestedDate);
+    const donationDateTime = new Date(appointmentDate);
     donationDateTime.setHours(hours, minutes, 0, 0);
     
     const pickupDateTime = new Date(donationDateTime.getTime() - (totalMinutesToSubtract * 60 * 1000));
     
-    // Format suggested pickup time as HH:MM
+    // Format suggested pickup time as HH:MM (24-hour format)
     const pickupHours = String(pickupDateTime.getHours()).padStart(2, '0');
     const pickupMinutes = String(pickupDateTime.getMinutes()).padStart(2, '0');
     suggestedPickupTime = `${pickupHours}:${pickupMinutes}`;
