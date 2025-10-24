@@ -27,6 +27,8 @@ export default function BloodBankDashboard() {
   const [loadingTokens, setLoadingTokens] = useState(false); // Loading state for tokens
   const [showAllTokens, setShowAllTokens] = useState(true); // Toggle between search and view all
   const [tokenFilter, setTokenFilter] = useState('today'); // Filter: 'all', 'today', 'date'
+  const [downloadFilter, setDownloadFilter] = useState('all'); // Download filter
+  const [showDownloadModal, setShowDownloadModal] = useState(false); // Show download options modal
   const [reviews, setReviews] = useState([]); // Reviews for this blood bank
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
