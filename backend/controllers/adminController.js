@@ -234,3 +234,71 @@ exports.getAllDonationRequests = asyncHandler(async (req, res) => {
 
   res.json({ success: true, data });
 });
+
+/**
+ * Get all activities with filters
+ * Query params: username, action, startDate, endDate
+ */
+exports.getAllActivities = asyncHandler(async (req, res) => {
+  const { username, action, startDate, endDate, page = 1, limit = 50 } = req.query;
+
+  // Build filter object
+  const filter = {};
+
+  // Filter by action
+  if (action && action !== 'all') {
+    filter.action = action;
+  }
+
+  // Filter by date range
+  if (startDate || endDate) {
+    filter.timestamp = {};
+    if (startDate) {
+      filter.timestamp.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999); // End of day
+      filter.timestamp.$lte = endDateTime;
+    }
+  }
+
+  // If username filter is provided, find user first
+  if (username && username.trim() !== '') {
+    const user = await User.findOne({ 
+      username: { $regex: username, $options: 'i' } 
+    });
+    
+    if (user) {
+      filter.userId = user._id;
+    } else {
+      // No user found, return empty result
+      return res.json({ 
+        success: true, 
+        data: [], 
+        total: 0,
+        page: parseInt(page),
+        totalPages: 0
+      });
+    }
+  }
+
+  // Get total count for pagination
+  const total = await Activity.countDocuments(filter);
+
+  // Fetch activities with pagination
+  const activities = await Activity.find(filter)
+    .populate('userId', 'username name email role')
+    .sort({ timestamp: -1 })
+    .limit(parseInt(limit))
+    .skip((parseInt(page) - 1) * parseInt(limit))
+    .lean();
+
+  res.json({ 
+    success: true, 
+    data: activities,
+    total,
+    page: parseInt(page),
+    totalPages: Math.ceil(total / parseInt(limit))
+  });
+});
