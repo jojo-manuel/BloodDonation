@@ -182,6 +182,24 @@ export default function BloodBankDashboard() {
     }
   };
 
+  // Fetch reviews for this blood bank
+  const fetchReviews = async () => {
+    if (!bloodBankDetails?._id) return;
+    
+    setLoadingReviews(true);
+    try {
+      const res = await api.get(`/reviews/bloodbank/${bloodBankDetails._id}`);
+      if (res.data.success) {
+        setReviews(res.data.data.reviews || []);
+        setReviewStats(res.data.data.stats || { averageRating: 0, totalReviews: 0 });
+      }
+    } catch (err) {
+      console.error("Failed to fetch reviews", err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
   // Handle confirm booking
   const handleConfirmBooking = async (booking) => {
     if (!confirm(`Confirm booking for ${booking.donorName}?`)) return;
