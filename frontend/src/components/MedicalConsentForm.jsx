@@ -148,36 +148,46 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     }
   };
 
-  const YesNoButton = ({ field, questionKey, deferralKey }) => (
-    <div className="border-b border-gray-200 dark:border-gray-700 py-3">
-      <p className="text-sm text-gray-900 dark:text-gray-100 mb-2">
-        {t(questionKey)}
-        {deferralKey && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({t(deferralKey)})</span>}
-      </p>
-      <div className="flex gap-3">
-        <button
-          onClick={() => handleChange(field, true)}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-            formData[field] === true
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-          }`}
-        >
-          {t('yesButton')}
-        </button>
-        <button
-          onClick={() => handleChange(field, false)}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-            formData[field] === false
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-          }`}
-        >
-          {t('noButton')}
-        </button>
+  const YesNoButton = ({ field, questionKey, deferralKey }) => {
+    const isUnanswered = formData[field] === null;
+    
+    return (
+      <div className={`border-b py-3 ${
+        isUnanswered 
+          ? 'border-yellow-400 dark:border-yellow-600 bg-yellow-50/30 dark:bg-yellow-900/10' 
+          : 'border-gray-200 dark:border-gray-700'
+      }`}>
+        <p className="text-sm text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
+          {isUnanswered && <span className="text-yellow-600 dark:text-yellow-400 text-lg">⚠️</span>}
+          {t(questionKey)}
+          {deferralKey && <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({t(deferralKey)})</span>}
+          {isUnanswered && <span className="text-xs text-yellow-700 dark:text-yellow-400 font-semibold ml-auto">Not answered</span>}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleChange(field, true)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+              formData[field] === true
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            {t('yesButton')}
+          </button>
+          <button
+            onClick={() => handleChange(field, false)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+              formData[field] === false
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            {t('noButton')}
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
