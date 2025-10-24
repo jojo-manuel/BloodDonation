@@ -428,11 +428,11 @@ export default function UserProfile() {
 
         {/* Patients Helped (Only for Donors) */}
         {isDonor && patientsHelped.length > 0 && (
-          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💝 Patients You Helped</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {patientsHelped.map((patient, index) => (
-                <div key={index} className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-xl p-5 border border-pink-200 dark:border-pink-800 shadow-md">
+                <div key={index} className="bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-500/10 dark:to-purple-500/10 rounded-xl p-5 border-2 border-pink-200 dark:border-pink-800 shadow-lg hover:shadow-xl transition-all">
                   <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{patient.patientName}</h4>
                   {patient.patientMRID && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -455,7 +455,7 @@ export default function UserProfile() {
 
         {/* No Donation History Message */}
         {isDonor && donations.length === 0 && (
-          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-8 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 text-center">
+          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-8 shadow-xl transition dark:border-white/10 dark:bg-white/5 text-center">
             <div className="text-6xl mb-4">🩸</div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Donation History Yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
