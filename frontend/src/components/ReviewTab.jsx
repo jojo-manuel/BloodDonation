@@ -27,7 +27,6 @@ const ReviewTab = () => {
 
   useEffect(() => {
     if (activeSubTab === 'write' || activeSubTab === 'browse') {
-      fetchReviewableDonors();
       fetchReviewableBloodBanks();
     } else if (activeSubTab === 'my') {
       fetchMyReviews();
