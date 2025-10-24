@@ -11,7 +11,7 @@
     "test": "jest --transformIgnorePatterns \"node_modules/(?!@testing-library)\"",
     "test:selenium": "jest --config tests/jest-selenium.config.cjs",
     "test:e2e": "npm run test:selenium",
-    "test:simple": "node tests/simple-login-test.js",
+    "test:simple": "node tests/simple-login-test.cjs",
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "test:playwright:headed": "playwright test --headed",
