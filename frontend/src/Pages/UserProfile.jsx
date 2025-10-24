@@ -320,7 +320,7 @@ export default function UserProfile() {
                   name="name"
                   value={editData.name}
                   onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -331,7 +331,7 @@ export default function UserProfile() {
                   name="phone"
                   value={editData.phone}
                   onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
                   placeholder="Enter your phone number"
                 />
               </div>
