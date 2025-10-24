@@ -537,7 +537,7 @@ export default function BloodBankDashboard() {
     ]);
 
     // Add table
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Token', 'Date', 'Time', 'Donor', 'Blood', 'Patient', 'Status', 'Arrived', 'Notes']],
       body: tableData,
       startY: 48,
