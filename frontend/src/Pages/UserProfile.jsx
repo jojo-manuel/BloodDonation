@@ -231,14 +231,14 @@ export default function UserProfile() {
                 </div>
               )}
 
-              {/* Donor Badge */}
+              {/* User Type Badge */}
               {isDonor ? (
                 <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full font-semibold shadow-md">
-                  ✅ Registered Donor
+                  ✅ User (Donor)
                 </div>
               ) : (
-                <div className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 rounded-full font-semibold shadow-md">
-                  👤 Regular User
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full font-semibold shadow-md">
+                  👤 User
                 </div>
               )}
             </div>
