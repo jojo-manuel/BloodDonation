@@ -1539,47 +1539,192 @@ export default function BloodBankDashboard() {
                 🖥️ Frontdesk Management
               </h2>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                Search donors by token number and manage arrivals
+                View all bookings or search by token number
               </p>
             </div>
 
-            {/* Token Search */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-2xl">🔍</span>
-                  Search by Token Number
-                </h3>
-                
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    placeholder="Enter token number (e.g., 25)"
-                    value={tokenSearch}
-                    onChange={(e) => setTokenSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleTokenSearch()}
-                    className="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 font-mono text-lg"
-                  />
-                  <button
-                    onClick={handleTokenSearch}
-                    disabled={searchingToken}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
-                  >
-                    {searchingToken ? (
-                      <>
-                        <span className="inline-block animate-spin">⏳</span>
-                        Searching...
-                      </>
-                    ) : (
-                      <>
-                        <span>🔍</span>
-                        Search
-                      </>
-                    )}
-                  </button>
-                </div>
+            {/* Toggle: View All / Search */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-lg border border-white/30 bg-white/20 dark:border-white/10 dark:bg-white/5 p-1">
+                <button
+                  onClick={() => setShowAllTokens(true)}
+                  className={`px-6 py-2 rounded-lg font-semibold transition ${
+                    showAllTokens
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-500 text-white shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/10'
+                  }`}
+                >
+                  📋 View All Tokens
+                </button>
+                <button
+                  onClick={() => setShowAllTokens(false)}
+                  className={`px-6 py-2 rounded-lg font-semibold transition ${
+                    !showAllTokens
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-500 text-white shadow-lg'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-white/10'
+                  }`}
+                >
+                  🔍 Search Token
+                </button>
               </div>
             </div>
+
+            {showAllTokens ? (
+              /* View All Tokens Section */
+              <div>
+                {/* Date Selector */}
+                <div className="max-w-2xl mx-auto mb-6">
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 p-4 rounded-xl border-2 border-green-200 dark:border-green-700">
+                    <label className="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                      <span className="text-xl">📅</span>
+                      Select Date to View Tokens
+                    </label>
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type="date"
+                        value={selectedTokenDate}
+                        onChange={(e) => setSelectedTokenDate(e.target.value)}
+                        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                      />
+                      <button
+                        onClick={() => setSelectedTokenDate(new Date().toISOString().split('T')[0])}
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-lg font-semibold hover:from-green-700 hover:to-teal-600 transition whitespace-nowrap"
+                      >
+                        📆 Today
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* All Tokens List */}
+                {loadingTokens ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tokens...</p>
+                  </div>
+                ) : allTokens.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📭</div>
+                    <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                      No bookings found for {new Date(selectedTokenDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                      Try selecting a different date
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        🎫 {allTokens.length} Token{allTokens.length !== 1 ? 's' : ''} for {new Date(selectedTokenDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                      </h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {allTokens.map((booking) => (
+                        <div
+                          key={booking._id}
+                          className={`rounded-xl border-2 p-4 shadow-lg transition cursor-pointer hover:shadow-xl ${
+                            booking.status === 'completed' 
+                              ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20'
+                              : booking.status === 'rejected'
+                              ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20'
+                              : booking.arrived
+                              ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20'
+                              : 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
+                          }`}
+                          onClick={() => {
+                            setSearchedBooking(booking);
+                            setShowAllTokens(false);
+                          }}
+                        >
+                          {/* Token Number Badge */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-2xl font-bold font-mono text-yellow-700 dark:text-yellow-400">
+                              #{booking.tokenNumber}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                              booking.status === 'completed' ? 'bg-blue-500 text-white' :
+                              booking.status === 'rejected' ? 'bg-red-500 text-white' :
+                              booking.arrived ? 'bg-yellow-500 text-white' :
+                              'bg-green-500 text-white'
+                            }`}>
+                              {booking.status === 'completed' ? '✓ DONE' :
+                               booking.status === 'rejected' ? '✗ REJECTED' :
+                               booking.arrived ? '⏳ ARRIVED' :
+                               '⏺ PENDING'}
+                            </span>
+                          </div>
+
+                          {/* Donor Info */}
+                          <div className="space-y-2">
+                            <div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Donor</p>
+                              <p className="font-bold text-gray-900 dark:text-white truncate">{booking.donorName}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg font-bold text-red-600 dark:text-red-400">{booking.bloodGroup}</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">• {booking.time}</span>
+                            </div>
+                            {booking.patientName && (
+                              <div>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">Patient</p>
+                                <p className="text-sm text-gray-900 dark:text-white truncate">{booking.patientName}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Click to view indicator */}
+                          <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+                            <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                              Click to view details →
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Token Search Section */
+              <div className="max-w-2xl mx-auto mb-8">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="text-2xl">🔍</span>
+                    Search by Token Number
+                  </h3>
+                  
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="Enter token number (e.g., 25)"
+                      value={tokenSearch}
+                      onChange={(e) => setTokenSearch(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleTokenSearch()}
+                      className="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 font-mono text-lg"
+                    />
+                    <button
+                      onClick={handleTokenSearch}
+                      disabled={searchingToken}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                    >
+                      {searchingToken ? (
+                        <>
+                          <span className="inline-block animate-spin">⏳</span>
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <span>🔍</span>
+                          Search
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Booking Details */}
             {searchedBooking ? (
