@@ -27,19 +27,17 @@ export default function BloodBankRegister() {
   const validateForm = () => {
     const errors = [];
 
-    if (isRegister) {
-      // Registration validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test((formData.username || "").trim())) {
-        errors.push("Username must be a valid email address.");
-      }
-
-      if (!formData.password || formData.password.length < 6) {
-        errors.push("Password must be at least 6 characters long.");
-      }
+    // Registration validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test((formData.username || "").trim())) {
+      errors.push("Username must be a valid email address.");
     }
 
-    // Common validation for blood bank details
+    if (!formData.password || formData.password.length < 6) {
+      errors.push("Password must be at least 6 characters long.");
+    }
+
+    // Blood bank details validation
     if (!NAME_REGEX.test((formData.name || "").trim())) {
       errors.push("Blood bank name must contain only letters, spaces, and basic punctuation (.'-)");
     }
@@ -61,9 +59,7 @@ export default function BloodBankRegister() {
     }
 
     // Required fields
-    const requiredFields = isRegister
-      ? ['username', 'password', 'name', 'address', 'district', 'contactNumber', 'licenseNumber']
-      : ['name', 'address', 'district', 'contactNumber', 'licenseNumber'];
+    const requiredFields = ['username', 'password', 'name', 'address', 'district', 'contactNumber', 'licenseNumber'];
 
     requiredFields.forEach(field => {
       if (!formData[field] || formData[field].toString().trim() === '') {
