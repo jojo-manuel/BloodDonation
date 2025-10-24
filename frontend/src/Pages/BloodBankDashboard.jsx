@@ -1790,6 +1790,15 @@ export default function BloodBankDashboard() {
                         {tokenFilter === 'today' && ` (Today - ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })})`}
                         {tokenFilter === 'date' && ` (${new Date(selectedTokenDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})`}
                       </h3>
+                      
+                      {/* Download Button */}
+                      <button
+                        onClick={() => setShowDownloadModal(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-600 transition flex items-center gap-2 shadow-lg"
+                      >
+                        <span className="text-lg">⬇️</span>
+                        Download Report
+                      </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
