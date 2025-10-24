@@ -212,6 +212,19 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             </p>
           </div>
 
+          {/* Instructions - How to Pass */}
+          <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 mb-4">
+            <p className="text-sm font-bold text-green-800 dark:text-green-200 mb-2">
+              ✅ To be eligible for blood donation:
+            </p>
+            <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+              <p>• <strong>Age & Weight:</strong> Must answer <span className="px-2 py-0.5 bg-green-600 text-white rounded">YES</span></p>
+              <p>• <strong>Current Health (Feeling well):</strong> Must answer <span className="px-2 py-0.5 bg-green-600 text-white rounded">YES</span></p>
+              <p>• <strong>All Medical History:</strong> Must answer <span className="px-2 py-0.5 bg-red-600 text-white rounded">NO</span> (procedures, diseases, medications, symptoms)</p>
+              <p>• <strong>Final Consent:</strong> Must answer <span className="px-2 py-0.5 bg-green-600 text-white rounded">YES</span></p>
+            </div>
+          </div>
+
           {/* Basic Eligibility */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
