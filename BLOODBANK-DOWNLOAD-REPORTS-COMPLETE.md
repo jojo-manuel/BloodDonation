@@ -78,8 +78,12 @@ Added comprehensive download functionality to export booking data in **CSV and P
    - Select one of 5 report types from modal
    - Each shows real-time count of bookings
 
-6. **Download Complete**
-   - CSV file downloads automatically
+6. **Choose Format**
+   - Click "📄 CSV" for spreadsheet format
+   - OR click "📕 PDF" for printable report
+
+7. **Download Complete**
+   - File downloads automatically
    - Success message confirms count
 
 ---
