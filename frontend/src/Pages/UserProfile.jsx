@@ -222,14 +222,14 @@ export default function UserProfile() {
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar and Basic Info */}
             <div className="flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-2xl ring-4 ring-rose-200 dark:ring-white/20 mb-4">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-2xl ring-4 ring-white/50 backdrop-blur-sm dark:ring-white/20 mb-4 hover:scale-105 transition-transform">
                 <span className="text-white font-bold text-5xl">
                   {user?.username ? user.username.charAt(0).toUpperCase() : user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               
               {isDonor && (
-                <div className="inline-flex items-center px-4 py-2 bg-red-100 border-2 border-red-300 dark:bg-red-900/30 dark:border-red-800 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-lg mb-3">
+                <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-100/80 to-pink-100/80 backdrop-blur-md border border-red-300/50 dark:bg-red-900/30 dark:border-red-800 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-lg mb-3 hover:scale-105 transition-transform">
                   🩸 {donorInfo?.bloodGroup || 'N/A'}
                 </div>
               )}
