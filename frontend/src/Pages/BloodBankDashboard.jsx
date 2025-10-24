@@ -2298,55 +2298,85 @@ export default function BloodBankDashboard() {
                     </div>
 
                     {/* Waiting Today */}
-                    <button
-                      onClick={() => downloadBookingsCSV('waiting_today')}
-                      className="w-full p-4 rounded-xl border-2 border-yellow-300 dark:border-yellow-700 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:from-yellow-100 hover:to-orange-100 dark:hover:from-yellow-900/40 dark:hover:to-orange-900/40 transition flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="border-2 border-yellow-300 dark:border-yellow-700 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">⏳</span>
-                        <div className="text-left">
+                        <div className="text-left flex-1">
                           <p className="font-bold text-gray-900 dark:text-white">Waiting Today</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Bookings scheduled for today that are pending ({allTokens.filter(b => b.date === new Date().toISOString().split('T')[0] && b.status !== 'completed' && b.status !== 'rejected').length} booking{allTokens.filter(b => b.date === new Date().toISOString().split('T')[0] && b.status !== 'completed' && b.status !== 'rejected').length !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => downloadBookingsCSV('waiting_today')}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📄 CSV
+                        </button>
+                        <button
+                          onClick={() => downloadBookingsPDF('waiting_today')}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📕 PDF
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Pending (Not Completed) */}
-                    <button
-                      onClick={() => downloadBookingsCSV('not_completed')}
-                      className="w-full p-4 rounded-xl border-2 border-green-300 dark:border-green-700 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 hover:from-green-100 hover:to-teal-100 dark:hover:from-green-900/40 dark:hover:to-teal-900/40 transition flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="border-2 border-green-300 dark:border-green-700 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 p-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">⏺</span>
-                        <div className="text-left">
+                        <div className="text-left flex-1">
                           <p className="font-bold text-gray-900 dark:text-white">Pending Bookings</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             All bookings not yet completed ({allTokens.filter(b => b.status !== 'completed' && b.status !== 'rejected').length} booking{allTokens.filter(b => b.status !== 'completed' && b.status !== 'rejected').length !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => downloadBookingsCSV('not_completed')}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📄 CSV
+                        </button>
+                        <button
+                          onClick={() => downloadBookingsPDF('not_completed')}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📕 PDF
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Rejected Bookings */}
-                    <button
-                      onClick={() => downloadBookingsCSV('rejected')}
-                      className="w-full p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/40 dark:hover:to-rose-900/40 transition flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="border-2 border-red-300 dark:border-red-700 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 p-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">❌</span>
-                        <div className="text-left">
+                        <div className="text-left flex-1">
                           <p className="font-bold text-gray-900 dark:text-white">Rejected Bookings</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Bookings that were rejected by the blood bank ({allTokens.filter(b => b.status === 'rejected').length} booking{allTokens.filter(b => b.status === 'rejected').length !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => downloadBookingsCSV('rejected')}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📄 CSV
+                        </button>
+                        <button
+                          onClick={() => downloadBookingsPDF('rejected')}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📕 PDF
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
