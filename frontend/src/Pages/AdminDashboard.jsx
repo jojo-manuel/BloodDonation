@@ -353,11 +353,11 @@ export default function AdminDashboard() {
   return (
     <Layout>
       <Navbar onLogout={handleLogout} />
-      <div className="flex justify-center mb-3">
-      <div className="flex flex-wrap bg-white/20 rounded-full p-0.5 backdrop-blur-md gap-1">
+      <div className="flex justify-center mb-6">
+      <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
         <button
           onClick={() => setActiveTab("donors")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "donors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab("users")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "users" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -373,7 +373,7 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab("admins")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "admins" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -381,23 +381,23 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab("bloodbanks")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "bloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
-          Blood Banks
+          All Blood Banks
         </button>
         <button
           onClick={() => setActiveTab("pendingBloodbanks")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "pendingBloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
-          Pending
+          Pending Blood Banks
         </button>
         <button
           onClick={() => setActiveTab("patients")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "patients" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab("requests")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "requests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -413,7 +413,7 @@ export default function AdminDashboard() {
         </button>
         <button
           onClick={() => setActiveTab("activities")}
-          className={`px-3 py-1 rounded-full text-sm font-semibold transition ${
+          className={`px-6 py-2 rounded-full font-semibold transition ${
             activeTab === "activities" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
           }`}
         >
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
       </div>
       </div>
 
-      <div className="mx-auto w-full max-w-7xl overflow-auto max-h-[85vh] px-2">
+      <div className="mx-auto w-full max-w-4xl overflow-auto max-h-[70vh]">
         {activeTab === "donors" && (
           <>
             <DonorSearchForm
