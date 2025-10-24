@@ -1187,39 +1187,41 @@ export default function UserDashboard() {
               <p className="text-gray-600 dark:text-gray-400">Loading...</p>
             ) : (
               <>
-                <div className="mb-6 p-6 rounded-2xl border border-white/30 bg-white/20 dark:border-white/10 dark:bg-white/5 backdrop-blur-md">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    🔍 Filter Requests
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Status Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Status
-                      </label>
+                {/* Compact Filter Toggle */}
+                <div className="mb-3">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="flex items-center justify-between w-full px-4 py-2 rounded-lg border border-white/30 bg-white/20 dark:border-white/10 dark:bg-white/5 backdrop-blur-md hover:bg-white/30 dark:hover:bg-white/10 transition"
+                  >
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      🔍 Filters
+                      {(statusFilter !== 'all' || filterMRID || filterPatientName || filterDonorName || filterDate || filterBloodGroup !== 'all' || filterBloodBankName) && (
+                        <span className="px-2 py-0.5 bg-pink-500 text-white text-xs rounded-full">Active</span>
+                      )}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400">{showFilters ? '▲' : '▼'}</span>
+                  </button>
+                </div>
+
+                {/* Collapsible Filter Panel */}
+                {showFilters && (
+                  <div className="mb-4 p-4 rounded-lg border border-white/30 bg-white/20 dark:border-white/10 dark:bg-white/5 backdrop-blur-md">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {/* Status & Blood Group & Sort */}
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                       >
                         {STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
+                          <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
-                    </div>
 
-                    {/* Blood Group Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Blood Group
-                      </label>
                       <select
                         value={filterBloodGroup}
                         onChange={(e) => setFilterBloodGroup(e.target.value)}
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                       >
                         <option value="all">All Blood Groups</option>
                         <option value="A+">A+</option>
@@ -1231,115 +1233,77 @@ export default function UserDashboard() {
                         <option value="O+">O+</option>
                         <option value="O-">O-</option>
                       </select>
-                    </div>
 
-                    {/* Sort Order */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Sort by Date
-                      </label>
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value)}
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                       >
                         {SORT_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
+                          <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
-                    </div>
 
-                    {/* MRID Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Patient MRID
-                      </label>
-                      <input
-                        type="text"
-                        value={filterMRID}
-                        onChange={(e) => setFilterMRID(e.target.value)}
-                        placeholder="Search by MRID..."
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-300"
-                      />
-                    </div>
-
-                    {/* Patient Name Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Patient Name
-                      </label>
-                      <input
-                        type="text"
-                        value={filterPatientName}
-                        onChange={(e) => setFilterPatientName(e.target.value)}
-                        placeholder="Search patient..."
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-300"
-                      />
-                    </div>
-
-                    {/* Donor Name Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Donor Name
-                      </label>
-                      <input
-                        type="text"
-                        value={filterDonorName}
-                        onChange={(e) => setFilterDonorName(e.target.value)}
-                        placeholder="Search donor..."
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-300"
-                      />
-                    </div>
-
-                    {/* Blood Bank Name Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Blood Bank
-                      </label>
-                      <input
-                        type="text"
-                        value={filterBloodBankName}
-                        onChange={(e) => setFilterBloodBankName(e.target.value)}
-                        placeholder="Search blood bank..."
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-300"
-                      />
-                    </div>
-
-                    {/* Date Filter */}
-                    <div>
-                      <label className="text-sm font-medium text-gray-800 dark:text-gray-200 block mb-1">
-                        Request Date
-                      </label>
                       <input
                         type="date"
                         value={filterDate}
                         onChange={(e) => setFilterDate(e.target.value)}
-                        className="w-full rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-sm text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                        placeholder="Date"
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      />
+
+                      {/* Text Filters */}
+                      <input
+                        type="text"
+                        value={filterMRID}
+                        onChange={(e) => setFilterMRID(e.target.value)}
+                        placeholder="🔢 MRID..."
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                      />
+
+                      <input
+                        type="text"
+                        value={filterPatientName}
+                        onChange={(e) => setFilterPatientName(e.target.value)}
+                        placeholder="👤 Patient name..."
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                      />
+
+                      <input
+                        type="text"
+                        value={filterDonorName}
+                        onChange={(e) => setFilterDonorName(e.target.value)}
+                        placeholder="🩸 Donor name..."
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                      />
+
+                      <input
+                        type="text"
+                        value={filterBloodBankName}
+                        onChange={(e) => setFilterBloodBankName(e.target.value)}
+                        placeholder="🏥 Blood bank..."
+                        className="w-full rounded-md border border-white/30 bg-white/10 px-2 py-1.5 text-xs text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
                       />
                     </div>
 
-                    {/* Clear Filters Button */}
-                    <div className="flex items-end">
-                      <button
-                        onClick={() => {
-                          setStatusFilter('all');
-                          setFilterBloodGroup('all');
-                          setSortOrder('desc');
-                          setFilterMRID('');
-                          setFilterPatientName('');
-                          setFilterDonorName('');
-                          setFilterBloodBankName('');
-                          setFilterDate('');
-                        }}
-                        className="w-full px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition font-semibold text-sm"
-                      >
-                        🔄 Clear All Filters
-                      </button>
-                    </div>
+                    {/* Clear Button */}
+                    <button
+                      onClick={() => {
+                        setStatusFilter('all');
+                        setFilterBloodGroup('all');
+                        setSortOrder('desc');
+                        setFilterMRID('');
+                        setFilterPatientName('');
+                        setFilterDonorName('');
+                        setFilterBloodBankName('');
+                        setFilterDate('');
+                      }}
+                      className="mt-3 w-full px-3 py-1.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-md hover:from-gray-600 hover:to-gray-700 transition font-semibold text-xs"
+                    >
+                      🔄 Clear All
+                    </button>
                   </div>
-                </div>
+                )}
 
                 {requestType === 'sent' ? (
                   <div>
