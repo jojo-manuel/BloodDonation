@@ -268,3 +268,11 @@ exports.updateSettingCategory = asyncHandler(async (req, res) => {
   });
 });
 
+// Export all functions
+module.exports = {
+  getSettings: exports.getSettings,
+  updateSettings: exports.updateSettings,
+  resetSettings: exports.resetSettings,
+  updateSettingCategory: exports.updateSettingCategory
+};
+
