@@ -21,5 +21,25 @@ router.get('/my-bookings', taxiController.getMyBookings);
 // Cancel booking
 router.put('/:bookingId/cancel', taxiController.cancelBooking);
 
+// =============================================
+// TAXI PARTNER API ROUTES
+// For third-party taxi service providers
+// =============================================
+
+// Get all available bookings for taxi partners
+router.get('/partner/available-bookings', taxiController.getAvailableBookings);
+
+// Get specific booking details
+router.get('/partner/booking/:bookingId', taxiController.getBookingDetails);
+
+// Assign driver to booking
+router.put('/partner/assign-driver/:bookingId', taxiController.assignDriver);
+
+// Update booking status
+router.put('/partner/update-status/:bookingId', taxiController.updateBookingStatus);
+
+// Get bookings assigned to a specific driver
+router.get('/partner/driver-bookings', taxiController.getDriverBookings);
+
 module.exports = router;
 
