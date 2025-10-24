@@ -250,19 +250,19 @@ export default function UserProfile() {
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📧 Email</label>
-                  <p className="text-gray-900 dark:text-white font-medium text-lg">{user?.email || user?.username || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg break-all">{user?.email || user?.username || 'Not provided'}</p>
                   </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📱 Phone</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg">{user?.phone || 'Not provided'}</p>
                   </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">👤 Role</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg capitalize">{user?.role || 'User'}</p>
                 </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-shadow">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📅 Member Since</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg">{formatDate(user?.createdAt)}</p>
             </div>
