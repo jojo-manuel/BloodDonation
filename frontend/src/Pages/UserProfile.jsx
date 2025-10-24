@@ -478,30 +478,30 @@ export default function UserProfile() {
           <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donor Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Blood Group</label>
+              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Blood Group</label>
                 <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
               </div>
-              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Weight</label>
+              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Weight</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.weight} kg</p>
               </div>
-              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Contact Number</label>
+              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Contact Number</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.contactNumber}</p>
               </div>
-              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Priority Points</label>
+              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Priority Points</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.priorityPoints || 0}</p>
               </div>
-              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Availability Status</label>
+              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Availability Status</label>
                 <p className={`font-bold text-lg ${donorInfo.availability ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                   {donorInfo.availability ? '✅ Available' : '⏸️ Not Available'}
                 </p>
               </div>
               {donorInfo.address && (
-                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all md:col-span-2 lg:col-span-1">
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all md:col-span-2 lg:col-span-1 group">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Address</label>
                   <p className="text-gray-900 dark:text-white font-medium text-sm">
                     {donorInfo.address.houseName && `${donorInfo.address.houseName}, `}
