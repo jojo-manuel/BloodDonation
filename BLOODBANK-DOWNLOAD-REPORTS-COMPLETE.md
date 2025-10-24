@@ -2,7 +2,9 @@
 
 ## Summary
 
-Added comprehensive download functionality to export booking data in CSV format with **5 different filter options** based on status and date.
+Added comprehensive download functionality to export booking data in **CSV and PDF formats** with **5 different filter options** based on status and date.
+
+**Total: 10 download combinations** (5 report types × 2 formats)!
 
 ---
 
