@@ -217,198 +217,80 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
           {/* Recent Medical Procedures */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">💉</span> Recent Medical Procedures
+              <span className="text-2xl">💉</span> {t('recentMedicalProcedures')}
             </h3>
-            <YesNoButton 
-              field="toothExtraction" 
-              label="Have you had a tooth extraction or root canal in the last 3 days?" 
-              note="Deferral: 3 days"
-            />
-            <YesNoButton 
-              field="earPiercing" 
-              label="Have you had ear piercing or acupuncture in the last 6 months?" 
-              note="Deferral: 6 months"
-            />
-            <YesNoButton 
-              field="tattoo" 
-              label="Have you gotten a tattoo in the last 6 months?" 
-              note="Deferral: 6 months"
-            />
-            <YesNoButton 
-              field="injection" 
-              label="Have you received any injections (other than vaccines) in the last 6 months?" 
-              note="Deferral: 6 months"
-            />
-            <YesNoButton 
-              field="surgery" 
-              label="Have you undergone any surgery in the last 6 months?" 
-              note="Deferral: 6 months"
-            />
-            <YesNoButton 
-              field="animalBite" 
-              label="Have you been bitten by a rabid or potentially rabid animal in the last 12 months?" 
-              note="Deferral: 12 months"
-            />
+            <YesNoButton field="toothExtraction" questionKey="q_toothExtraction" deferralKey="deferral_3days" />
+            <YesNoButton field="earPiercing" questionKey="q_earPiercing" deferralKey="deferral_6months" />
+            <YesNoButton field="tattoo" questionKey="q_tattoo" deferralKey="deferral_12months" />
+            <YesNoButton field="injection" questionKey="q_injection" deferralKey="deferral_6months" />
+            <YesNoButton field="surgery" questionKey="q_surgery" deferralKey="deferral_6months" />
+            <YesNoButton field="animalBite" questionKey="q_animalBite" deferralKey="deferral_12months" />
           </div>
 
           {/* For Women Only */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">👩</span> For Women Only
+              <span className="text-2xl">👩</span> {t('forWomenOnly')}
             </h3>
-            <YesNoButton 
-              field="pregnant" 
-              label="Are you currently pregnant?" 
-              note="Deferral: Until delivery + 12 months"
-            />
-            <YesNoButton 
-              field="lactating" 
-              label="Are you currently breastfeeding?" 
-              note="Deferral: 12 months after delivery"
-            />
-            <YesNoButton 
-              field="delivery" 
-              label="Have you given birth in the last 12 months?" 
-              note="Deferral: 12 months"
-            />
-            <YesNoButton 
-              field="abortion" 
-              label="Have you had a miscarriage or abortion in the last 6 months?" 
-              note="Deferral: 6 months"
-            />
+            <YesNoButton field="pregnant" questionKey="q_pregnant" deferralKey="deferral_12months" />
+            <YesNoButton field="lactating" questionKey="q_lactating" deferralKey="deferral_12months" />
+            <YesNoButton field="delivery" questionKey="q_delivery" deferralKey="deferral_12months" />
+            <YesNoButton field="abortion" questionKey="q_abortion" deferralKey="deferral_6months" />
           </div>
 
           {/* Recent Diseases */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">🦠</span> Recent Diseases
+              <span className="text-2xl">🦠</span> {t('recentDiseases')}
             </h3>
-            <YesNoButton 
-              field="malaria" 
-              label="Have you had malaria in the last 3 months?" 
-              note="Deferral: 3 months"
-            />
-            <YesNoButton 
-              field="std" 
-              label="Have you had any sexually transmitted diseases in the last 5 years?" 
-              note="Deferral: 5 years"
-            />
-            <YesNoButton 
-              field="tuberculosis" 
-              label="Have you been treated for tuberculosis in the last 3 months?" 
-              note="Deferral: 3 months"
-            />
-            <YesNoButton 
-              field="asthma" 
-              label="Have you had asthma symptoms in the last 3 months?" 
-              note="Deferral: 3 months"
-            />
-            <YesNoButton 
-              field="liverDisease" 
-              label="Have you had liver disease (jaundice, hepatitis) in the last 2 years?" 
-              note="Deferral: 2 years"
-            />
-            <YesNoButton 
-              field="kidneyDisease" 
-              label="Have you had kidney disease in the last 2 years?" 
-              note="Deferral: 2 years"
-            />
+            <YesNoButton field="malaria" questionKey="q_malaria" deferralKey="deferral_3months" />
+            <YesNoButton field="std" questionKey="q_std" deferralKey="deferral_permanent" />
+            <YesNoButton field="tuberculosis" questionKey="q_tuberculosis" deferralKey="deferral_2years" />
+            <YesNoButton field="asthma" questionKey="q_asthma" deferralKey="deferral_permanent" />
+            <YesNoButton field="liverDisease" questionKey="q_liverDisease" deferralKey="deferral_12months" />
+            <YesNoButton field="kidneyDisease" questionKey="q_kidneyDisease" deferralKey="deferral_6months" />
           </div>
 
           {/* Medications & Vaccines */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">💊</span> Recent Medications & Vaccines
+              <span className="text-2xl">💊</span> {t('medicationsVaccines')}
             </h3>
-            <YesNoButton 
-              field="liveVaccine" 
-              label="Have you received any live vaccines (BCG, Polio, MMR, etc.) in the last 28 days?" 
-              note="Deferral: 28 days"
-            />
-            <YesNoButton 
-              field="antiserumInjection" 
-              label="Have you received anti-tetanus, anti-venom, or anti-diphtheria serum in the last 28 days?" 
-              note="Deferral: 28 days"
-            />
-            <YesNoButton 
-              field="rabiesVaccine" 
-              label="Have you received rabies vaccination in the last 12 months?" 
-              note="Deferral: 1 year"
-            />
-            <YesNoButton 
-              field="hormoneTherapy" 
-              label="Have you been on hormone therapy or insulin in the last 28 days?" 
-              note="Deferral: 28 days"
-            />
-            <YesNoButton 
-              field="aspirin" 
-              label="Have you taken aspirin or other pain relievers in the last 3 days?" 
-              note="Deferral: 3 days"
-            />
-            <YesNoButton 
-              field="antibiotics" 
-              label="Have you taken antibiotics in the last 2 weeks?" 
-              note="Deferral: 2 weeks"
-            />
+            <YesNoButton field="liveVaccine" questionKey="q_liveVaccine" deferralKey="deferral_28days" />
+            <YesNoButton field="antiserumInjection" questionKey="q_antiserumInjection" deferralKey="deferral_28days" />
+            <YesNoButton field="rabiesVaccine" questionKey="q_rabiesVaccine" deferralKey="deferral_12months" />
+            <YesNoButton field="hormoneTherapy" questionKey="q_hormoneTherapy" deferralKey="deferral_28days" />
+            <YesNoButton field="aspirin" questionKey="q_aspirin" deferralKey="deferral_3days" />
+            <YesNoButton field="antibiotics" questionKey="q_antibiotics" deferralKey="deferral_2weeks" />
           </div>
 
           {/* Serious Conditions */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
-              <span className="text-2xl">⚠️</span> Serious Medical Conditions (Permanent Deferral)
+              <span className="text-2xl">⚠️</span> {t('seriousConditions')}
             </h3>
             <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
               <p className="text-xs text-red-700 dark:text-red-300">
-                If you answer "Yes" to any of these questions, you will not be eligible to donate blood for safety reasons.
+                {t('seriousConditionsWarning')}
               </p>
             </div>
-            <YesNoButton 
-              field="heartDisease" 
-              label="Do you have any heart disease or cardiovascular condition?" 
-            />
-            <YesNoButton 
-              field="epilepsy" 
-              label="Do you have epilepsy or have you experienced fainting/seizures?" 
-            />
-            <YesNoButton 
-              field="bloodDisorder" 
-              label="Do you have any blood clotting disorder or hemophilia?" 
-            />
-            <YesNoButton 
-              field="chronicIllness" 
-              label="Do you have any chronic illness (diabetes, cancer, etc.)?" 
-            />
-            <YesNoButton 
-              field="organTransplant" 
-              label="Have you ever received an organ transplant?" 
-            />
-            <YesNoButton 
-              field="hiv" 
-              label="Have you ever tested positive for HIV/AIDS?" 
-            />
-            <YesNoButton 
-              field="hepatitis" 
-              label="Do you have chronic hepatitis B or C?" 
-            />
+            <YesNoButton field="heartDisease" questionKey="q_heartDisease" />
+            <YesNoButton field="epilepsy" questionKey="q_epilepsy" />
+            <YesNoButton field="bloodDisorder" questionKey="q_bloodDisorder" />
+            <YesNoButton field="chronicIllness" questionKey="q_chronicIllness" />
+            <YesNoButton field="organTransplant" questionKey="q_organTransplant" />
+            <YesNoButton field="hiv" questionKey="q_hiv" />
+            <YesNoButton field="hepatitis" questionKey="q_hepatitis" />
           </div>
 
           {/* Current Health Status */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">🌡️</span> Current Health Status
+              <span className="text-2xl">🌡️</span> {t('currentHealthStatus')}
             </h3>
-            <YesNoButton 
-              field="feelingWell" 
-              label="Do you feel healthy and well today?" 
-            />
-            <YesNoButton 
-              field="fever" 
-              label="Do you have fever, cold, cough, or diarrhea today?" 
-            />
-            <YesNoButton 
-              field="fatigue" 
-              label="Are you experiencing severe fatigue or weakness today?" 
-            />
+            <YesNoButton field="feelingWell" questionKey="q_feelingWell" />
+            <YesNoButton field="fever" questionKey="q_fever" />
+            <YesNoButton field="fatigue" questionKey="q_fatigue" />
           </div>
 
           {/* Final Consent */}
