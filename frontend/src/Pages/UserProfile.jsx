@@ -479,26 +479,26 @@ export default function UserProfile() {
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Blood Group</label>
                 <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
               </div>
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Weight</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.weight} kg</p>
               </div>
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Contact Number</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.contactNumber}</p>
               </div>
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Priority Points</label>
                 <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.priorityPoints || 0}</p>
               </div>
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+              <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
                 <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Availability Status</label>
                 <p className={`font-bold text-lg ${donorInfo.availability ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                   {donorInfo.availability ? '✅ Available' : '⏸️ Not Available'}
                 </p>
               </div>
               {donorInfo.address && (
-                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md md:col-span-2 lg:col-span-1">
+                <div className="bg-white border-2 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all md:col-span-2 lg:col-span-1">
                   <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Address</label>
                   <p className="text-gray-900 dark:text-white font-medium text-sm">
                     {donorInfo.address.houseName && `${donorInfo.address.houseName}, `}
@@ -512,7 +512,7 @@ export default function UserProfile() {
         )}
 
         {/* Account Actions */}
-        <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+        <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">⚙️ Account Actions</h3>
           <div className="flex flex-wrap gap-4">
             {!isDonor && (
