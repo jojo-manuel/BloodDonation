@@ -366,7 +366,7 @@ export default function BloodBankDashboard() {
         setSearchedBooking(null);
         setTokenSearch('');
         // Refresh token list
-        fetchAllTokens(selectedTokenDate);
+        fetchAllTokens();
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to reject booking');
