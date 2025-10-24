@@ -268,5 +268,3 @@ exports.updateSettingCategory = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = exports;
-
