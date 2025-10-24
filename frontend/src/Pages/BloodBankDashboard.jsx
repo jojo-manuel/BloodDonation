@@ -627,12 +627,6 @@ export default function BloodBankDashboard() {
           >
             🖥️ Frontdesk
           </button>
-          <Link
-            to="/bloodbank-register"
-            className="px-6 py-2 rounded-full font-semibold text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white transition"
-          >
-            🔄 Update Details
-          </Link>
         </div>
       </div>
 
