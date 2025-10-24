@@ -377,6 +377,8 @@ export default function BloodBankDashboard() {
         alert('✅ Donation completed! Thank you for saving lives! 🎉');
         setSearchedBooking(null);
         setTokenSearch('');
+        // Refresh token list
+        fetchAllTokens(selectedTokenDate);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to mark completion');
