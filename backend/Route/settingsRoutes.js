@@ -16,6 +16,9 @@ const {
 } = settingsController;
 const { protect } = require('../Middleware/authMiddleware');
 
+console.log('protect middleware:', protect);
+console.log('getSettings after destructure:', getSettings);
+
 /**
  * @route   GET /api/settings
  * @desc    Get user settings
