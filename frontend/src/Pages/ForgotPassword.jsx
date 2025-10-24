@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { auth, sendPasswordResetEmail } from '../firebase';
 
-function Navbar({ isDark, toggleTheme }) {
+function Navbar() {
   return (
     <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 md:px-6">
       <Link to="/" className="flex items-center gap-3">
@@ -18,38 +18,19 @@ function Navbar({ isDark, toggleTheme }) {
           <p className="text-xs text-gray-600 dark:text-gray-300">Connect. Donate. Save lives.</p>
         </div>
       </Link>
-      <button
-        onClick={toggleTheme}
-        className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-medium text-gray-900 shadow-sm backdrop-blur-md transition hover:bg-white/90 dark:border-white/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-        aria-label="Toggle dark mode"
-      >
-        <span className="h-4 w-4">☀️</span>
-        <span>Theme</span>
-      </button>
     </nav>
   );
 }
 
 export default function ForgotPassword() {
-  const [isDark, setIsDark] = useState(false);
   const [identity, setIdentity] = useState(''); // username or email
   const navigate = useNavigate();
 
+  // Always use dark mode
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const shouldDark = saved
-      ? saved === "dark"
-      : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setIsDark(shouldDark);
-    document.documentElement.classList.toggle("dark", shouldDark);
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
   }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +68,7 @@ export default function ForgotPassword() {
       <div className="pointer-events-none absolute top-32 -right-16 h-80 w-80 rounded-full bg-red-500/30 blur-3xl dark:bg-amber-500/20" />
 
       <header className="relative z-10">
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <Navbar />
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-center px-4 pb-16 pt-4 md:px-6 md:pb-24 md:pt-8">
