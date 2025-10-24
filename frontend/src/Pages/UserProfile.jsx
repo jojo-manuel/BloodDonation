@@ -514,8 +514,8 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* Account Actions */}
-        <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+        {/* Account Actions - Glassmorphic */}
+        <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">⚙️ Account Actions</h3>
           <div className="flex flex-wrap gap-4">
             {!isDonor && (
