@@ -1857,10 +1857,6 @@ export default function UserDashboard() {
                     <p className="text-gray-900 dark:text-white">{selectedRequest.requestedAt ? new Date(selectedRequest.requestedAt).toLocaleString() : 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Issued At</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.issuedAt ? new Date(selectedRequest.issuedAt).toLocaleString() : '—'}</p>
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active</label>
                     <p className="text-gray-900 dark:text-white">{selectedRequest.isActive ? 'Yes' : 'No'}</p>
                   </div>
