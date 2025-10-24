@@ -183,6 +183,31 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
   };
 
   const handleSubmit = () => {
+    // First, scroll to first unanswered question if any
+    const firstUnanswered = Object.keys(formData).find(field => {
+      // Skip female-only questions for males
+      if (gender === 'male') {
+        const femaleOnlyFields = ['pregnant', 'lactating', 'delivery', 'abortion'];
+        if (femaleOnlyFields.includes(field)) return false;
+      }
+      return formData[field] === null;
+    });
+
+    if (firstUnanswered) {
+      // Try to find the question element and scroll to it
+      const questionElements = document.querySelectorAll('[class*="border-yellow"]');
+      if (questionElements.length > 0) {
+        questionElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Show alert after scroll
+        setTimeout(() => {
+          const { answeredQuestions, totalQuestions } = calculateProgress();
+          alert(`⚠️ Please complete all questions!\n\n${answeredQuestions} of ${totalQuestions} answered\n${totalQuestions - answeredQuestions} questions remaining\n\n👇 Scroll down to find questions highlighted in YELLOW`);
+        }, 500);
+        return;
+      }
+    }
+
     if (checkEligibility()) {
       onConsent(formData);
     }
@@ -314,14 +339,29 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
                   style={{ width: `${calculateProgress().percentage}%` }}
                 />
               </div>
-              <p className="text-xs text-indigo-700 dark:text-indigo-300">
-                {calculateProgress().answeredQuestions} of {calculateProgress().totalQuestions} questions answered
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                  {calculateProgress().answeredQuestions} of {calculateProgress().totalQuestions} questions answered
+                  {calculateProgress().answeredQuestions < calculateProgress().totalQuestions && (
+                    <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                      ⚠️ {calculateProgress().totalQuestions - calculateProgress().answeredQuestions} remaining
+                    </span>
+                  )}
+                </p>
                 {calculateProgress().answeredQuestions < calculateProgress().totalQuestions && (
-                  <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                    ⚠️ {calculateProgress().totalQuestions - calculateProgress().answeredQuestions} remaining
-                  </span>
+                  <button
+                    onClick={() => {
+                      const questionElements = document.querySelectorAll('[class*="border-yellow"]');
+                      if (questionElements.length > 0) {
+                        questionElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                    className="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-full font-semibold transition"
+                  >
+                    👇 Find Missing
+                  </button>
                 )}
-              </p>
+              </div>
             </div>
           )}
 
