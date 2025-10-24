@@ -68,6 +68,25 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     setLanguage(prev => prev === 'en' ? 'ml' : 'en');
   };
 
+  // Calculate progress
+  const calculateProgress = () => {
+    const requiredFields = Object.keys(formData).filter(field => {
+      // If male, exclude female-only questions
+      if (gender === 'male') {
+        const femaleOnlyFields = ['pregnant', 'lactating', 'delivery', 'abortion'];
+        return !femaleOnlyFields.includes(field);
+      }
+      return true;
+    });
+    
+    const answeredFields = requiredFields.filter(field => formData[field] !== null);
+    const totalQuestions = requiredFields.length;
+    const answeredQuestions = answeredFields.length;
+    const percentage = totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
+    
+    return { answeredQuestions, totalQuestions, percentage };
+  };
+
   const handleScroll = (e) => {
     const bottom = e.target.scrollHeight - e.target.scrollTop <= e.target.clientHeight + 50;
     if (bottom) {
@@ -278,6 +297,34 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             )}
           </div>
 
+          {/* Progress Indicator */}
+          {gender && (
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500 p-4 mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">
+                  📊 Form Progress
+                </p>
+                <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                  {calculateProgress().percentage}%
+                </p>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                <div 
+                  className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${calculateProgress().percentage}%` }}
+                />
+              </div>
+              <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                {calculateProgress().answeredQuestions} of {calculateProgress().totalQuestions} questions answered
+                {calculateProgress().answeredQuestions < calculateProgress().totalQuestions && (
+                  <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                    ⚠️ {calculateProgress().totalQuestions - calculateProgress().answeredQuestions} remaining
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Instructions - How to Pass */}
           <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 mb-4">
             <p className="text-sm font-bold text-green-800 dark:text-green-200 mb-2">
@@ -350,12 +397,27 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
               <YesNoButton field="abortion" questionKey="q_abortion" deferralKey="deferral_6months" />
             </div>
           )}
+          
+          {/* Info for Male Users */}
+          {gender === 'male' && (
+            <div className="mb-6 bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 p-4 rounded">
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <span className="text-xl">ℹ️</span>
+                <span><strong>For Male Donors:</strong> Female-specific questions are not applicable and have been skipped.</span>
+              </p>
+            </div>
+          )}
 
           {/* Recent Diseases */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span className="text-2xl">🦠</span> {t('recentDiseases')}
             </h3>
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-red-700 dark:text-red-300">
+                ⚠️ All questions in this section MUST be answered <strong className="text-red-600">NO</strong>
+              </p>
+            </div>
             <YesNoButton field="malaria" questionKey="q_malaria" deferralKey="deferral_3months" />
             <YesNoButton field="std" questionKey="q_std" deferralKey="deferral_permanent" />
             <YesNoButton field="tuberculosis" questionKey="q_tuberculosis" deferralKey="deferral_2years" />
@@ -369,6 +431,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span className="text-2xl">💊</span> {t('medicationsVaccines')}
             </h3>
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-red-700 dark:text-red-300">
+                ⚠️ All questions in this section MUST be answered <strong className="text-red-600">NO</strong>
+              </p>
+            </div>
             <YesNoButton field="liveVaccine" questionKey="q_liveVaccine" deferralKey="deferral_28days" />
             <YesNoButton field="antiserumInjection" questionKey="q_antiserumInjection" deferralKey="deferral_28days" />
             <YesNoButton field="rabiesVaccine" questionKey="q_rabiesVaccine" deferralKey="deferral_12months" />
