@@ -153,11 +153,11 @@ exports.getComprehensiveProfile = asyncHandler(async (req, res) => {
     totalDonations: 0
   };
 
-  // Check if user is a donor
-  if (user.role === 'donor') {
-    const donor = await Donor.findOne({ userId: user._id });
-    if (donor) {
-      profileData.isDonor = true;
+  // Check if user exists in Donor collection (regardless of role)
+  const donor = await Donor.findOne({ userId: user._id });
+  if (donor) {
+    // User is a donor if they have a donor profile
+    profileData.isDonor = true;
       profileData.donorInfo = {
         bloodGroup: donor.bloodGroup,
         availability: donor.availability,
