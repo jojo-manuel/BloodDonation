@@ -133,6 +133,32 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // User Settings/Preferences
+  settings: {
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      push: { type: Boolean, default: true },
+      donationReminders: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: false },
+    },
+    security: {
+      twoFactorAuth: { type: Boolean, default: false },
+    },
+    appearance: {
+      darkMode: { type: Boolean, default: false },
+      language: { type: String, default: 'en', enum: ['en', 'hi', 'es', 'fr'] },
+    },
+    privacy: {
+      profileVisibility: { type: String, default: 'public', enum: ['public', 'private', 'friends'] },
+      showEmail: { type: Boolean, default: false },
+      showPhone: { type: Boolean, default: false },
+    },
+    regional: {
+      timezone: { type: String, default: 'Asia/Kolkata' },
+      dateFormat: { type: String, default: 'DD/MM/YYYY', enum: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'] },
+    },
+  },
 }, { timestamps: true });
 
 // Pre-save hook to hash password before saving
