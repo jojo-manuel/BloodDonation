@@ -273,13 +273,13 @@ export default function BloodBankRegister() {
             disabled={loading}
             className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-amber-500 px-5 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-[0.99] disabled:opacity-50"
           >
-            {loading ? "⏳ Processing..." : (isRegister ? '🏥 Register Blood Bank' : '🔄 Update Details')}
+            {loading ? "⏳ Processing..." : '🏥 Register Blood Bank'}
           </button>
         </div>
 
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            {isRegister ? 'By registering, you agree to our terms and conditions for blood bank operations.' : 'Update your details to keep your information current.'}
+            By registering, you agree to our terms and conditions for blood bank operations.
           </p>
           <div className="mt-2">
             <Link to="/" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
