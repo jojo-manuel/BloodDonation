@@ -307,7 +307,7 @@ export default function UserProfile() {
 
         {/* Edit Profile Form */}
         {editMode && (
-          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">✏️ Edit Profile</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
