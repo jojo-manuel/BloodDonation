@@ -109,6 +109,8 @@ export default function BloodBankDashboard() {
     } else if (activeTab === 'donors') {
       fetchDonors();
       fetchVisitedDonors(); // Also fetch visited donors with history
+    } else if (activeTab === 'reviews') {
+      fetchReviews(); // Fetch reviews when reviews tab is active
     }
   }, [activeTab]);
 
