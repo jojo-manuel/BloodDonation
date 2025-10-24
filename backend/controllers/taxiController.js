@@ -76,7 +76,7 @@ exports.calculateFare = asyncHandler(async (req, res) => {
     });
   }
   
-  // Fetch donation request with populated data
+  // Fetch donation request with populated data including booking
   const donationRequest = await DonationRequest.findById(donationRequestId)
     .populate({
       path: 'donorId',
@@ -85,7 +85,8 @@ exports.calculateFare = asyncHandler(async (req, res) => {
         select: 'name email phone'
       }
     })
-    .populate('bloodBankId', 'name address');
+    .populate('bloodBankId', 'name address')
+    .populate('bookingId', 'date time'); // Populate the actual booked slot
   
   if (!donationRequest) {
     return res.status(404).json({
