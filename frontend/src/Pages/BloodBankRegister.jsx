@@ -126,25 +126,6 @@ export default function BloodBankRegister() {
     setLoading(false);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const validationErrors = validateForm();
-    if (validationErrors.length > 0) {
-      alert("❌ Validation Errors:\n" + validationErrors.join("\n"));
-      setLoading(false);
-      return;
-    }
-
-    try {
-      await submitBloodBankDetails(userId);
-    } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
-    }
-    setLoading(false);
-  };
-
   const submitBloodBankDetails = async (userId) => {
     const res = await api.post("/bloodbank/submit-details", {
       userId,
@@ -156,13 +137,8 @@ export default function BloodBankRegister() {
     });
 
     if (res.data.success) {
-      if (isRegister) {
-        alert("✅ Blood bank registration submitted for approval!");
-        navigate("/bloodbank-pending-approval");
-      } else {
-        alert("✅ Blood bank details updated successfully!");
-        navigate("/bloodbank/dashboard");
-      }
+      alert("✅ Blood bank registration submitted for approval!");
+      navigate("/bloodbank-pending-approval");
     } else {
       alert(res.data.message || "Submission failed");
     }
