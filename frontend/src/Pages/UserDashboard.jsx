@@ -5,6 +5,7 @@ import Layout from '../components/Layout';
 import ReviewTab from '../components/ReviewTab';
 import TaxiBookingModal from '../components/TaxiBookingModal';
 import CitySearchDropdown from '../components/CitySearchDropdown';
+import MedicalConsentForm from '../components/MedicalConsentForm';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
@@ -568,6 +569,8 @@ export default function UserDashboard() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [showConsentForm, setShowConsentForm] = useState(false); // Show medical consent form
+  const [consentData, setConsentData] = useState(null); // Stored consent form data
   const [requestModal, setRequestModal] = useState(null); // For enhanced request modal
   const [patients, setPatients] = useState([]); // Available patients
   const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
