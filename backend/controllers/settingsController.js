@@ -268,5 +268,10 @@ exports.updateSettingCategory = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = exports;
+module.exports = {
+  getSettings: exports.getSettings,
+  updateSettings: exports.updateSettings,
+  resetSettings: exports.resetSettings,
+  updateSettingCategory: exports.updateSettingCategory
+};
 
