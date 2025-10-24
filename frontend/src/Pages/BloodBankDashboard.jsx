@@ -2271,21 +2271,31 @@ export default function BloodBankDashboard() {
                     </div>
 
                     {/* Completed Bookings */}
-                    <button
-                      onClick={() => downloadBookingsCSV('completed')}
-                      className="w-full p-4 rounded-xl border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/40 dark:hover:to-cyan-900/40 transition flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="border-2 border-blue-300 dark:border-blue-700 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <span className="text-3xl">✅</span>
-                        <div className="text-left">
+                        <div className="text-left flex-1">
                           <p className="font-bold text-gray-900 dark:text-white">Completed Donations</p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             Only successfully completed donations ({allTokens.filter(b => b.status === 'completed').length} booking{allTokens.filter(b => b.status === 'completed').length !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => downloadBookingsCSV('completed')}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📄 CSV
+                        </button>
+                        <button
+                          onClick={() => downloadBookingsPDF('completed')}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
+                          📕 PDF
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Waiting Today */}
                     <button
