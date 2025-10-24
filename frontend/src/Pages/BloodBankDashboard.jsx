@@ -1710,6 +1710,147 @@ export default function BloodBankDashboard() {
             )}
           </div>
         )}
+
+        {/* Reviews Tab */}
+        {activeTab === 'reviews' && (
+          <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <div className="mb-6 text-center">
+              <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                ⭐ Reviews & Ratings
+              </h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                See what people are saying about {bloodBankDetails?.name || 'your blood bank'}
+              </p>
+            </div>
+
+            {/* Review Statistics */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 rounded-2xl border-2 border-yellow-200 dark:border-yellow-700 text-center">
+                <div className="text-5xl font-bold text-yellow-600 dark:text-yellow-400">
+                  {reviewStats.averageRating.toFixed(1)}
+                </div>
+                <div className="text-yellow-700 dark:text-yellow-300 font-semibold mt-2">
+                  Average Rating
+                </div>
+                <div className="flex justify-center mt-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      className={`text-2xl ${
+                        star <= Math.round(reviewStats.averageRating)
+                          ? 'text-yellow-500'
+                          : 'text-gray-300 dark:text-gray-600'
+                      }`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-700 text-center">
+                <div className="text-5xl font-bold text-blue-600 dark:text-blue-400">
+                  {reviewStats.totalReviews}
+                </div>
+                <div className="text-blue-700 dark:text-blue-300 font-semibold mt-2">
+                  Total Reviews
+                </div>
+                <div className="text-sm text-blue-600 dark:text-blue-400 mt-2">
+                  From satisfied users
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-700 text-center">
+                <div className="text-5xl font-bold text-green-600 dark:text-green-400">
+                  {reviewStats.totalReviews > 0 ? '✓' : '−'}
+                </div>
+                <div className="text-green-700 dark:text-green-300 font-semibold mt-2">
+                  Status
+                </div>
+                <div className="text-sm text-green-600 dark:text-green-400 mt-2">
+                  {reviewStats.totalReviews > 0 ? 'Reviews Available' : 'No Reviews Yet'}
+                </div>
+              </div>
+            </div>
+
+            {/* Loading State */}
+            {loadingReviews && (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading reviews...</p>
+              </div>
+            )}
+
+            {/* Reviews List */}
+            {!loadingReviews && reviews.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  📝 What people are saying
+                </h3>
+                {reviews.map((review) => (
+                  <div
+                    key={review._id}
+                    className="bg-white/50 dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white">
+                          {review.reviewerId?.name || review.reviewerId?.username || 'Anonymous User'}
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(review.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 rounded-full">
+                        <span className="text-yellow-500 text-lg">★</span>
+                        <span className="font-bold text-yellow-700 dark:text-yellow-400">
+                          {review.rating}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {review.comment}
+                    </p>
+
+                    {/* Star Rating Display */}
+                    <div className="flex mt-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          className={`text-xl ${
+                            star <= review.rating
+                              ? 'text-yellow-500'
+                              : 'text-gray-300 dark:text-gray-600'
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No Reviews State */}
+            {!loadingReviews && reviews.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">⭐</div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  No Reviews Yet
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  You haven't received any reviews yet. Keep providing excellent service!
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reschedule Modal */}
