@@ -36,6 +36,7 @@ api.interceptors.request.use((config) => {
 
 let isRefreshing = false;
 let queue = [];
+let isRedirecting = false; // Prevent multiple redirects
 
 function onRefreshed(token) {
   queue.forEach((cb) => cb(token));
@@ -47,47 +48,86 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+    
+    // If we're already redirecting to login, don't process any more errors
+    if (isRedirecting) {
+      return Promise.reject(new Error('Redirecting to login'));
+    }
+    
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
+      
+      // Check if we have a refresh token
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      // If no refresh token, clear storage and redirect immediately
+      if (!refreshToken) {
+        if (!isRedirecting && !window.location.pathname.includes('/login')) {
+          isRedirecting = true;
+          localStorage.clear();
+          alert('⚠️ Your session has expired. Please log in again.');
+          window.location.href = '/login';
+        }
+        return Promise.reject(new Error('No refresh token'));
+      }
+      
       try {
         if (!isRefreshing) {
           isRefreshing = true;
-          const refreshToken = localStorage.getItem('refreshToken');
           const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
           const newAccess = data?.data?.accessToken;
           const newRefresh = data?.data?.refreshToken;
-          if (newAccess) localStorage.setItem('accessToken', newAccess);
-          if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
-          isRefreshing = false;
-          onRefreshed(newAccess);
+          
+          if (newAccess) {
+            localStorage.setItem('accessToken', newAccess);
+            if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
+            isRefreshing = false;
+            onRefreshed(newAccess);
+            
+            // Retry with updated token
+            original.headers.Authorization = `Bearer ${newAccess}`;
+            return api(original);
+          } else {
+            throw new Error('No access token received');
+          }
         } else {
-          // If a refresh is already in progress, queue the request until it's done
-          return new Promise((resolve) => {
+          // If a refresh is already in progress, queue the request
+          return new Promise((resolve, reject) => {
             queue.push((token) => {
-              original.headers.Authorization = `Bearer ${token}`;
-              resolve(api(original));
+              if (token) {
+                original.headers.Authorization = `Bearer ${token}`;
+                resolve(api(original));
+              } else {
+                reject(new Error('Token refresh failed'));
+              }
             });
           });
         }
-        // Retry with updated token
-        original.headers.Authorization = `Bearer ${localStorage.getItem('accessToken')}`;
-        return api(original);
       } catch (e) {
         isRefreshing = false;
-        // Clear all auth data
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('username');
+        queue = []; // Clear queue
         
-        // Show user-friendly message
-        const reason = e.response?.status === 403 
-          ? 'Your account has been blocked or suspended.' 
-          : 'Your session has expired. Please log in again.';
-        
-        // Redirect to login with message
-        alert(`⚠️ ${reason}`);
-        window.location.href = '/login';
+        // Only show alert and redirect once
+        if (!isRedirecting && !window.location.pathname.includes('/login')) {
+          isRedirecting = true;
+          
+          // Clear all auth data
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('username');
+          
+          // Show user-friendly message
+          const reason = e.response?.status === 403 
+            ? 'Your account has been blocked or suspended.' 
+            : 'Your session has expired. Please log in again.';
+          
+          // Redirect to login with message
+          alert(`⚠️ ${reason}`);
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 100);
+        }
         
         // Prevent further processing
         return Promise.reject(new Error('Session expired'));
