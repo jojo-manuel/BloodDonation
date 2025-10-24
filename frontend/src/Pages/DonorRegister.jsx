@@ -39,7 +39,6 @@ function Navbar() {
 
 export default function DonorRegister() {
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
   const [isDonor, setIsDonor] = useState(true);
   const [isAlreadyDonor, setIsAlreadyDonor] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,7 +67,11 @@ export default function DonorRegister() {
     contactPreference: "phone",
   });
 
-  const toggleTheme = () => setIsDark((v) => !v);
+  // Always use dark mode
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }, []);
 
   useEffect(() => {
     const fetchUserAndDonorData = async () => {
