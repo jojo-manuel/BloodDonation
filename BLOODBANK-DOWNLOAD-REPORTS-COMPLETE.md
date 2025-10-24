@@ -8,6 +8,25 @@ Added comprehensive download functionality to export booking data in **CSV and P
 
 ---
 
+## 📥 Download Formats
+
+### 📄 CSV (Comma-Separated Values)
+- Opens in Excel, Google Sheets
+- Perfect for data analysis
+- Create charts and graphs
+- Filter and sort data
+- Import into other systems
+
+### 📕 PDF (Portable Document Format)
+- Professional formatted reports
+- Ready to print
+- Blood bank branded
+- Auto-pagination
+- Page numbers included
+- Universal viewing (any device)
+
+---
+
 ## 📥 Download Options
 
 ### 1. 📚 **All Bookings**
