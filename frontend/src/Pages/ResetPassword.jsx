@@ -126,4 +126,7 @@ export default function ResetPassword() {
             <Link to="/login" className="text-sm text-gray-600 transition hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">← Back to Login</Link>
           </div>
         </form>
-      </main
+      </main>
+    </div>
+  );
+}
