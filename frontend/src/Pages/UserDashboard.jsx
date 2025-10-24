@@ -2392,6 +2392,15 @@ export default function UserDashboard() {
         )}
       </div>
 
+      {/* Medical Consent Form */}
+      {showConsentForm && bookingModal && (
+        <MedicalConsentForm
+          onConsent={proceedWithBooking}
+          onCancel={handleConsentCancel}
+          donorName={bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'Donor'}
+        />
+      )}
+
       {/* Enhanced Request Modal */}
       {requestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
