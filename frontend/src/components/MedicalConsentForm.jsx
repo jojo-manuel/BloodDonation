@@ -312,16 +312,23 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <YesNoButton field="animalBite" questionKey="q_animalBite" deferralKey="deferral_12months" />
           </div>
 
-          {/* For Women Only */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-              <span className="text-2xl">👩</span> {t('forWomenOnly')}
-            </h3>
-            <YesNoButton field="pregnant" questionKey="q_pregnant" deferralKey="deferral_12months" />
-            <YesNoButton field="lactating" questionKey="q_lactating" deferralKey="deferral_12months" />
-            <YesNoButton field="delivery" questionKey="q_delivery" deferralKey="deferral_12months" />
-            <YesNoButton field="abortion" questionKey="q_abortion" deferralKey="deferral_6months" />
-          </div>
+          {/* For Women Only - Conditional */}
+          {gender === 'female' && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-pink-600 dark:text-pink-400 mb-3 flex items-center gap-2">
+                <span className="text-2xl">👩</span> {t('forWomenOnly')}
+              </h3>
+              <div className="bg-pink-50 dark:bg-pink-900/10 border border-pink-200 dark:border-pink-800 rounded-lg p-2 mb-3">
+                <p className="text-xs text-pink-700 dark:text-pink-300">
+                  ⚠️ All questions in this section MUST be answered <strong className="text-red-600">NO</strong>
+                </p>
+              </div>
+              <YesNoButton field="pregnant" questionKey="q_pregnant" deferralKey="deferral_12months" />
+              <YesNoButton field="lactating" questionKey="q_lactating" deferralKey="deferral_12months" />
+              <YesNoButton field="delivery" questionKey="q_delivery" deferralKey="deferral_12months" />
+              <YesNoButton field="abortion" questionKey="q_abortion" deferralKey="deferral_6months" />
+            </div>
+          )}
 
           {/* Recent Diseases */}
           <div className="mb-6">
