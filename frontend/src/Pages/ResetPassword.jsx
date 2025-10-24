@@ -65,7 +65,7 @@ export default function ResetPassword() {
       <div className="pointer-events-none absolute top-32 -right-16 h-80 w-80 rounded-full bg-red-500/30 blur-3xl dark:bg-amber-500/20" />
 
       <header className="relative z-10">
-        <Navbar isDark={isDark} toggleTheme={toggleTheme} />
+        <Navbar />
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-center px-4 pb-16 pt-4 md:px-6 md:pb-24 md:pt-8">
