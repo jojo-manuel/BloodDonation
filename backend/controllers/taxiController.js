@@ -365,5 +365,252 @@ exports.cancelBooking = asyncHandler(async (req, res) => {
   });
 });
 
+// =============================================
+// TAXI PARTNER API ENDPOINTS
+// For third-party taxi service providers
+// =============================================
+
+/**
+ * Get all pending/confirmed bookings for taxi partners
+ * GET /api/taxi/partner/available-bookings
+ * Requires: API Key authentication (partner-specific)
+ */
+exports.getAvailableBookings = asyncHandler(async (req, res) => {
+  const bookings = await TaxiBooking.find({
+    status: { $in: ['pending', 'confirmed'] },
+    paymentStatus: 'paid'
+  })
+    .populate('donorId', 'name contactNumber')
+    .populate('bloodBankId', 'name address contactNumber')
+    .populate('donationRequestId', 'bloodGroup requestedDate requestedTime')
+    .sort({ bookingDate: 1, bookingTime: 1 });
+  
+  // Format response for taxi partners
+  const formattedBookings = bookings.map(booking => ({
+    bookingId: booking._id,
+    pickupAddress: booking.pickupAddress,
+    pickupLocation: {
+      latitude: booking.pickupLocation?.latitude,
+      longitude: booking.pickupLocation?.longitude
+    },
+    dropAddress: booking.dropAddress,
+    dropLocation: {
+      latitude: booking.dropLocation?.latitude,
+      longitude: booking.dropLocation?.longitude
+    },
+    passengerName: booking.donorName,
+    passengerPhone: booking.donorPhone,
+    scheduledDate: booking.bookingDate,
+    scheduledTime: booking.bookingTime,
+    distanceKm: booking.distanceKm,
+    fare: booking.totalFare,
+    status: booking.status,
+    specialInstructions: booking.notes,
+    bloodBankName: booking.bloodBankId?.name,
+    bloodBankPhone: booking.bloodBankId?.contactNumber,
+    donationType: 'Blood Donation',
+    priority: 'high'
+  }));
+  
+  res.json({
+    success: true,
+    message: 'Available bookings retrieved successfully',
+    data: formattedBookings,
+    count: formattedBookings.length
+  });
+});
+
+/**
+ * Assign driver to booking
+ * PUT /api/taxi/partner/assign-driver/:bookingId
+ * Body: { driverName, driverPhone, vehicleNumber, vehicleType }
+ */
+exports.assignDriver = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const { driverName, driverPhone, vehicleNumber, vehicleType } = req.body;
+  
+  if (!driverName || !driverPhone || !vehicleNumber) {
+    return res.status(400).json({
+      success: false,
+      message: 'Driver name, phone, and vehicle number are required'
+    });
+  }
+  
+  const booking = await TaxiBooking.findById(bookingId);
+  
+  if (!booking) {
+    return res.status(404).json({
+      success: false,
+      message: 'Booking not found'
+    });
+  }
+  
+  if (booking.status === 'cancelled' || booking.status === 'completed') {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot assign driver to this booking'
+    });
+  }
+  
+  booking.taxiDetails = {
+    driverName,
+    driverPhone,
+    vehicleNumber,
+    vehicleType: vehicleType || 'Sedan'
+  };
+  booking.status = 'assigned';
+  await booking.save();
+  
+  res.json({
+    success: true,
+    message: 'Driver assigned successfully',
+    data: {
+      bookingId: booking._id,
+      status: booking.status,
+      taxiDetails: booking.taxiDetails
+    }
+  });
+});
+
+/**
+ * Update booking status
+ * PUT /api/taxi/partner/update-status/:bookingId
+ * Body: { status, notes }
+ * Valid statuses: 'assigned', 'in_transit', 'completed', 'cancelled'
+ */
+exports.updateBookingStatus = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const { status, notes } = req.body;
+  
+  const validStatuses = ['assigned', 'in_transit', 'completed', 'cancelled'];
+  
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Valid status is required',
+      validStatuses
+    });
+  }
+  
+  const booking = await TaxiBooking.findById(bookingId);
+  
+  if (!booking) {
+    return res.status(404).json({
+      success: false,
+      message: 'Booking not found'
+    });
+  }
+  
+  booking.status = status;
+  if (notes) {
+    booking.notes = booking.notes ? `${booking.notes}\n${notes}` : notes;
+  }
+  
+  await booking.save();
+  
+  res.json({
+    success: true,
+    message: 'Booking status updated successfully',
+    data: {
+      bookingId: booking._id,
+      status: booking.status,
+      updatedAt: new Date()
+    }
+  });
+});
+
+/**
+ * Get specific booking details
+ * GET /api/taxi/partner/booking/:bookingId
+ */
+exports.getBookingDetails = asyncHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  
+  const booking = await TaxiBooking.findById(bookingId)
+    .populate('donorId', 'name contactNumber')
+    .populate('bloodBankId', 'name address contactNumber')
+    .populate('donationRequestId', 'bloodGroup requestedDate requestedTime');
+  
+  if (!booking) {
+    return res.status(404).json({
+      success: false,
+      message: 'Booking not found'
+    });
+  }
+  
+  const formattedBooking = {
+    bookingId: booking._id,
+    pickupAddress: booking.pickupAddress,
+    pickupLocation: booking.pickupLocation,
+    dropAddress: booking.dropAddress,
+    dropLocation: booking.dropLocation,
+    passengerName: booking.donorName,
+    passengerPhone: booking.donorPhone,
+    scheduledDate: booking.bookingDate,
+    scheduledTime: booking.bookingTime,
+    distanceKm: booking.distanceKm,
+    fare: booking.totalFare,
+    status: booking.status,
+    paymentStatus: booking.paymentStatus,
+    specialInstructions: booking.notes,
+    taxiDetails: booking.taxiDetails,
+    bloodBankName: booking.bloodBankId?.name,
+    bloodBankPhone: booking.bloodBankId?.contactNumber,
+    donationType: 'Blood Donation',
+    createdAt: booking.createdAt
+  };
+  
+  res.json({
+    success: true,
+    data: formattedBooking
+  });
+});
+
+/**
+ * Get bookings assigned to a specific driver
+ * GET /api/taxi/partner/driver-bookings
+ * Query params: driverPhone
+ */
+exports.getDriverBookings = asyncHandler(async (req, res) => {
+  const { driverPhone } = req.query;
+  
+  if (!driverPhone) {
+    return res.status(400).json({
+      success: false,
+      message: 'Driver phone number is required'
+    });
+  }
+  
+  const bookings = await TaxiBooking.find({
+    'taxiDetails.driverPhone': driverPhone,
+    status: { $in: ['assigned', 'in_transit'] }
+  })
+    .populate('donorId', 'name contactNumber')
+    .populate('bloodBankId', 'name address')
+    .sort({ bookingDate: 1, bookingTime: 1 });
+  
+  const formattedBookings = bookings.map(booking => ({
+    bookingId: booking._id,
+    pickupAddress: booking.pickupAddress,
+    pickupLocation: booking.pickupLocation,
+    dropAddress: booking.dropAddress,
+    dropLocation: booking.dropLocation,
+    passengerName: booking.donorName,
+    passengerPhone: booking.donorPhone,
+    scheduledDate: booking.bookingDate,
+    scheduledTime: booking.bookingTime,
+    distanceKm: booking.distanceKm,
+    fare: booking.totalFare,
+    status: booking.status,
+    specialInstructions: booking.notes
+  }));
+  
+  res.json({
+    success: true,
+    data: formattedBookings,
+    count: formattedBookings.length
+  });
+});
+
 module.exports = exports;
 
