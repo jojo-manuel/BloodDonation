@@ -22,6 +22,9 @@ export default function BloodBankDashboard() {
   const [visitedDonors, setVisitedDonors] = useState([]); // Donors who visited
   const [showVisitHistory, setShowVisitHistory] = useState(false); // Toggle visit history view
   const [expandedDonor, setExpandedDonor] = useState(null); // Expanded donor for visit details
+  const [reviews, setReviews] = useState([]); // Reviews for this blood bank
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
+  const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
   const [formData, setFormData] = useState({
     patientName: "",
     address: {
