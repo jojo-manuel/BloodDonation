@@ -290,7 +290,7 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Pickup Date * (Auto-populated from donation date)
+                      Pickup Date * {fareData.isBookedSlot ? '(From confirmed slot)' : '(From requested date)'}
                     </label>
                     <input
                       type="date"
@@ -303,7 +303,7 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Pickup Time * (Suggested based on travel time)
+                      Pickup Time * (Auto-calculated at 50 km/h)
                     </label>
                     <input
                       type="time"
@@ -314,7 +314,7 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                     />
                     {fareData.suggestedPickupTime && (
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        💡 Suggested: {fareData.suggestedPickupTime} (includes {fareData.estimatedTravelMinutes} min travel + 15 min buffer)
+                        💡 Suggested: {fareData.suggestedPickupTime} (Travel: {fareData.estimatedTravelMinutes} min + Buffer: 15 min)
                       </p>
                     )}
                   </div>
