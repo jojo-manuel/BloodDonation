@@ -86,11 +86,16 @@ export default function AuthCallback() {
   }, [searchParams, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-        <h2 className="text-xl font-semibold text-white mb-2">Completing Sign In...</h2>
-        <p className="text-gray-300">Please wait while we set up your account.</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#1a1333] via-[#2c1a3a] to-[#2c1a3a] dark:from-slate-900 dark:via-neutral-900 dark:to-black">
+      <div className="absolute top-8 right-8">
+        <UserAvatar />
+      </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-white mb-2">Completing Sign In...</h2>
+          <p className="text-gray-300">Please wait while we set up your account.</p>
+        </div>
       </div>
     </div>
   );
