@@ -690,6 +690,148 @@ export default function UserDashboard() {
     }
   }, [patients, patientSearchBloodBank, patientSearchMRID]);
 
+  // Generate booking confirmation PDF with QR code
+  const generateBookingPDF = async (bookingData) => {
+    try {
+      const doc = new jsPDF();
+      
+      // Header - Booking Confirmation
+      doc.setFillColor(220, 38, 38); // Red background
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255); // White text
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('BOOKING CONFIRMATION', 105, 18, { align: 'center' });
+      
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'normal');
+      doc.text('Blood Donation Appointment', 105, 28, { align: 'center' });
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Token Number (Large and prominent)
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Token #${bookingData.tokenNumber || 'PENDING'}`, 105, 52, { align: 'center' });
+      
+      // Generate QR Code
+      const qrData = JSON.stringify({
+        token: bookingData.tokenNumber || 'PENDING',
+        donor: bookingData.donorName,
+        bloodGroup: bookingData.bloodGroup,
+        date: bookingData.date,
+        time: bookingData.time,
+        bloodBank: bookingData.bloodBankName,
+        patientMRID: bookingData.patientMRID
+      });
+      
+      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      
+      // Add QR Code (centered)
+      doc.addImage(qrCodeDataUrl, 'PNG', 55, 60, 100, 100);
+      
+      // Booking Details Section
+      let yPos = 170;
+      
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text('Appointment Details:', 20, yPos);
+      yPos += 10;
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      
+      // Two column layout
+      const leftX = 20;
+      const rightX = 110;
+      
+      // Left column
+      doc.setFont(undefined, 'bold');
+      doc.text('Date & Time:', leftX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${new Date(bookingData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, leftX, yPos + 5);
+      doc.text(`Time: ${bookingData.time}`, leftX, yPos + 10);
+      
+      // Right column
+      doc.setFont(undefined, 'bold');
+      doc.text('Blood Group:', rightX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(220, 38, 38);
+      doc.setFontSize(16);
+      doc.text(bookingData.bloodGroup || 'N/A', rightX, yPos + 5);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      
+      yPos += 20;
+      
+      // Donor Details
+      doc.setFont(undefined, 'bold');
+      doc.text('Donor Information:', leftX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Name: ${bookingData.donorName}`, leftX, yPos + 5);
+      doc.text(`Phone: ${bookingData.donorPhone || 'N/A'}`, leftX, yPos + 10);
+      
+      // Patient Details
+      doc.setFont(undefined, 'bold');
+      doc.text('Patient Information:', rightX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Name: ${bookingData.patientName || 'N/A'}`, rightX, yPos + 5);
+      doc.text(`MRID: ${bookingData.patientMRID || 'N/A'}`, rightX, yPos + 10);
+      
+      yPos += 20;
+      
+      // Blood Bank Details
+      doc.setFont(undefined, 'bold');
+      doc.text('Blood Bank:', leftX, yPos);
+      doc.setFont(undefined, 'normal');
+      doc.text(bookingData.bloodBankName || 'N/A', leftX, yPos + 5);
+      doc.text(bookingData.bloodBankAddress || '', leftX, yPos + 10);
+      doc.text(`Phone: ${bookingData.bloodBankPhone || 'N/A'}`, leftX, yPos + 15);
+      
+      yPos += 25;
+      
+      // Important Instructions
+      doc.setFillColor(255, 248, 220);
+      doc.rect(15, yPos, 180, 25, 'F');
+      doc.setDrawColor(255, 193, 7);
+      doc.rect(15, yPos, 180, 25, 'S');
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.text('Important Instructions:', 20, yPos + 6);
+      doc.setFont(undefined, 'normal');
+      doc.text('• Please arrive 15 minutes before your scheduled time', 20, yPos + 11);
+      doc.text('• Bring a valid ID and this confirmation', 20, yPos + 15);
+      doc.text('• Ensure you have eaten and are well hydrated', 20, yPos + 19);
+      
+      // Footer
+      yPos += 30;
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Generated: ' + new Date().toLocaleString(), 105, yPos, { align: 'center' });
+      doc.text('Thank you for saving lives! 💉', 105, yPos + 5, { align: 'center' });
+      
+      // Save PDF
+      const fileName = `booking_confirmation_${bookingData.tokenNumber || Date.now()}.pdf`;
+      doc.save(fileName);
+      
+      return true;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Your booking is still confirmed!');
+      return false;
+    }
+  };
+
   const handleBookSlot = async (request) => {
     // Open booking modal with request details
     setBookingModal(request);
