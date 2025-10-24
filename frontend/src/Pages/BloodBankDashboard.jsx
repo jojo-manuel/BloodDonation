@@ -650,6 +650,16 @@ export default function BloodBankDashboard() {
           >
             🖥️ Frontdesk
           </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`px-6 py-2 rounded-full font-semibold transition ${
+              activeTab === 'reviews'
+                ? 'bg-pink-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white'
+            }`}
+          >
+            ⭐ Reviews
+          </button>
         </div>
       </div>
 
