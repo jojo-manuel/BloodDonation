@@ -48,6 +48,17 @@ async function main() {
     console.log('Waiting for authentication...');
     await driver.sleep(3000);
     
+    // Handle any alerts
+    try {
+      const alert = await driver.switchTo().alert();
+      const alertText = await alert.getText();
+      console.log('Alert detected: ' + alertText);
+      await alert.accept();
+      console.log('Alert dismissed');
+    } catch (e) {
+      // No alert present, continue
+    }
+    
     // Get current URL
     const currentUrl = await driver.getCurrentUrl();
     const expectedUrl = "http://localhost:5173/login";
