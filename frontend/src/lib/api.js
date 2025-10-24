@@ -74,12 +74,23 @@ api.interceptors.response.use(
         return api(original);
       } catch (e) {
         isRefreshing = false;
+        // Clear all auth data
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        // If refresh fails due to user being blocked/suspended, redirect to login
-        if (e.response?.status === 403) {
-          window.location.href = '/login';
-        }
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('username');
+        
+        // Show user-friendly message
+        const reason = e.response?.status === 403 
+          ? 'Your account has been blocked or suspended.' 
+          : 'Your session has expired. Please log in again.';
+        
+        // Redirect to login with message
+        alert(`⚠️ ${reason}`);
+        window.location.href = '/login';
+        
+        // Prevent further processing
+        return Promise.reject(new Error('Session expired'));
       }
     }
     return Promise.reject(error);
