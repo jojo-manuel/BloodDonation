@@ -44,6 +44,14 @@ export default function UserDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('desc');
   const [requestType, setRequestType] = useState('sent'); // 'sent' or 'received'
+  
+  // Additional filters
+  const [filterMRID, setFilterMRID] = useState('');
+  const [filterPatientName, setFilterPatientName] = useState('');
+  const [filterDonorName, setFilterDonorName] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterBloodGroup, setFilterBloodGroup] = useState('all');
+  const [filterBloodBankName, setFilterBloodBankName] = useState('');
   const [profileData, setProfileData] = useState({});
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
