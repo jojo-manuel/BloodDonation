@@ -9,7 +9,7 @@ const asyncHandler = require('../Middleware/asyncHandler');
 // Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_RP6aD2gNdAuoRE',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'YOUR_KEY_SECRET'
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'RyTIKYQ5yobfYgNaDrvErQKN'
 });
 
 /**
