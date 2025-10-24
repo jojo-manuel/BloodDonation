@@ -86,19 +86,43 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
       return false;
     }
 
-    // Check permanent deferral conditions (must be NO)
+    // Check basic eligibility - MUST BE YES
+    if (!formData.ageEligible) {
+      alert('❌ You must be between 18-65 years of age to donate blood.\n\nAge requirement: YES is required');
+      return false;
+    }
+    if (!formData.weightEligible) {
+      alert('❌ You must weigh more than 45kg to donate blood.\n\nWeight requirement: YES is required');
+      return false;
+    }
+    if (!formData.feelingWell) {
+      alert('❌ You must be feeling healthy and well today to donate blood.\n\nCurrent health: YES is required');
+      return false;
+    }
+
+    // Check consent - MUST BE YES
+    if (!formData.informationTruthful) {
+      alert('❌ You must confirm that all information provided is truthful.\n\nTruthful information: YES is required');
+      return false;
+    }
+    if (!formData.consentToDonate) {
+      alert('❌ You must consent to donate blood and undergo medical examination.\n\nConsent to donate: YES is required');
+      return false;
+    }
+
+    // Check permanent deferral conditions - MUST BE NO
     const permanentDeferrals = [
       'heartDisease', 'epilepsy', 'bloodDisorder', 'chronicIllness',
       'organTransplant', 'hiv', 'hepatitis'
     ];
     for (let condition of permanentDeferrals) {
       if (formData[condition] === true) {
-        alert(t('notEligiblePermanent'));
+        alert('❌ PERMANENT DEFERRAL\n\nYou are not eligible to donate blood due to serious medical conditions.\n\nAll serious medical condition questions must be answered NO.\n\nPlease consult with medical staff for more information.');
         return false;
       }
     }
 
-    // Check temporary deferral conditions (must be NO)
+    // Check temporary deferral conditions - MUST BE NO
     const temporaryDeferrals = [
       'toothExtraction', 'earPiercing', 'tattoo', 'injection', 'surgery',
       'animalBite', 'pregnant', 'lactating', 'delivery', 'abortion',
@@ -108,23 +132,12 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
     ];
     for (let condition of temporaryDeferrals) {
       if (formData[condition] === true) {
-        alert(t('notEligibleTemporary'));
+        alert('❌ TEMPORARY DEFERRAL\n\nYou may be temporarily deferred from donating blood.\n\nAll medical history questions (procedures, diseases, medications, current symptoms) must be answered NO.\n\nPlease consult with the blood bank medical officer for clearance and deferral period.');
         return false;
       }
     }
 
-    // Check basic eligibility (must be YES)
-    if (!formData.ageEligible || !formData.weightEligible || !formData.feelingWell) {
-      alert(t('mustMeetCriteria'));
-      return false;
-    }
-
-    // Check consent (must be YES)
-    if (!formData.informationTruthful || !formData.consentToDonate) {
-      alert(t('mustConsent'));
-      return false;
-    }
-
+    // ✅ All checks passed
     return true;
   };
 
@@ -356,4 +369,5 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
 };
 
 export default MedicalConsentForm;
+
 
