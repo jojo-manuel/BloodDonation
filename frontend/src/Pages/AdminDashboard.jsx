@@ -47,6 +47,16 @@ export default function AdminDashboard() {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
+  
+  // Activities state
+  const [activities, setActivities] = useState([]);
+  const [activityUsername, setActivityUsername] = useState("");
+  const [activityAction, setActivityAction] = useState("all");
+  const [activityStartDate, setActivityStartDate] = useState("");
+  const [activityEndDate, setActivityEndDate] = useState("");
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [activityTotalPages, setActivityTotalPages] = useState(0);
 
   // Safely format address objects for display
   const formatAddress = (addr) => {
@@ -84,7 +94,15 @@ export default function AdminDashboard() {
     else if (activeTab === "pendingBloodbanks") fetchPendingBloodbanks();
     else if (activeTab === "patients") fetchPatients();
     else if (activeTab === "requests") fetchRequests();
+    else if (activeTab === "activities") fetchActivities();
   }, [activeTab]);
+
+  // Fetch activities when filters change
+  useEffect(() => {
+    if (activeTab === "activities") {
+      fetchActivities();
+    }
+  }, [activityUsername, activityAction, activityStartDate, activityEndDate, activityPage]);
 
   // Filter donors based on search criteria
   useEffect(() => {
@@ -242,6 +260,40 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchActivities = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      
+      if (activityUsername && activityUsername.trim()) {
+        params.append('username', activityUsername.trim());
+      }
+      if (activityAction && activityAction !== 'all') {
+        params.append('action', activityAction);
+      }
+      if (activityStartDate) {
+        params.append('startDate', activityStartDate);
+      }
+      if (activityEndDate) {
+        params.append('endDate', activityEndDate);
+      }
+      params.append('page', activityPage);
+      params.append('limit', 50);
+
+      const { data } = await api.get(`/admin/activities?${params.toString()}`);
+      if (data.success) {
+        setActivities(data.data);
+        setActivityTotal(data.total);
+        setActivityTotalPages(data.totalPages);
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+      alert('Error fetching activities: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApprove = async (id) => {
     try {
       await api.put(`/admin/bloodbanks/${id}/approve`);
@@ -358,6 +410,14 @@ export default function AdminDashboard() {
           }`}
         >
           Requests
+        </button>
+        <button
+          onClick={() => setActiveTab("activities")}
+          className={`px-6 py-2 rounded-full font-semibold transition ${
+            activeTab === "activities" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+          }`}
+        >
+          📊 Activities
         </button>
       </div>
       </div>
@@ -759,6 +819,195 @@ export default function AdminDashboard() {
               </TableBody>
             </Table>
           </TableContainer>
+        )}
+
+        {activeTab === "activities" && (
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filter Activities</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={activityUsername}
+                    onChange={(e) => {
+                      setActivityUsername(e.target.value);
+                      setActivityPage(1); // Reset to page 1 on filter change
+                    }}
+                    placeholder="Search username..."
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Action
+                  </label>
+                  <select
+                    value={activityAction}
+                    onChange={(e) => {
+                      setActivityAction(e.target.value);
+                      setActivityPage(1);
+                    }}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white"
+                  >
+                    <option value="all">All Actions</option>
+                    <option value="login">Login</option>
+                    <option value="logout">Logout</option>
+                    <option value="booking_created">Booking Created</option>
+                    <option value="booking_updated">Booking Updated</option>
+                    <option value="booking_cancelled">Booking Cancelled</option>
+                    <option value="booking_rescheduled">Booking Rescheduled</option>
+                    <option value="request_created">Request Created</option>
+                    <option value="request_accepted">Request Accepted</option>
+                    <option value="request_rejected">Request Rejected</option>
+                    <option value="user_blocked">User Blocked</option>
+                    <option value="user_unblocked">User Unblocked</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={activityStartDate}
+                    onChange={(e) => {
+                      setActivityStartDate(e.target.value);
+                      setActivityPage(1);
+                    }}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={activityEndDate}
+                    onChange={(e) => {
+                      setActivityEndDate(e.target.value);
+                      setActivityPage(1);
+                    }}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => {
+                    setActivityUsername("");
+                    setActivityAction("all");
+                    setActivityStartDate("");
+                    setActivityEndDate("");
+                    setActivityPage(1);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+                >
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => fetchActivities()}
+                  className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition"
+                >
+                  Apply Filters
+                </button>
+              </div>
+
+              {activityTotal > 0 && (
+                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                  Showing {activities.length} of {activityTotal} activities (Page {activityPage} of {activityTotalPages})
+                </div>
+              )}
+            </div>
+
+            {/* Activities Table */}
+            <TableContainer component={Paper} sx={{ maxHeight: '70vh' }}>
+              <Table stickyHeader aria-label="activities table" sx={{ minWidth: 900 }}>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell>Timestamp</StyledTableCell>
+                    <StyledTableCell>Username</StyledTableCell>
+                    <StyledTableCell>Role</StyledTableCell>
+                    <StyledTableCell>Action</StyledTableCell>
+                    <StyledTableCell>Details</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={5} align="center">Loading activities...</StyledTableCell>
+                    </StyledTableRow>
+                  ) : activities.length === 0 ? (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={5} align="center">No activities found.</StyledTableCell>
+                    </StyledTableRow>
+                  ) : (
+                    activities.map((activity) => (
+                      <StyledTableRow key={activity._id}>
+                        <StyledTableCell>
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          {activity.userId?.username || 'Unknown'}
+                          {activity.userId?.name && (
+                            <div className="text-xs text-gray-500">{activity.userId.name}</div>
+                          )}
+                        </StyledTableCell>
+                        <StyledTableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            activity.role === 'admin' ? 'bg-red-100 text-red-800' :
+                            activity.role === 'bloodbank' ? 'bg-blue-100 text-blue-800' :
+                            activity.role === 'donor' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {activity.role}
+                          </span>
+                        </StyledTableCell>
+                        <StyledTableCell>{activity.action}</StyledTableCell>
+                        <StyledTableCell>
+                          <pre className="text-xs max-w-md overflow-auto">
+                            {JSON.stringify(activity.details, null, 2)}
+                          </pre>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination */}
+            {activityTotalPages > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                <button
+                  onClick={() => setActivityPage(Math.max(1, activityPage - 1))}
+                  disabled={activityPage === 1}
+                  className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Previous
+                </button>
+                <span className="px-4 py-2 text-gray-900 dark:text-white">
+                  Page {activityPage} of {activityTotalPages}
+                </span>
+                <button
+                  onClick={() => setActivityPage(Math.min(activityTotalPages, activityPage + 1))}
+                  disabled={activityPage === activityTotalPages}
+                  className="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </Layout>
