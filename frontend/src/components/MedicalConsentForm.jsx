@@ -254,6 +254,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span className="text-2xl">💉</span> {t('recentMedicalProcedures')}
             </h3>
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-red-700 dark:text-red-300">
+                ⚠️ All questions in this section MUST be answered <strong className="text-red-600">NO</strong>
+              </p>
+            </div>
             <YesNoButton field="toothExtraction" questionKey="q_toothExtraction" deferralKey="deferral_3days" />
             <YesNoButton field="earPiercing" questionKey="q_earPiercing" deferralKey="deferral_6months" />
             <YesNoButton field="tattoo" questionKey="q_tattoo" deferralKey="deferral_12months" />
@@ -323,7 +328,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
               <span className="text-2xl">🌡️</span> {t('currentHealthStatus')}
             </h3>
-            <YesNoButton field="feelingWell" questionKey="q_feelingWell" />
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-red-700 dark:text-red-300">
+                ⚠️ These questions MUST be answered <strong className="text-red-600">NO</strong> to donate
+              </p>
+            </div>
             <YesNoButton field="fever" questionKey="q_fever" />
             <YesNoButton field="fatigue" questionKey="q_fatigue" />
           </div>
@@ -333,6 +342,11 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
               <span className="text-2xl">📋</span> {t('declarationConsent')}
             </h3>
+            <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-2 mb-3">
+              <p className="text-xs text-green-700 dark:text-green-300">
+                ⭐ Final 2 questions MUST be answered <strong className="text-green-600">YES</strong>
+              </p>
+            </div>
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-3">
               <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
                 {t('declarationTitle')}
