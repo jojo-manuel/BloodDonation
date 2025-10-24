@@ -4,6 +4,7 @@ import api from '../lib/api';
 import Layout from '../components/Layout';
 import ReviewTab from '../components/ReviewTab';
 import TaxiBookingModal from '../components/TaxiBookingModal';
+import CitySearchDropdown from '../components/CitySearchDropdown';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
