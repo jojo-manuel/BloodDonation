@@ -187,4 +187,45 @@ export const getReviewableBloodBanks = async () => {
   }
 };
 
+// Settings API functions
+export const getSettings = async () => {
+  try {
+    const response = await api.get('/settings');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    throw error;
+  }
+};
+
+export const updateSettings = async (settingsData) => {
+  try {
+    const response = await api.put('/settings', settingsData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    throw error;
+  }
+};
+
+export const resetSettings = async () => {
+  try {
+    const response = await api.post('/settings/reset');
+    return response.data;
+  } catch (error) {
+    console.error("Error resetting settings:", error);
+    throw error;
+  }
+};
+
+export const updateSettingCategory = async (category, categoryData) => {
+  try {
+    const response = await api.patch(`/settings/${category}`, categoryData);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating ${category} settings:`, error);
+    throw error;
+  }
+};
+
 export default api;
