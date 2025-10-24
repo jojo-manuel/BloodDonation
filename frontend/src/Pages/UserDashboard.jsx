@@ -193,16 +193,61 @@ export default function UserDashboard() {
   };
 
   const filteredRequests = useMemo(() => {
-    const filtered = statusFilter === 'all'
-      ? sentRequests
-      : sentRequests.filter((request) => request.status === statusFilter);
+    let filtered = sentRequests;
 
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((request) => request.status === statusFilter);
+    }
+
+    // Filter by MRID
+    if (filterMRID) {
+      filtered = filtered.filter((request) => 
+        (request.patientId?.mrid || request.patientMRID || '').toLowerCase().includes(filterMRID.toLowerCase())
+      );
+    }
+
+    // Filter by Patient Name
+    if (filterPatientName) {
+      filtered = filtered.filter((request) =>
+        (request.patientId?.name || request.patientUsername || '').toLowerCase().includes(filterPatientName.toLowerCase())
+      );
+    }
+
+    // Filter by Donor Name
+    if (filterDonorName) {
+      filtered = filtered.filter((request) =>
+        (request.receiverId?.username || request.donorId?.userId?.username || request.donorUsername || request.receiverId?.name || '').toLowerCase().includes(filterDonorName.toLowerCase())
+      );
+    }
+
+    // Filter by Date
+    if (filterDate) {
+      filtered = filtered.filter((request) => {
+        const requestDate = request.requestedAt ? new Date(request.requestedAt).toISOString().split('T')[0] : '';
+        return requestDate === filterDate;
+      });
+    }
+
+    // Filter by Blood Group
+    if (filterBloodGroup !== 'all') {
+      filtered = filtered.filter((request) => request.bloodGroup === filterBloodGroup);
+    }
+
+    // Filter by Blood Bank Name
+    if (filterBloodBankName) {
+      filtered = filtered.filter((request) =>
+        (request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || '').toLowerCase().includes(filterBloodBankName.toLowerCase())
+      );
+    }
+
+    // Sort by date
     return filtered.sort((a, b) => {
       const aDate = new Date(a.requestedAt || a.createdAt || 0).getTime();
       const bDate = new Date(b.requestedAt || b.createdAt || 0).getTime();
       return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
     });
-  }, [sentRequests, statusFilter, sortOrder]);
+  }, [sentRequests, statusFilter, sortOrder, filterMRID, filterPatientName, filterDonorName, filterDate, filterBloodGroup, filterBloodBankName]);
 
   const filteredReceivedRequests = useMemo(() => {
     const filtered = statusFilter === 'all'
