@@ -296,34 +296,32 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
           {/* Final Consent */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
-              <span className="text-2xl">📋</span> Declaration & Consent
+              <span className="text-2xl">📋</span> {t('declarationConsent')}
             </h3>
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-3">
               <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                I hereby declare that:
+                {t('declarationTitle')}
               </p>
               <ul className="list-disc list-inside text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                <li>All the information provided above is true and correct to the best of my knowledge</li>
-                <li>I understand that providing false information may endanger the recipient's life</li>
-                <li>I consent to have my blood tested for HIV, Hepatitis B, Hepatitis C, Syphilis (VDRL), and Malaria</li>
-                <li>I agree to donate my blood voluntarily without any payment</li>
-                <li>I understand the blood donation procedure and its minimal risks</li>
+                {translations[language].declarationItems.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
               </ul>
             </div>
             <YesNoButton 
               field="informationTruthful" 
-              label="I confirm that all information provided is truthful and accurate" 
+              questionKey="q_informationTruthful" 
             />
             <YesNoButton 
               field="consentToDonate" 
-              label="I consent to donate blood and undergo medical examination" 
+              questionKey="q_consentToDonate" 
             />
           </div>
 
           {!scrolledToBottom && (
             <div className="sticky bottom-0 bg-gradient-to-t from-white dark:from-gray-800 to-transparent py-3 text-center">
               <p className="text-sm text-gray-500 dark:text-gray-400 animate-bounce">
-                ↓ Scroll down to continue ↓
+                ↓ {t('scrollInstruction')} ↓
               </p>
             </div>
           )}
@@ -337,18 +335,18 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
               disabled={!scrolledToBottom}
               className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition"
             >
-              ✓ I Confirm - Proceed to Booking
+              ✓ {t('submitButton')}
             </button>
             <button
               onClick={onCancel}
               className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 font-semibold transition"
             >
-              ✕ Cancel
+              ✕ {t('cancelButton')}
             </button>
           </div>
           {!scrolledToBottom && (
             <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-              Please scroll to the bottom to enable the submit button
+              {t('scrollToEnableButton')}
             </p>
           )}
         </div>
