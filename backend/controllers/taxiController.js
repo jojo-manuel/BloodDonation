@@ -131,6 +131,37 @@ exports.calculateFare = asyncHandler(async (req, res) => {
   // Calculate fare
   const fareDetails = calculateFare(distanceKm);
   
+  // Calculate estimated travel time at 50 km/h
+  const AVERAGE_SPEED_KMH = 50;
+  const estimatedTravelMinutes = Math.ceil((distanceKm / AVERAGE_SPEED_KMH) * 60);
+  
+  // Calculate suggested pickup time
+  let suggestedPickupTime = null;
+  let donationDate = null;
+  let donationTime = null;
+  
+  if (donationRequest.requestedDate && donationRequest.requestedTime) {
+    donationDate = new Date(donationRequest.requestedDate).toISOString().split('T')[0];
+    donationTime = donationRequest.requestedTime;
+    
+    // Parse donation time (assuming format like "14:30")
+    const [hours, minutes] = donationRequest.requestedTime.split(':').map(Number);
+    
+    // Calculate pickup time: donation time - travel time - 15 min buffer
+    const BUFFER_MINUTES = 15;
+    const totalMinutesToSubtract = estimatedTravelMinutes + BUFFER_MINUTES;
+    
+    const donationDateTime = new Date(donationRequest.requestedDate);
+    donationDateTime.setHours(hours, minutes, 0, 0);
+    
+    const pickupDateTime = new Date(donationDateTime.getTime() - (totalMinutesToSubtract * 60 * 1000));
+    
+    // Format suggested pickup time as HH:MM
+    const pickupHours = String(pickupDateTime.getHours()).padStart(2, '0');
+    const pickupMinutes = String(pickupDateTime.getMinutes()).padStart(2, '0');
+    suggestedPickupTime = `${pickupHours}:${pickupMinutes}`;
+  }
+  
   res.json({
     success: true,
     data: {
@@ -141,7 +172,11 @@ exports.calculateFare = asyncHandler(async (req, res) => {
       bloodBankName: bloodBank.name,
       distance: fareDetails,
       pickupLocation: donor.location,
-      dropLocation: bloodBank.location
+      dropLocation: bloodBank.location,
+      estimatedTravelMinutes,
+      donationDate,
+      donationTime,
+      suggestedPickupTime
     }
   });
 });

@@ -26,6 +26,15 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
       
       if (res.data.success) {
         setFareData(res.data.data);
+        
+        // Auto-populate booking date and suggested pickup time
+        if (res.data.data.donationDate) {
+          setBookingDetails(prev => ({
+            ...prev,
+            bookingDate: res.data.data.donationDate,
+            bookingTime: res.data.data.suggestedPickupTime || ''
+          }));
+        }
       }
     } catch (error) {
       console.error('Fare calculation error:', error);
@@ -209,6 +218,12 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-700 dark:text-gray-300">Estimated Travel Time:</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-400">
+                      ~{fareData.estimatedTravelMinutes} minutes
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-700 dark:text-gray-300">Base Fare:</span>
                     <span className="text-gray-900 dark:text-white">
                       ₹{fareData.distance.baseFare}
@@ -238,10 +253,25 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                 <h3 className="font-bold text-lg text-purple-900 dark:text-purple-100 mb-3">
                   📅 Schedule Pickup
                 </h3>
+                
+                {fareData.donationDate && fareData.donationTime && (
+                  <div className="mb-3 p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">
+                      ℹ️ Donation Appointment
+                    </p>
+                    <p className="text-sm text-blue-800 dark:text-blue-300">
+                      📅 {new Date(fareData.donationDate).toLocaleDateString()} at ⏰ {fareData.donationTime}
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
+                      💡 Pickup time calculated to arrive ~{fareData.estimatedTravelMinutes} minutes before appointment
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Pickup Date *
+                      Pickup Date * (Auto-populated from donation date)
                     </label>
                     <input
                       type="date"
@@ -254,7 +284,7 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Pickup Time *
+                      Pickup Time * (Suggested based on travel time)
                     </label>
                     <input
                       type="time"
@@ -263,6 +293,11 @@ export default function TaxiBookingModal({ donationRequest, onClose, onSuccess }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
                       required
                     />
+                    {fareData.suggestedPickupTime && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        💡 Suggested: {fareData.suggestedPickupTime} (includes {fareData.estimatedTravelMinutes} min travel + 15 min buffer)
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
