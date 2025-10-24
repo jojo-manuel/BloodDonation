@@ -4,9 +4,17 @@ import api from "../lib/api";
 import Layout from "../components/Layout";
 
 export default function UserProfile() {
-  const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
+  const [updating, setUpdating] = useState(false);
+  const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,9 +24,15 @@ export default function UserProfile() {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/users/me');
+      const response = await api.get('/users/me/comprehensive');
       if (response.data.success) {
-        setUser(response.data.data);
+        setProfileData(response.data.data);
+        // Initialize edit data
+        setEditData({
+          name: response.data.data.user.name || '',
+          phone: response.data.data.user.phone || '',
+          email: response.data.data.user.email || ''
+        });
       } else {
         setError('Failed to fetch user profile');
       }
@@ -27,6 +41,62 @@ export default function UserProfile() {
       setError('Error loading user profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      setUpdating(true);
+      const response = await api.put('/users/me', {
+        name: editData.name,
+        phone: editData.phone
+      });
+      
+      if (response.data.success) {
+        alert('Profile updated successfully!');
+        setEditMode(false);
+        fetchUserProfile();
+      } else {
+        alert('Failed to update profile: ' + (response.data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error updating profile: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleToggleAvailability = async () => {
+    if (!profileData?.isDonor) {
+      alert('Only donors can toggle availability');
+      return;
+    }
+
+    const newAvailability = !profileData.donorInfo.availability;
+    
+    try {
+      setUpdatingAvailability(true);
+      const response = await api.patch('/users/me/availability', {
+        availability: newAvailability
+      });
+      
+      if (response.data.success) {
+        alert(`Availability updated to ${newAvailability ? 'Available' : 'Not Available'}`);
+        fetchUserProfile();
+      } else {
+        alert('Failed to update availability: ' + (response.data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      alert('Error updating availability: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingAvailability(false);
     }
   };
 
@@ -57,13 +127,52 @@ export default function UserProfile() {
     }
   };
 
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200', icon: '⏳' },
+      confirmed: { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200', icon: '✓' },
+      completed: { color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200', icon: '✅' },
+      rejected: { color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200', icon: '❌' },
+      cancelled: { color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200', icon: '🚫' }
+    };
+    
+    const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: '❓' };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        <span className="mr-1">{config.icon}</span>
+        {status.toUpperCase()}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <Layout onLogout={handleLogout}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Loading profile...</p>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 text-lg">Loading your profile...</p>
           </div>
         </div>
       </Layout>
@@ -75,12 +184,12 @@ export default function UserProfile() {
       <Layout onLogout={handleLogout}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-              <p className="text-red-600 dark:text-red-400">{error}</p>
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
+              <p className="text-red-600 dark:text-red-400 text-lg">{error}</p>
             </div>
             <Link
               to="/user-dashboard"
-              className="mt-4 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 px-5 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+              className="mt-6 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
             >
               Back to Dashboard
             </Link>
@@ -90,104 +199,338 @@ export default function UserProfile() {
     );
   }
 
+  const { user, isDonor, donorInfo, donations, patientsHelped, nextDonationDate, totalDonations } = profileData;
+
   return (
     <Layout onLogout={handleLogout}>
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="mx-auto w-full max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">
-            👤 User Profile
+          <h1 className="mb-2 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-5xl">
+            👤 My Profile
           </h1>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            View and manage your account information
+          <p className="text-base text-gray-700 dark:text-gray-300">
+            View and manage your account information and donation history
           </p>
         </div>
 
-        {/* Profile Card */}
-        <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center md:items-start">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-rose-500/80 to-red-600/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg ring-1 ring-white/10 mb-4">
-                <span className="text-white font-bold text-2xl">
-                  {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
+        {/* Profile Overview Section */}
+        <div className="mb-8 rounded-2xl border border-white/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 p-8 shadow-2xl backdrop-blur-2xl transition dark:border-white/10">
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            {/* Avatar and Basic Info */}
+            <div className="flex flex-col items-center">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-xl ring-4 ring-white/20 mb-4">
+                <span className="text-white font-bold text-5xl">
+                  {user?.username ? user.username.charAt(0).toUpperCase() : user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user?.name}</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</p>
+              
+              {isDonor && (
+                <div className="inline-flex items-center px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-md mb-3">
+                  🩸 {donorInfo?.bloodGroup || 'N/A'}
+                </div>
+              )}
+
+              {/* Donor Badge */}
+              {isDonor ? (
+                <div className="inline-flex items-center px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full font-semibold shadow-md">
+                  ✅ Registered Donor
+                </div>
+              ) : (
+                <div className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200 rounded-full font-semibold shadow-md">
+                  👤 Regular User
+                </div>
+              )}
             </div>
 
-            {/* Profile Details */}
+            {/* User Details */}
             <div className="flex-1">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Profile Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.name || 'Not provided'}</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                {user?.name || 'User'}
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📧 Email</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{user?.email || user?.username || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.email}</p>
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📱 Phone</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{user?.phone || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.phone || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Address</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.address || 'Not provided'}</p>
-                  </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">👤 Role</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg capitalize">{user?.role || 'User'}</p>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.city || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">State</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.state || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Blood Group</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium">{user?.bloodGroup || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Account Type</label>
-                    <p className="mt-1 text-gray-900 dark:text-white font-medium capitalize">{user?.role || 'User'}</p>
-                  </div>
-                </div>
-              </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">📅 Member Since</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{formatDate(user?.createdAt)}</p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-white/20">
-            {user?.role !== 'admin' && (
-              <>
-                <Link
-                  to="/user-settings"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
-                >
-                  <span className="mr-2">⚙️</span>
-                  Edit Profile
-                </Link>
+              <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={handleDeleteAccount}
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-500 to-red-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] hover:bg-red-700"
+                  onClick={() => setEditMode(!editMode)}
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
                 >
-                  <span className="mr-2">🗑️</span>
-                  Delete Account
+                  <span className="mr-2">{editMode ? '❌' : '✏️'}</span>
+                  {editMode ? 'Cancel Edit' : 'Edit Profile'}
                 </button>
-              </>
+
+                {isDonor && (
+                  <button
+                    onClick={handleToggleAvailability}
+                    disabled={updatingAvailability}
+                    className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] ${
+                      donorInfo?.availability 
+                        ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                        : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                    } ${updatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <span className="mr-2">{donorInfo?.availability ? '✅' : '⏸️'}</span>
+                    {updatingAvailability ? 'Updating...' : (donorInfo?.availability ? 'Available' : 'Not Available')}
+                  </button>
+                )}
+
+                <Link
+                  to="/user-dashboard"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-gray-500 to-gray-600 px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+                >
+                  <span className="mr-2">←</span>
+                  Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Profile Form */}
+        {editMode && (
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">✏️ Edit Profile</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editData.name}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition"
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={editData.phone}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex gap-3">
+                <button
+                onClick={handleUpdateProfile}
+                disabled={updating}
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                {updating ? 'Updating...' : '💾 Save Changes'}
+                </button>
+            </div>
+          </div>
+        )}
+
+        {/* Donor Statistics (Only for Donors) */}
+        {isDonor && (
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📊 Donation Statistics</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-red-500/20 to-pink-500/20 p-6 shadow-xl backdrop-blur-2xl">
+                <div className="text-5xl font-bold text-red-600 dark:text-red-400 mb-2">{totalDonations}</div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Total Donations</div>
+              </div>
+              
+              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-6 shadow-xl backdrop-blur-2xl">
+                <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">{patientsHelped.length}</div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Patients Helped</div>
+              </div>
+              
+              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 p-6 shadow-xl backdrop-blur-2xl">
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                  {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Donation</div>
+              </div>
+              
+              <div className="rounded-2xl border border-white/30 bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-6 shadow-xl backdrop-blur-2xl">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
+                  {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}
+                </div>
+                <div className="text-sm font-semibold text-gray-700 dark:text-gray-300">Next Eligible Date</div>
+              </div>
+            </div>
+
+            {/* Next Donation Info */}
+            {nextDonationDate && (
+              <div className="mt-4 rounded-xl bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-4">
+                <p className="text-blue-800 dark:text-blue-200 font-medium">
+                  ℹ️ You can donate again after <strong>{formatDate(nextDonationDate)}</strong> (3 months after your last donation)
+                </p>
+              </div>
             )}
+          </div>
+        )}
+
+        {/* Donation History (Only for Donors) */}
+        {isDonor && donations.length > 0 && (
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donation History</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-300 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Booking ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Blood Bank</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Patient</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Completed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donations.map((donation, index) => (
+                    <tr key={donation.id} className={`border-b border-gray-200 dark:border-gray-800 ${index % 2 === 0 ? 'bg-white/20 dark:bg-gray-900/20' : ''}`}>
+                      <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{donation.bookingId || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{formatDate(donation.date)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{donation.bloodBankName || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        {donation.patientName || 'N/A'}
+                        {donation.patientMRID && (
+                          <div className="text-xs text-gray-500">MRID: {donation.patientMRID}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">{getStatusBadge(donation.status)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                        {donation.completedAt ? formatDateTime(donation.completedAt) : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Patients Helped (Only for Donors) */}
+        {isDonor && patientsHelped.length > 0 && (
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💝 Patients You Helped</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {patientsHelped.map((patient, index) => (
+                <div key={index} className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-xl p-5 border border-pink-200 dark:border-pink-800 shadow-md">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{patient.patientName}</h4>
+                  {patient.patientMRID && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <strong>MRID:</strong> {patient.patientMRID}
+                    </p>
+                  )}
+                  {patient.bloodGroup && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      <strong>Blood Group:</strong> {patient.bloodGroup}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <strong>Donation Date:</strong> {formatDate(patient.donationDate)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Donation History Message */}
+        {isDonor && donations.length === 0 && (
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-8 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 text-center">
+            <div className="text-6xl mb-4">🩸</div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Donation History Yet</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              You haven't completed any donations yet. Start saving lives today!
+            </p>
             <Link
               to="/user-dashboard"
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
             >
-              <span className="mr-2">←</span>
-              Back to Dashboard
+              Find Donation Opportunities
             </Link>
+          </div>
+        )}
+
+        {/* Donor Info Card (Only for Donors) */}
+        {isDonor && donorInfo && (
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donor Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Blood Group</label>
+                <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
+              </div>
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Weight</label>
+                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.weight} kg</p>
+              </div>
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Contact Number</label>
+                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.contactNumber}</p>
+              </div>
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Priority Points</label>
+                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.priorityPoints || 0}</p>
+              </div>
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md">
+                <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Availability Status</label>
+                <p className={`font-bold text-lg ${donorInfo.availability ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                  {donorInfo.availability ? '✅ Available' : '⏸️ Not Available'}
+                </p>
+              </div>
+              {donorInfo.address && (
+                <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 shadow-md md:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Address</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-sm">
+                    {donorInfo.address.houseName && `${donorInfo.address.houseName}, `}
+                    {donorInfo.address.city && `${donorInfo.address.city}, `}
+                    {donorInfo.address.pincode}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Account Actions */}
+        <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">⚙️ Account Actions</h3>
+          <div className="flex flex-wrap gap-4">
+            {!isDonor && (
+              <Link
+                to="/donor-register"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+              >
+                <span className="mr-2">🩸</span>
+                Become a Donor
+              </Link>
+            )}
+            <button
+              onClick={handleDeleteAccount}
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-red-700 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+            >
+              <span className="mr-2">🗑️</span>
+              Delete Account
+            </button>
           </div>
         </div>
       </div>
