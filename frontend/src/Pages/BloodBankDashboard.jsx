@@ -326,6 +326,111 @@ export default function BloodBankDashboard() {
     }
   }, [activeTab, tokenFilter, selectedTokenDate, showAllTokens]);
 
+  // Download bookings as CSV
+  const downloadBookingsCSV = (filterType) => {
+    let filteredBookings = [...allTokens];
+    let filename = 'bookings';
+
+    // Apply status filters
+    switch (filterType) {
+      case 'completed':
+        filteredBookings = allTokens.filter(b => b.status === 'completed');
+        filename = 'completed_bookings';
+        break;
+      case 'waiting_today':
+        const today = new Date().toISOString().split('T')[0];
+        filteredBookings = allTokens.filter(b => 
+          b.date === today && 
+          b.status !== 'completed' && 
+          b.status !== 'rejected'
+        );
+        filename = 'waiting_today';
+        break;
+      case 'not_completed':
+        filteredBookings = allTokens.filter(b => 
+          b.status !== 'completed' && 
+          b.status !== 'rejected'
+        );
+        filename = 'pending_bookings';
+        break;
+      case 'rejected':
+        filteredBookings = allTokens.filter(b => b.status === 'rejected');
+        filename = 'rejected_bookings';
+        break;
+      case 'all':
+      default:
+        filename = 'all_bookings';
+        break;
+    }
+
+    if (filteredBookings.length === 0) {
+      alert('No bookings found for the selected filter');
+      return;
+    }
+
+    // Add date suffix to filename
+    const dateStr = tokenFilter === 'today' 
+      ? 'today' 
+      : tokenFilter === 'date' 
+      ? selectedTokenDate 
+      : 'all_time';
+    filename += `_${dateStr}_${new Date().getTime()}.csv`;
+
+    // Create CSV content
+    const headers = [
+      'Token Number',
+      'Date',
+      'Time',
+      'Donor Name',
+      'Donor Phone',
+      'Blood Group',
+      'Patient Name',
+      'Patient MRID',
+      'Status',
+      'Arrived',
+      'Arrival Time',
+      'Completed At',
+      'Rejection Reason'
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    filteredBookings.forEach(booking => {
+      const row = [
+        booking.tokenNumber || '',
+        booking.date || '',
+        booking.time || '',
+        `"${booking.donorName || ''}"`,
+        booking.donorPhone || '',
+        booking.bloodGroup || '',
+        `"${booking.patientName || ''}"`,
+        booking.patientMRID || '',
+        booking.status || '',
+        booking.arrived ? 'Yes' : 'No',
+        booking.arrivalTime ? new Date(booking.arrivalTime).toLocaleString() : '',
+        booking.completedAt ? new Date(booking.completedAt).toLocaleString() : '',
+        `"${booking.rejectionReason || ''}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    // Create and download file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    alert(`✅ Downloaded ${filteredBookings.length} booking(s) successfully!`);
+    setShowDownloadModal(false);
+  };
+
   // Frontdesk: Mark arrival
   const handleMarkArrival = async () => {
     if (!searchedBooking) return;
