@@ -880,7 +880,25 @@ export default function UserDashboard() {
       const res = await api.post('/users/direct-book-slot', bookingData);
 
       if (res.data.success) {
-        alert('Booking request sent successfully! The blood bank will confirm your appointment.');
+        // Prepare data for PDF
+        const pdfData = {
+          tokenNumber: res.data.data?.tokenNumber || 'PENDING',
+          donorName: bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'N/A',
+          donorPhone: bookingModal.donorId?.userId?.phone || bookingModal.donorId?.contactNumber || '',
+          bloodGroup: bookingModal.bloodGroup || bookingModal.donorId?.bloodGroup || 'N/A',
+          patientName: bookingModal.patientId?.name || bookingModal.patientName || 'N/A',
+          patientMRID: bookingModal.patientId?.mrid || bookingModal.mrid || 'N/A',
+          bloodBankName: bookingModal.bloodBankId?.name || 'N/A',
+          bloodBankAddress: bookingModal.bloodBankId?.address || '',
+          bloodBankPhone: bookingModal.bloodBankId?.phone || '',
+          date: selectedDate,
+          time: selectedTime
+        };
+
+        // Generate PDF
+        await generateBookingPDF(pdfData);
+        
+        alert('Booking confirmed! Your confirmation PDF has been downloaded.');
         setBookingModal(null);
         setSelectedDate('');
         setSelectedTime('');
