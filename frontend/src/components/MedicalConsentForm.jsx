@@ -3,6 +3,7 @@ import { getTranslation, translations } from './MedicalConsentFormTranslations';
 
 const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
   const [language, setLanguage] = useState('en'); // 'en' or 'ml'
+  const [gender, setGender] = useState(null); // 'male', 'female', or null
   const [formData, setFormData] = useState({
     // Basic Eligibility
     ageEligible: null, // 18-65 years
