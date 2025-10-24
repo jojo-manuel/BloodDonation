@@ -49,8 +49,14 @@ export default function ForgotPassword() {
       const payload = { username: identity };
       const { data } = await api.post('/auth/forgot-password', payload);
       if (data?.success) {
-        alert('If the account exists, a reset link has been created. In dev mode, you will use the token directly on the next page.');
-        navigate('/reset-password');
+        // Check if token is returned (development mode)
+        if (data.token) {
+          alert(`Reset token generated: ${data.token}\n\nYou can now reset your password on the next page.`);
+          navigate(`/reset-password?token=${data.token}`);
+        } else {
+          alert('If the account exists, a password reset email has been sent. Please check your inbox.');
+          navigate('/login');
+        }
       } else {
         alert(data?.message || 'Failed to request reset');
       }
