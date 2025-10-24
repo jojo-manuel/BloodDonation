@@ -250,16 +250,61 @@ export default function UserDashboard() {
   }, [sentRequests, statusFilter, sortOrder, filterMRID, filterPatientName, filterDonorName, filterDate, filterBloodGroup, filterBloodBankName]);
 
   const filteredReceivedRequests = useMemo(() => {
-    const filtered = statusFilter === 'all'
-      ? receivedRequests
-      : receivedRequests.filter((request) => request.status === statusFilter);
+    let filtered = receivedRequests;
 
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((request) => request.status === statusFilter);
+    }
+
+    // Filter by MRID
+    if (filterMRID) {
+      filtered = filtered.filter((request) => 
+        (request.patientId?.mrid || request.patientMRID || '').toLowerCase().includes(filterMRID.toLowerCase())
+      );
+    }
+
+    // Filter by Patient Name
+    if (filterPatientName) {
+      filtered = filtered.filter((request) =>
+        (request.patientId?.name || request.patientUsername || '').toLowerCase().includes(filterPatientName.toLowerCase())
+      );
+    }
+
+    // Filter by Donor Name (requester in received requests)
+    if (filterDonorName) {
+      filtered = filtered.filter((request) =>
+        (request.senderId?.username || request.requesterId?.username || request.requesterUsername || request.senderId?.name || '').toLowerCase().includes(filterDonorName.toLowerCase())
+      );
+    }
+
+    // Filter by Date
+    if (filterDate) {
+      filtered = filtered.filter((request) => {
+        const requestDate = request.requestedAt ? new Date(request.requestedAt).toISOString().split('T')[0] : '';
+        return requestDate === filterDate;
+      });
+    }
+
+    // Filter by Blood Group
+    if (filterBloodGroup !== 'all') {
+      filtered = filtered.filter((request) => request.bloodGroup === filterBloodGroup);
+    }
+
+    // Filter by Blood Bank Name
+    if (filterBloodBankName) {
+      filtered = filtered.filter((request) =>
+        (request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || '').toLowerCase().includes(filterBloodBankName.toLowerCase())
+      );
+    }
+
+    // Sort by date
     return filtered.sort((a, b) => {
       const aDate = new Date(a.requestedAt || a.createdAt || 0).getTime();
       const bDate = new Date(b.requestedAt || b.createdAt || 0).getTime();
       return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
     });
-  }, [receivedRequests, statusFilter, sortOrder]);
+  }, [receivedRequests, statusFilter, sortOrder, filterMRID, filterPatientName, filterDonorName, filterDate, filterBloodGroup, filterBloodBankName]);
 
   // Add notification
   const addNotification = (message, type = 'info') => {
