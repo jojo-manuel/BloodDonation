@@ -501,6 +501,28 @@ export default function UserDashboard() {
     }
   };
 
+  const handleCancelRequest = async (requestId) => {
+    if (!confirm('Are you sure you want to cancel this request?')) {
+      return;
+    }
+    try {
+      setUpdatingId(requestId);
+      const res = await api.put(`/donors/requests/${requestId}/status`, { status: 'cancelled' });
+      if (res.data.success) {
+        addNotification('Request cancelled successfully', 'success');
+        // Refresh the requests lists
+        fetchRequests();
+        fetchReceivedRequests();
+      } else {
+        addNotification(res.data.message || 'Failed to cancel request', 'error');
+      }
+    } catch (e) {
+      addNotification(e?.response?.data?.message || 'Failed to cancel request', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleAccept = async (requestId) => {
     try {
       setUpdatingId(requestId);
