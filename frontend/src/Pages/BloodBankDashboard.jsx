@@ -433,6 +433,160 @@ export default function BloodBankDashboard() {
     setShowDownloadModal(false);
   };
 
+  // Download bookings as PDF
+  const downloadBookingsPDF = (filterType) => {
+    let filteredBookings = [...allTokens];
+    let filename = 'bookings';
+    let reportTitle = 'Booking Report';
+
+    // Apply status filters
+    switch (filterType) {
+      case 'completed':
+        filteredBookings = allTokens.filter(b => b.status === 'completed');
+        filename = 'completed_bookings';
+        reportTitle = 'Completed Donations Report';
+        break;
+      case 'waiting_today':
+        const today = new Date().toISOString().split('T')[0];
+        filteredBookings = allTokens.filter(b => 
+          b.date === today && 
+          b.status !== 'completed' && 
+          b.status !== 'rejected'
+        );
+        filename = 'waiting_today';
+        reportTitle = 'Waiting Today Report';
+        break;
+      case 'not_completed':
+        filteredBookings = allTokens.filter(b => 
+          b.status !== 'completed' && 
+          b.status !== 'rejected'
+        );
+        filename = 'pending_bookings';
+        reportTitle = 'Pending Bookings Report';
+        break;
+      case 'rejected':
+        filteredBookings = allTokens.filter(b => b.status === 'rejected');
+        filename = 'rejected_bookings';
+        reportTitle = 'Rejected Bookings Report';
+        break;
+      case 'all':
+      default:
+        filename = 'all_bookings';
+        reportTitle = 'All Bookings Report';
+        break;
+    }
+
+    if (filteredBookings.length === 0) {
+      alert('No bookings found for the selected filter');
+      return;
+    }
+
+    // Add date suffix to filename
+    const dateStr = tokenFilter === 'today' 
+      ? 'today' 
+      : tokenFilter === 'date' 
+      ? selectedTokenDate 
+      : 'all_time';
+    filename += `_${dateStr}_${new Date().getTime()}.pdf`;
+
+    // Create PDF
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(220, 38, 38); // Red color
+    doc.text(reportTitle, 14, 15);
+    
+    // Add blood bank name (if available)
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Blood Bank: ${bloodBankDetails?.name || 'N/A'}`, 14, 23);
+    
+    // Add date range
+    let dateRangeText = '';
+    if (tokenFilter === 'today') {
+      dateRangeText = `Date: Today (${new Date().toLocaleDateString()})`;
+    } else if (tokenFilter === 'date') {
+      dateRangeText = `Date: ${new Date(selectedTokenDate).toLocaleDateString()}`;
+    } else {
+      dateRangeText = 'Date: All Time';
+    }
+    doc.text(dateRangeText, 14, 30);
+    
+    // Add report generated time
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 36);
+    
+    // Add summary stats
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Bookings: ${filteredBookings.length}`, 14, 42);
+    
+    // Prepare table data
+    const tableData = filteredBookings.map(booking => [
+      booking.tokenNumber || 'N/A',
+      booking.date || 'N/A',
+      booking.time || 'N/A',
+      booking.donorName || 'N/A',
+      booking.bloodGroup || 'N/A',
+      booking.patientName || 'N/A',
+      booking.status || 'N/A',
+      booking.arrived ? 'Yes' : 'No',
+      booking.rejectionReason || '-'
+    ]);
+
+    // Add table
+    doc.autoTable({
+      head: [['Token', 'Date', 'Time', 'Donor', 'Blood', 'Patient', 'Status', 'Arrived', 'Notes']],
+      body: tableData,
+      startY: 48,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [220, 38, 38], // Red color
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      columnStyles: {
+        0: { cellWidth: 15 }, // Token
+        1: { cellWidth: 25 }, // Date
+        2: { cellWidth: 18 }, // Time
+        3: { cellWidth: 35 }, // Donor
+        4: { cellWidth: 18 }, // Blood
+        5: { cellWidth: 35 }, // Patient
+        6: { cellWidth: 25 }, // Status
+        7: { cellWidth: 18 }, // Arrived
+        8: { cellWidth: 'auto' }, // Notes
+      },
+    });
+
+    // Add footer with page numbers
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save PDF
+    doc.save(filename);
+
+    alert(`✅ Downloaded ${filteredBookings.length} booking(s) as PDF successfully!`);
+    setShowDownloadModal(false);
+  };
+
   // Frontdesk: Mark arrival
   const handleMarkArrival = async () => {
     if (!searchedBooking) return;
