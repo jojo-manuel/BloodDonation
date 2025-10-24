@@ -1590,27 +1590,67 @@ export default function BloodBankDashboard() {
             {showAllTokens ? (
               /* View All Tokens Section */
               <div>
-                {/* Date Selector */}
-                <div className="max-w-2xl mx-auto mb-6">
-                  <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 p-4 rounded-xl border-2 border-green-200 dark:border-green-700">
-                    <label className="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                      <span className="text-xl">📅</span>
-                      Select Date to View Tokens
-                    </label>
-                    <div className="flex gap-3 items-center">
-                      <input
-                        type="date"
-                        value={selectedTokenDate}
-                        onChange={(e) => setSelectedTokenDate(e.target.value)}
-                        className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
-                      />
+                {/* Filter Options */}
+                <div className="max-w-4xl mx-auto mb-6">
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 p-6 rounded-xl border-2 border-green-200 dark:border-green-700">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <span className="text-xl">🔍</span>
+                      Filter Bookings
+                    </h3>
+                    
+                    {/* Filter Buttons */}
+                    <div className="flex flex-wrap gap-3 mb-4">
                       <button
-                        onClick={() => setSelectedTokenDate(new Date().toISOString().split('T')[0])}
-                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-500 text-white rounded-lg font-semibold hover:from-green-700 hover:to-teal-600 transition whitespace-nowrap"
+                        onClick={() => setTokenFilter('all')}
+                        className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                          tokenFilter === 'all'
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500'
+                        }`}
                       >
-                        📆 Today
+                        <span className="text-xl">📚</span>
+                        All Bookings
+                      </button>
+                      
+                      <button
+                        onClick={() => setTokenFilter('today')}
+                        className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                          tokenFilter === 'today'
+                            ? 'bg-gradient-to-r from-green-600 to-teal-500 text-white shadow-lg'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500'
+                        }`}
+                      >
+                        <span className="text-xl">📆</span>
+                        Today's Bookings
+                      </button>
+                      
+                      <button
+                        onClick={() => setTokenFilter('date')}
+                        className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 ${
+                          tokenFilter === 'date'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500'
+                        }`}
+                      >
+                        <span className="text-xl">📅</span>
+                        Specific Date
                       </button>
                     </div>
+
+                    {/* Date Picker (only show when 'date' filter is selected) */}
+                    {tokenFilter === 'date' && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <label className="text-sm font-semibold text-gray-900 dark:text-white mb-2 block">
+                          Select Date:
+                        </label>
+                        <input
+                          type="date"
+                          value={selectedTokenDate}
+                          onChange={(e) => setSelectedTokenDate(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
