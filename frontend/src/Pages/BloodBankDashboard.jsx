@@ -348,11 +348,13 @@ export default function BloodBankDashboard() {
         status: 'rejected',
         rejectionReason: reason
       });
-
+      
       if (res.data.success) {
         alert('Booking rejected');
         setSearchedBooking(null);
         setTokenSearch('');
+        // Refresh token list
+        fetchAllTokens(selectedTokenDate);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to reject booking');
