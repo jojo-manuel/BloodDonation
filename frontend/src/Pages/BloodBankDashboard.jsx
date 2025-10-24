@@ -2064,6 +2064,126 @@ export default function BloodBankDashboard() {
                 </p>
               </div>
             )}
+
+            {/* Download Modal */}
+            {showDownloadModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-6 border-2 border-pink-200 dark:border-pink-700">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span className="text-3xl">⬇️</span>
+                      Download Booking Report
+                    </h3>
+                    <button
+                      onClick={() => setShowDownloadModal(false)}
+                      className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-3xl leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Choose the type of report you want to download. The report will be generated as a CSV file with all relevant details.
+                  </p>
+
+                  <div className="space-y-3">
+                    {/* All Bookings */}
+                    <button
+                      onClick={() => downloadBookingsCSV('all')}
+                      className="w-full p-4 rounded-xl border-2 border-purple-300 dark:border-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/40 dark:hover:to-pink-900/40 transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">📚</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900 dark:text-white">All Bookings</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Download all bookings shown in current view ({allTokens.length} booking{allTokens.length !== 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
+                    </button>
+
+                    {/* Completed Bookings */}
+                    <button
+                      onClick={() => downloadBookingsCSV('completed')}
+                      className="w-full p-4 rounded-xl border-2 border-blue-300 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 hover:from-blue-100 hover:to-cyan-100 dark:hover:from-blue-900/40 dark:hover:to-cyan-900/40 transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">✅</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900 dark:text-white">Completed Donations</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Only successfully completed donations ({allTokens.filter(b => b.status === 'completed').length} booking{allTokens.filter(b => b.status === 'completed').length !== 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
+                    </button>
+
+                    {/* Waiting Today */}
+                    <button
+                      onClick={() => downloadBookingsCSV('waiting_today')}
+                      className="w-full p-4 rounded-xl border-2 border-yellow-300 dark:border-yellow-700 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 hover:from-yellow-100 hover:to-orange-100 dark:hover:from-yellow-900/40 dark:hover:to-orange-900/40 transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">⏳</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900 dark:text-white">Waiting Today</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Bookings scheduled for today that are pending ({allTokens.filter(b => b.date === new Date().toISOString().split('T')[0] && b.status !== 'completed' && b.status !== 'rejected').length} booking{allTokens.filter(b => b.date === new Date().toISOString().split('T')[0] && b.status !== 'completed' && b.status !== 'rejected').length !== 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
+                    </button>
+
+                    {/* Pending (Not Completed) */}
+                    <button
+                      onClick={() => downloadBookingsCSV('not_completed')}
+                      className="w-full p-4 rounded-xl border-2 border-green-300 dark:border-green-700 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 hover:from-green-100 hover:to-teal-100 dark:hover:from-green-900/40 dark:hover:to-teal-900/40 transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">⏺</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900 dark:text-white">Pending Bookings</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            All bookings not yet completed ({allTokens.filter(b => b.status !== 'completed' && b.status !== 'rejected').length} booking{allTokens.filter(b => b.status !== 'completed' && b.status !== 'rejected').length !== 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
+                    </button>
+
+                    {/* Rejected Bookings */}
+                    <button
+                      onClick={() => downloadBookingsCSV('rejected')}
+                      className="w-full p-4 rounded-xl border-2 border-red-300 dark:border-red-700 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 hover:from-red-100 hover:to-rose-100 dark:hover:from-red-900/40 dark:hover:to-rose-900/40 transition flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">❌</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900 dark:text-white">Rejected Bookings</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Bookings that were rejected by the blood bank ({allTokens.filter(b => b.status === 'rejected').length} booking{allTokens.filter(b => b.status === 'rejected').length !== 1 ? 's' : ''})
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-2xl group-hover:translate-x-1 transition">→</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>📄 File Format:</strong> CSV (Comma-Separated Values)
+                    </p>
+                    <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                      <strong>📊 Included Data:</strong> Token #, Date, Time, Donor Details, Patient Info, Status, and more
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
