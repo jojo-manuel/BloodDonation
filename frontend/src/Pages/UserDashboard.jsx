@@ -5,6 +5,8 @@ import Layout from '../components/Layout';
 import ReviewTab from '../components/ReviewTab';
 import TaxiBookingModal from '../components/TaxiBookingModal';
 import CitySearchDropdown from '../components/CitySearchDropdown';
+import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
