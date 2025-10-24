@@ -90,26 +90,47 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = expiry;
     await user.save();
 
-    // Send password reset email using Firebase Admin SDK
+    // Send password reset email
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
 
-    const message = {
-      notification: {
-        title: 'Password Reset Request',
-        body: `You requested a password reset. Click the link to reset your password.`,
-      },
-      data: {
-        resetUrl,
-      },
-      token: user.firebaseToken, // Assuming you store Firebase device tokens for users
-    };
-
     try {
-      await admin.messaging().send(message);
+      // Try to send email if email utility is available
+      if (user.email) {
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: 'Password Reset Request - Blood Donation App',
+            text: `You requested a password reset. Click this link to reset your password: ${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #dc2626;">Password Reset Request</h2>
+                <p>You requested a password reset for your Blood Donation App account.</p>
+                <p>Click the button below to reset your password:</p>
+                <a href="${resetUrl}" style="display: inline-block; background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">Reset Password</a>
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="color: #666; word-break: break-all;">${resetUrl}</p>
+                <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
+                <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
+              </div>
+            `
+          });
+        } catch (emailErr) {
+          console.error('Email send error:', emailErr);
+          // Don't fail if email sending fails - user can still use the token
+        }
+      }
+      
+      // Return success even if email fails (security - don't reveal user existence)
+      // In development, you can return the token for testing
+      return res.json({ 
+        success: true, 
+        message: 'If the account exists, a reset link has been sent',
+        ...(process.env.NODE_ENV === 'development' && { token }) // Only in dev mode
+      });
+    } catch (err) {
+      console.error('Password reset error:', err);
+      // Still return success to not reveal user existence
       return res.json({ success: true, message: 'If the account exists, a reset link has been sent' });
-    } catch (firebaseErr) {
-      console.error('Firebase send message error:', firebaseErr);
-      return res.status(500).json({ success: false, message: 'Failed to send reset notification' });
     }
   } catch (err) {
     console.error('Forgot password error:', err);
