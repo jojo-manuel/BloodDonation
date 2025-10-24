@@ -4,6 +4,8 @@ import api from "../lib/api";
 import Layout from "../components/Layout";
 import DonorSearchForm from "../components/DonorSearchForm";
 import UserSearchForm from "../components/UserSearchForm";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function BloodBankDashboard() {
   const [activeTab, setActiveTab] = useState('patients');
