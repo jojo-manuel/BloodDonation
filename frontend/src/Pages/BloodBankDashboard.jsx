@@ -1658,23 +1658,30 @@ export default function BloodBankDashboard() {
                 {loadingTokens ? (
                   <div className="text-center py-12">
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tokens...</p>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading bookings...</p>
                   </div>
                 ) : allTokens.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">📭</div>
                     <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                      No bookings found for {new Date(selectedTokenDate).toLocaleDateString()}
+                      {tokenFilter === 'all' && 'No bookings found'}
+                      {tokenFilter === 'today' && 'No bookings for today'}
+                      {tokenFilter === 'date' && `No bookings found for ${new Date(selectedTokenDate).toLocaleDateString()}`}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                      Try selecting a different date
+                      {tokenFilter === 'all' && 'No bookings have been made yet'}
+                      {tokenFilter === 'today' && 'No one is scheduled to donate today'}
+                      {tokenFilter === 'date' && 'Try selecting a different date'}
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        🎫 {allTokens.length} Token{allTokens.length !== 1 ? 's' : ''} for {new Date(selectedTokenDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        🎫 {allTokens.length} Booking{allTokens.length !== 1 ? 's' : ''} 
+                        {tokenFilter === 'all' && ' (All Time)'}
+                        {tokenFilter === 'today' && ` (Today - ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })})`}
+                        {tokenFilter === 'date' && ` (${new Date(selectedTokenDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })})`}
                       </h3>
                     </div>
                     
