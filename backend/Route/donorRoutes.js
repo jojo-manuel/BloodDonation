@@ -5,7 +5,7 @@ const express = require('express');
 const authMiddleware = require('../Middleware/authMiddleware');
 const validate = require('../Middleware/validate');
 const { donorRegisterBody, bookSlotBody } = require('../validators/schemas');
-const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, respondToRequest, bookSlot, getAddressByPostalCode } = require('../controllers/donorController');
+const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, respondToRequest, bookSlot, getAddressByPostalCode, getAvailableCities } = require('../controllers/donorController');
 const donationRequestController = require('../controllers/donationRequestController');
 
 const router = express.Router();
@@ -54,5 +54,8 @@ router.get('/requests/all', authMiddleware, donationRequestController.listAll);
 
 // Get address details by postal code
 router.get('/address/:postalCode', getAddressByPostalCode);
+
+// Get unique cities where donors are available
+router.get('/cities/available', getAvailableCities);
 
 module.exports = router;
