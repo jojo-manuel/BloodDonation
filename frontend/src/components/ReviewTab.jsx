@@ -254,71 +254,31 @@ const ReviewTab = () => {
       {activeSubTab === 'write' && (
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Write a Review</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Write a Review for a Blood Bank You Visited</h3>
             <form onSubmit={handleCreateReview} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Review Type
+                  Select Blood Bank to Review
                 </label>
                 <select
-                  value={reviewForm.type}
-                  onChange={(e) => setReviewForm(prev => ({ ...prev, type: e.target.value, donorId: '', bloodBankId: '' }))}
+                  value={reviewForm.bloodBankId}
+                  onChange={(e) => setReviewForm(prev => ({ ...prev, bloodBankId: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
                 >
-                  <option value="donor">Review Donor</option>
-                  <option value="bloodbank">Review Blood Bank</option>
+                  <option value="">Choose a blood bank you visited...</option>
+                  {reviewableBloodBanks.map((bloodBank) => (
+                    <option key={bloodBank._id} value={bloodBank._id}>
+                      {bloodBank.name} - {bloodBank.location}
+                    </option>
+                  ))}
                 </select>
+                {reviewableBloodBanks.length === 0 && !loading && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    No blood banks available for review. You can only review blood banks you've visited through completed donation requests.
+                  </p>
+                )}
               </div>
-
-              {reviewForm.type === 'donor' ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Select Donor to Review
-                  </label>
-                  <select
-                    value={reviewForm.donorId}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, donorId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  >
-                    <option value="">Choose a donor...</option>
-                    {reviewableDonors.map((donor) => (
-                      <option key={donor._id} value={donor._id}>
-                        {donor.userId?.username} - {donor.bloodGroup}
-                      </option>
-                    ))}
-                  </select>
-                  {reviewableDonors.length === 0 && !loading && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      No donors available for review. You can only review donors you've interacted with through completed donation requests.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Select Blood Bank to Review
-                  </label>
-                  <select
-                    value={reviewForm.bloodBankId}
-                    onChange={(e) => setReviewForm(prev => ({ ...prev, bloodBankId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  >
-                    <option value="">Choose a blood bank...</option>
-                    {reviewableBloodBanks.map((bloodBank) => (
-                      <option key={bloodBank._id} value={bloodBank._id}>
-                        {bloodBank.name} - {bloodBank.location}
-                      </option>
-                    ))}
-                  </select>
-                  {reviewableBloodBanks.length === 0 && !loading && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      No blood banks available for review. You can only review blood banks you've interacted with through completed donation requests.
-                    </p>
-                  )}
-                </div>
-              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -338,14 +298,14 @@ const ReviewTab = () => {
                   onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   rows={4}
-                  placeholder="Share your experience with this donor..."
+                  placeholder="Share your experience with this blood bank..."
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={submitting || (!reviewForm.donorId && !reviewForm.bloodBankId)}
+                disabled={submitting || !reviewForm.bloodBankId}
                 className="w-full bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Submit Review'}
