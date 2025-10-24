@@ -388,23 +388,23 @@ export default function UserProfile() {
 
         {/* Donation History (Only for Donors) */}
         {isDonor && donations.length > 0 && (
-          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+          <div className="mb-8 rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donation History</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-300 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Booking ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Blood Bank</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Patient</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Completed</th>
+                  <tr className="border-b-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50">
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Booking ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Blood Bank</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Patient</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Status</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Completed</th>
                   </tr>
                 </thead>
                 <tbody>
                   {donations.map((donation, index) => (
-                    <tr key={donation.id} className={`border-b border-gray-200 dark:border-gray-800 ${index % 2 === 0 ? 'bg-white/20 dark:bg-gray-900/20' : ''}`}>
+                    <tr key={donation.id} className={`border-b border-gray-200 dark:border-gray-800 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/20' : 'bg-white dark:bg-transparent'} hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors`}>
                       <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{donation.bookingId || 'N/A'}</td>
                       <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{formatDate(donation.date)}</td>
                       <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{donation.bloodBankName || 'N/A'}</td>
