@@ -158,72 +158,71 @@ exports.getComprehensiveProfile = asyncHandler(async (req, res) => {
   if (donor) {
     // User is a donor if they have a donor profile
     profileData.isDonor = true;
-      profileData.donorInfo = {
-        bloodGroup: donor.bloodGroup,
-        availability: donor.availability,
-        lastDonatedDate: donor.lastDonatedDate,
-        donatedDates: donor.donatedDates,
-        contactNumber: donor.contactNumber,
-        weight: donor.weight,
-        address: donor.houseAddress,
-        priorityPoints: donor.priorityPoints
+    profileData.donorInfo = {
+      bloodGroup: donor.bloodGroup,
+      availability: donor.availability,
+      lastDonatedDate: donor.lastDonatedDate,
+      donatedDates: donor.donatedDates,
+      contactNumber: donor.contactNumber,
+      weight: donor.weight,
+      address: donor.houseAddress,
+      priorityPoints: donor.priorityPoints
+    };
+
+    // Get all bookings/donations made by this donor
+    const donations = await Booking.find({ 
+      donorId: donor._id 
+    })
+      .populate('bloodBankId', 'name address')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    profileData.donations = donations.map(booking => ({
+      id: booking._id,
+      bookingId: booking.bookingId,
+      date: booking.date,
+      time: booking.time,
+      status: booking.status,
+      bloodBank: booking.bloodBankId,
+      bloodBankName: booking.bloodBankName,
+      patientName: booking.patientName,
+      patientMRID: booking.patientMRID,
+      bloodGroup: booking.bloodGroup,
+      completedAt: booking.completedAt,
+      arrived: booking.arrived,
+      arrivalTime: booking.arrivalTime
+    }));
+
+    profileData.totalDonations = donations.filter(d => d.status === 'completed').length;
+
+    // Get list of unique patients helped
+    const completedBookings = donations.filter(d => d.status === 'completed' && d.patientName);
+    const uniquePatients = [...new Set(completedBookings.map(b => b.patientName))];
+    profileData.patientsHelped = uniquePatients.map(patientName => {
+      const booking = completedBookings.find(b => b.patientName === patientName);
+      return {
+        patientName,
+        patientMRID: booking?.patientMRID,
+        donationDate: booking?.completedAt || booking?.date,
+        bloodGroup: booking?.bloodGroup
       };
+    });
 
-      // Get all bookings/donations made by this donor
-      const donations = await Booking.find({ 
-        donorId: donor._id 
-      })
-        .populate('bloodBankId', 'name address')
-        .sort({ createdAt: -1 })
-        .lean();
-
-      profileData.donations = donations.map(booking => ({
-        id: booking._id,
-        bookingId: booking.bookingId,
-        date: booking.date,
-        time: booking.time,
-        status: booking.status,
-        bloodBank: booking.bloodBankId,
-        bloodBankName: booking.bloodBankName,
-        patientName: booking.patientName,
-        patientMRID: booking.patientMRID,
-        bloodGroup: booking.bloodGroup,
-        completedAt: booking.completedAt,
-        arrived: booking.arrived,
-        arrivalTime: booking.arrivalTime
-      }));
-
-      profileData.totalDonations = donations.filter(d => d.status === 'completed').length;
-
-      // Get list of unique patients helped
-      const completedBookings = donations.filter(d => d.status === 'completed' && d.patientName);
-      const uniquePatients = [...new Set(completedBookings.map(b => b.patientName))];
-      profileData.patientsHelped = uniquePatients.map(patientName => {
-        const booking = completedBookings.find(b => b.patientName === patientName);
-        return {
-          patientName,
-          patientMRID: booking?.patientMRID,
-          donationDate: booking?.completedAt || booking?.date,
-          bloodGroup: booking?.bloodGroup
-        };
-      });
-
-      // Calculate next eligible donation date (3 months after last completed donation)
-      const completedDonations = donations.filter(d => d.status === 'completed' && d.completedAt);
-      if (completedDonations.length > 0) {
-        // Sort by completion date to get the most recent
-        const sortedCompletedDonations = completedDonations.sort((a, b) => 
-          new Date(b.completedAt) - new Date(a.completedAt)
-        );
-        const lastCompletedDonation = sortedCompletedDonations[0];
-        const lastDonationDate = new Date(lastCompletedDonation.completedAt);
-        
-        // Add 3 months (90 days) to the last donation date
-        const nextEligibleDate = new Date(lastDonationDate);
-        nextEligibleDate.setDate(nextEligibleDate.getDate() + 90);
-        
-        profileData.nextDonationDate = nextEligibleDate;
-      }
+    // Calculate next eligible donation date (3 months after last completed donation)
+    const completedDonations = donations.filter(d => d.status === 'completed' && d.completedAt);
+    if (completedDonations.length > 0) {
+      // Sort by completion date to get the most recent
+      const sortedCompletedDonations = completedDonations.sort((a, b) => 
+        new Date(b.completedAt) - new Date(a.completedAt)
+      );
+      const lastCompletedDonation = sortedCompletedDonations[0];
+      const lastDonationDate = new Date(lastCompletedDonation.completedAt);
+      
+      // Add 3 months (90 days) to the last donation date
+      const nextEligibleDate = new Date(lastDonationDate);
+      nextEligibleDate.setDate(nextEligibleDate.getDate() + 90);
+      
+      profileData.nextDonationDate = nextEligibleDate;
     }
   }
 
