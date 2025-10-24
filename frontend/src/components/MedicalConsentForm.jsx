@@ -223,6 +223,40 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
             </p>
           </div>
 
+          {/* Gender Selection */}
+          <div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 p-4 mb-4">
+            <p className="text-sm font-bold text-purple-800 dark:text-purple-200 mb-3">
+              👤 Select Your Gender
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setGender('male')}
+                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                  gender === 'male'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                👨 Male
+              </button>
+              <button
+                onClick={() => setGender('female')}
+                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                  gender === 'female'
+                    ? 'bg-pink-600 text-white shadow-lg'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600'
+                }`}
+              >
+                👩 Female
+              </button>
+            </div>
+            {!gender && (
+              <p className="text-xs text-purple-700 dark:text-purple-300 mt-2 flex items-center gap-1">
+                <span className="text-yellow-600">⚠️</span> Please select your gender to continue
+              </p>
+            )}
+          </div>
+
           {/* Instructions - How to Pass */}
           <div className="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 mb-4">
             <p className="text-sm font-bold text-green-800 dark:text-green-200 mb-2">
