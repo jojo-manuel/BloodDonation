@@ -26,6 +26,7 @@ export default function BloodBankDashboard() {
   const [selectedTokenDate, setSelectedTokenDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
   const [loadingTokens, setLoadingTokens] = useState(false); // Loading state for tokens
   const [showAllTokens, setShowAllTokens] = useState(true); // Toggle between search and view all
+  const [tokenFilter, setTokenFilter] = useState('today'); // Filter: 'all', 'today', 'date'
   const [reviews, setReviews] = useState([]); // Reviews for this blood bank
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
