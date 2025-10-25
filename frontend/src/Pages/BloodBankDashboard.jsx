@@ -1641,14 +1641,64 @@ export default function BloodBankDashboard() {
                   }}
                 />
 
+                {/* Donor Count Summary */}
+                <div className="mb-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 shadow-md">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">👥</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                          Total Available Donors in Database
+                        </p>
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {donors.length} Donors
+                        </p>
+                      </div>
+                    </div>
+                    {(searchBloodGroup || searchDonorEmail || searchPlace) && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🔍</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                            Filtered Results
+                          </p>
+                          <p className="text-xl font-bold text-pink-600 dark:text-pink-400">
+                            {filteredDonors.length} Donors
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
             {donors.length === 0 ? (
               <div className="text-center py-8">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">No donors found.</p>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">Loading donors from database...</p>
+              </div>
+            ) : filteredDonors.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                  No donors match your search criteria
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  Try adjusting your filters or clear the search
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchBloodGroup('');
+                    setSearchDonorEmail('');
+                    setSearchPlace('');
+                  }}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                >
+                  Clear All Filters
+                </button>
               </div>
             ) : (
               <div className="space-y-4">
-                {donors.map((donor) => (
+                {filteredDonors.map((donor) => (
                   <div key={donor._id} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex-1">
