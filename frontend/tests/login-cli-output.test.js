@@ -377,13 +377,13 @@ describe('Login Functionality Tests - CLI OUTPUT', () => {
       console.log('⏳ Step 2: Entering valid email...');
       const emailInput = await driver.findElement(By.css('input[type="email"]'));
       await emailInput.clear();
-      await emailInput.sendKeys('jojo2001p@gmail.com');
-      console.log('✅ Email entered: jojo2001p@gmail.com');
+      await emailInput.sendKeys('jeevan@gmail.com');
+      console.log('✅ Email entered: jeevan@gmail.com');
       
       console.log('⏳ Step 3: Entering valid password...');
       const passwordInput = await driver.findElement(By.css('input[type="password"]'));
       await passwordInput.clear();
-      await passwordInput.sendKeys('MyPassword123!');
+      await passwordInput.sendKeys('Jeevan123!@#');
       console.log('✅ Password entered: ************');
       
       console.log('⏳ Step 4: Clicking login button...');
