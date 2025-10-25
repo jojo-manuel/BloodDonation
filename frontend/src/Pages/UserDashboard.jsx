@@ -560,6 +560,15 @@ export default function UserDashboard() {
   const [showConsentForm, setShowConsentForm] = useState(false); // Show medical consent form
   const [consentData, setConsentData] = useState(null); // Stored consent form data
   const [requestModal, setRequestModal] = useState(null); // For enhanced request modal
+  const [showAvatarDropdown, setShowAvatarDropdown] = useState(false); // Avatar menu dropdown
+  const [showProfileModal, setShowProfileModal] = useState(false); // Profile modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false); // Settings modal
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  }); // Password change data
+  const [updatingPassword, setUpdatingPassword] = useState(false);
   const [patients, setPatients] = useState([]); // Available patients
   const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
   const [selectedPatient, setSelectedPatient] = useState('');
