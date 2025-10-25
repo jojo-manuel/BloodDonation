@@ -150,26 +150,26 @@ export default function UserDashboard() {
     setSelectedBloodBank(''); // Reset blood bank selection
 
     try {
-      const response = await api.get(`/patients/search-by-mrid?mrid=${encodeURIComponent(trimmed)}`);
+      // Call donor search endpoint (not patient search!)
+      const response = await api.get(`/donors/searchByMrid/${encodeURIComponent(trimmed)}`);
       
       if (response.data.success) {
-        const patients = response.data.data || [];
-        setMridResults(patients);
+        const donors = response.data.data || [];
+        const patientInfo = response.data.patientInfo;
         
-        if (patients.length === 0) {
-          setMridError('No patients found with this MRID.');
-        } else if (patients.length === 1) {
-          setMridSuccess(`Found 1 patient for MRID ${trimmed}`);
-          setSelectedBloodBank(patients[0].bloodBankId._id); // Auto-select if only one
+        setMridResults(donors);
+        
+        if (donors.length === 0) {
+          setMridError(`Patient found (MRID: ${trimmed}, Blood Group: ${patientInfo?.bloodGroup || 'Unknown'}), but no matching donors available.`);
         } else {
-          setMridSuccess(`Found ${patients.length} patients with MRID ${trimmed} from different blood banks. Please select a blood bank.`);
+          setMridSuccess(`Found ${donors.length} donor(s) with blood group ${patientInfo?.bloodGroup || 'matching'} for patient "${patientInfo?.name || trimmed}"`);
         }
       } else {
-        setMridError('No patients found with this MRID.');
+        setMridError(response.data.message || 'No patient found with this MRID.');
         setMridResults([]);
       }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Unable to search for patients with the provided MRID.';
+      const message = error?.response?.data?.message || 'Patient not found with the provided MRID.';
       setMridError(message);
       setMridResults([]);
     } finally {
