@@ -1112,9 +1112,17 @@ export default function UserDashboard() {
             <div className="flex-shrink-0 relative">
               <button
                 onClick={() => setShowAvatarDropdown(!showAvatarDropdown)}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg ring-4 ring-white/20 hover:ring-pink-300 transition-all cursor-pointer"
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg ring-4 ring-white/20 hover:ring-pink-300 transition-all cursor-pointer overflow-hidden"
               >
-                {profileData.name ? profileData.name.charAt(0).toUpperCase() : loginUsername.charAt(0).toUpperCase()}
+                {profileData.profileImage ? (
+                  <img
+                    src={profileData.profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{profileData.name ? profileData.name.charAt(0).toUpperCase() : loginUsername.charAt(0).toUpperCase()}</span>
+                )}
               </button>
               
               {/* Dropdown Menu */}
