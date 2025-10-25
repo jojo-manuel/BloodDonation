@@ -33,6 +33,7 @@ export default function UserDashboard() {
   const [results, setResults] = useState([]);
   const [mrid, setMrid] = useState("");
   const [mridResults, setMridResults] = useState([]);
+  const [selectedBloodBank, setSelectedBloodBank] = useState(""); // For multiple blood bank selection
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [loading, setLoading] = useState(false);
