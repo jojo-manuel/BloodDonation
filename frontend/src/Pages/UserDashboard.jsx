@@ -1676,7 +1676,9 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {activeTab === "profile" && (
+        {/* Profile tab removed */}
+
+        {activeTab === "settings-REMOVED" && (
           <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <div className="mb-6 text-center">
               <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
