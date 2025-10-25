@@ -272,12 +272,41 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
   filter.isBlocked = { $ne: true };
 
   // Find all donors with matching blood group, sorted by eligibility
-  const donors = await Donor.find(filter)
+  let donors = await Donor.find(filter)
     .populate('userId', 'username name email phone profileImage')
     .lean()
     .sort({ lastDonatedDate: 1 }); // Sort by oldest donation first (most eligible first)
 
-  return res.json({ success: true, message: 'Donors found', data: donors });
+  // Add eligibility information to each donor
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
+
+  donors = donors.map(donor => {
+    const isEligible = !donor.lastDonatedDate || donor.lastDonatedDate < threeMonthsAgo;
+    const daysSinceLastDonation = donor.lastDonatedDate 
+      ? Math.floor((new Date() - new Date(donor.lastDonatedDate)) / (1000 * 60 * 60 * 24))
+      : null;
+    
+    return {
+      ...donor,
+      eligibilityStatus: isEligible ? 'eligible' : 'not_eligible',
+      daysSinceLastDonation,
+      nextEligibleDate: donor.lastDonatedDate 
+        ? new Date(new Date(donor.lastDonatedDate).getTime() + (90 * 24 * 60 * 60 * 1000))
+        : null
+    };
+  });
+
+  return res.json({ 
+    success: true, 
+    message: `Found ${donors.length} donor(s) with blood group ${patient.bloodGroup}`, 
+    data: donors,
+    patientInfo: {
+      mrid: patient.mrid,
+      bloodGroup: patient.bloodGroup,
+      name: patient.name
+    }
+  });
 });
 
 /**
