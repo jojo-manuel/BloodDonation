@@ -1151,22 +1151,6 @@ export default function UserDashboard() {
           >
             ⭐ Leave Reviews
           </button>
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "profile" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            👤 Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "settings" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
-          >
-            ⚙️ Settings
-          </button>
         </div>
       </div>
 
