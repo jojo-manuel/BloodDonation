@@ -1144,16 +1144,16 @@ export default function UserDashboard() {
                     <span className="font-medium">My Profile</span>
                   </button>
                   
-                  <button
-                    onClick={() => {
-                      setShowSettingsModal(true);
-                      setShowAvatarDropdown(false);
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
-                  >
-                    <span className="text-xl">⚙️</span>
-                    <span className="font-medium">Settings</span>
-                  </button>
+              <button
+                onClick={() => {
+                  window.location.href = "/user-settings";
+                  setShowAvatarDropdown(false);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
+              >
+                <span className="text-xl">⚙️</span>
+                <span className="font-medium">Settings</span>
+              </button>
                   
                   <button
                     onClick={handleLogout}
