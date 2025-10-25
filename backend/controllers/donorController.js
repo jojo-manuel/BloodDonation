@@ -123,28 +123,37 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   
   if (availability === 'available') filter.availability = true;
 
-  // Filter lastDonatedDate to be before today
-  filter.lastDonatedDate = { $lt: new Date() };
+  // Filter for donors eligible to donate (never donated OR donated 3+ months ago)
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
+  
+  filter.$or = [
+    { lastDonatedDate: null }, // Never donated
+    { lastDonatedDate: { $exists: false } }, // Field doesn't exist
+    { lastDonatedDate: { $lt: threeMonthsAgo } } // Donated more than 3 months ago
+  ];
 
   // Exclude suspended donors from search results
   const User = require('../Models/User');
   const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
   filter.userId = { $nin: suspendedUserIds };
 
-  // Exclude donors who have completed donations
+  // Exclude donors who have active bookings (not yet donated)
   const Booking = require('../Models/Booking');
-  const completedDonorIds = await Booking.find({ status: 'completed' }).distinct('donorId');
+  const activeDonorIds = await Booking.find({ 
+    status: { $in: ['pending', 'confirmed'] } 
+  }).distinct('donorId');
   
-  // Add to the filter to exclude donors with completed bookings
+  // Add to the filter to exclude donors with active bookings
   if (filter._id) {
     if (filter._id.$nin) {
-      filter._id.$nin = [...filter._id.$nin, ...completedDonorIds];
+      filter._id.$nin = [...filter._id.$nin, ...activeDonorIds];
     } else {
-      filter._id = { ...filter._id, $nin: completedDonorIds };
+      filter._id = { ...filter._id, $nin: activeDonorIds };
     }
   } else {
-    if (completedDonorIds.length > 0) {
-      filter._id = { $nin: completedDonorIds };
+    if (activeDonorIds.length > 0) {
+      filter._id = { $nin: activeDonorIds };
     }
   }
 
