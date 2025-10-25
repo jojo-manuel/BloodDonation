@@ -18,7 +18,11 @@
     "test:playwright:debug": "playwright test --debug",
     "test:bdd": "cucumber-js",
     "test:bdd:report": "cucumber-js && node generate-report.js",
-    "test:bdd:tags": "cucumber-js --tags"
+    "test:bdd:tags": "cucumber-js --tags",
+    "test:bdd:login": "cucumber-js features/login.feature",
+    "test:bdd:donor-booking": "cucumber-js features/donor-booking.feature",
+    "test:bdd:patient": "cucumber-js features/patient-management.feature",
+    "test:bdd:donor-slots": "cucumber-js features/donor-slot-booking.feature"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
