@@ -1477,37 +1477,10 @@ export default function UserDashboard() {
               </form>
             </div>
 
-            {/* Blood Bank Selector (if multiple results) */}
-            {mridResults.length > 1 && (
-              <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
-                <div className="mb-4 text-center">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                    🏥 Select Blood Bank
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                    Multiple patients found with this MRID from different blood banks
-                  </p>
-                </div>
-
-                <div className="max-w-2xl mx-auto">
-                  <select
-                    value={selectedBloodBank}
-                    onChange={(e) => setSelectedBloodBank(e.target.value)}
-                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                  >
-                    <option value="">-- Select a Blood Bank --</option>
-                    {mridResults.map((patient) => (
-                      <option key={patient._id} value={patient.bloodBankId._id}>
-                        {patient.bloodBankName} - {patient.bloodBankId.address?.city || 'Unknown City'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* Patient Details */}
-            {mridResults.length > 0 && (mridResults.length === 1 || selectedBloodBank) && (
+            {/* Donor Results are already shown above in the "Available Donors" section */}
+            
+            {/* Optional: Show patient info if you want to display which patient these donors match */}
+            {false && mridResults.length > 0 && (
               <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5 md:p-8">
                 {mridResults
                   .filter((p) => mridResults.length === 1 || p.bloodBankId._id === selectedBloodBank)
