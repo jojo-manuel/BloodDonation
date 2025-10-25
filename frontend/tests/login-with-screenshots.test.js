@@ -225,12 +225,12 @@ describe('Login Functionality Tests - WITH SCREENSHOTS', () => {
     // Enter valid credentials
     const emailInput = await driver.findElement(By.css('input[type="email"]'));
     await emailInput.clear();
-    await emailInput.sendKeys('jojo2001p@gmail.com');
+    await emailInput.sendKeys('jeevan@gmail.com');
     await takeScreenshot('07-valid-email-entered');
     
     const passwordInput = await driver.findElement(By.css('input[type="password"]'));
     await passwordInput.clear();
-    await passwordInput.sendKeys('MyPassword123!');
+    await passwordInput.sendKeys('Jeevan123!@#');
     await takeScreenshot('07-valid-password-entered');
     
     // Click login

@@ -29,13 +29,13 @@ async function main() {
     // Find and fill email input
     console.log('Finding email input field...');
     const emailInput = await driver.findElement(By.css('input[type="email"]'));
-    await emailInput.sendKeys("jojo2001p@gmail.com");
-    console.log('Email entered: jojo2001p@gmail.com');
+    await emailInput.sendKeys("jeevan@gmail.com");
+    console.log('Email entered: jeevan@gmail.com');
     
     // Find and fill password input
     console.log('Finding password input field...');
     const passwordInput = await driver.findElement(By.css('input[type="password"]'));
-    await passwordInput.sendKeys("MyPassword123!");
+    await passwordInput.sendKeys("Jeevan123!@#");
     console.log('Password entered: ************');
     
     // Click login button
