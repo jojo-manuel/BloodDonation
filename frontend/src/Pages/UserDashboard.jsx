@@ -1108,11 +1108,54 @@ export default function UserDashboard() {
       <div className="mx-auto w-full max-w-6xl mb-8">
         <div className="rounded-2xl border border-white/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 p-6 shadow-xl backdrop-blur-2xl transition dark:border-white/10">
           <div className="flex items-center gap-6">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg ring-4 ring-white/20">
+            {/* Avatar with Dropdown */}
+            <div className="flex-shrink-0 relative">
+              <button
+                onClick={() => setShowAvatarDropdown(!showAvatarDropdown)}
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg ring-4 ring-white/20 hover:ring-pink-300 transition-all cursor-pointer"
+              >
                 {profileData.name ? profileData.name.charAt(0).toUpperCase() : loginUsername.charAt(0).toUpperCase()}
-              </div>
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showAvatarDropdown && (
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                  <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <p className="font-semibold text-gray-900 dark:text-white">{profileData.name || loginUsername}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{profileData.email}</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(true);
+                      setShowAvatarDropdown(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                  >
+                    <span className="text-xl">👤</span>
+                    <span className="font-medium">My Profile</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setShowSettingsModal(true);
+                      setShowAvatarDropdown(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                  >
+                    <span className="text-xl">⚙️</span>
+                    <span className="font-medium">Settings</span>
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-3 text-red-600 dark:text-red-400 border-t border-gray-200 dark:border-gray-700"
+                  >
+                    <span className="text-xl">🚪</span>
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* User Info */}
