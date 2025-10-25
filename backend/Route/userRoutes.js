@@ -47,6 +47,7 @@ let storage = multer.diskStorage({
 let upload = multer({ storage: storage });
 
 router.patch('/me/profile-image', auth(true), upload.single('profileImage'), uploadProfileImage);
+router.post('/me/profile-image', auth(true), upload.single('profileImage'), uploadProfileImage);
 
 // Complete profile for Google users
 router.post('/me/complete-profile', auth(true), completeProfile);
