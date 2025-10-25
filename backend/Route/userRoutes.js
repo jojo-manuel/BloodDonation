@@ -25,6 +25,9 @@ router.get('/me', auth(true), me);
 router.patch('/me', auth(true), validate({ body: userUpdateBody }), updateMe);
 router.put('/me', auth(true), validate({ body: userUpdateBody }), updateMe);
 
+// Update current user's password
+router.put('/me/password', auth(true), userController.updatePassword);
+
 // Update donor availability
 router.patch('/me/availability', auth(true), updateDonorAvailability);
 
