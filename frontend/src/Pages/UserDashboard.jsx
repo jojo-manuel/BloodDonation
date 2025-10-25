@@ -1384,12 +1384,23 @@ export default function UserDashboard() {
                             {(donor.userId?.name || donor.name || donor.userId?.username)?.slice(0, 2).toUpperCase() || "NA"}
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.userId?.name || donor.name || donor.userId?.username || "N/A"}</h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.userId?.name || donor.name || donor.userId?.username || "N/A"}</h4>
+                              {donor.eligibilityStatus === 'eligible' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                  ✓ Eligible
+                                </span>
+                              ) : donor.eligibilityStatus === 'not_eligible' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                  ⏳ Wait {donor.nextEligibleDate ? Math.ceil((new Date(donor.nextEligibleDate) - new Date()) / (1000 * 60 * 60 * 24)) : '?'} days
+                                </span>
+                              ) : null}
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
                               <p>🩸 Blood Type: {donor.bloodGroup}</p>
                               <p>📍 Location: {donor.houseAddress?.city || "N/A"}</p>
                               <p>⭐ Rating: 4.8/5</p>
-                              <p>📅 Last Donation: {donor.lastDonatedDate ? new Date(donor.lastDonatedDate).toLocaleDateString() : "N/A"}</p>
+                              <p>📅 Last Donation: {donor.lastDonatedDate ? new Date(donor.lastDonatedDate).toLocaleDateString() : "Never"}</p>
                             </div>
                           </div>
                         </div>
