@@ -171,15 +171,46 @@ export default function BloodBankDashboard() {
     }
   };
 
-  // Fetch donors
+  // Fetch donors - Always fetch ALL available donors
   const fetchDonors = async () => {
     try {
       const res = await api.get("/bloodbank/donors");
-      if (res.data.success) setDonors(res.data.data);
+      if (res.data.success) {
+        setDonors(res.data.data);
+        console.log(`✅ Fetched ${res.data.data.length} donors from database`);
+      }
     } catch (err) {
       console.error("Failed to fetch donors", err);
     }
   };
+
+  // Filter donors based on search criteria (client-side filtering)
+  const filteredDonors = React.useMemo(() => {
+    if (!donors || donors.length === 0) return [];
+    
+    return donors.filter(donor => {
+      // Filter by blood group
+      if (searchBloodGroup && donor.bloodGroup !== searchBloodGroup) {
+        return false;
+      }
+      
+      // Filter by email
+      if (searchDonorEmail && !donor.email?.toLowerCase().includes(searchDonorEmail.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by place (address, district, state)
+      if (searchPlace) {
+        const searchLower = searchPlace.toLowerCase();
+        const addressStr = formatAddress(donor.address).toLowerCase();
+        if (!addressStr.includes(searchLower)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [donors, searchBloodGroup, searchDonorEmail, searchPlace]);
 
   // Fetch visited donors with their visit history
   const fetchVisitedDonors = async () => {
