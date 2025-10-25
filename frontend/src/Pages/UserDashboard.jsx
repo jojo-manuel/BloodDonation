@@ -1667,7 +1667,6 @@ export default function UserDashboard() {
         {/* Profile and Settings tabs have been removed */}
 
         {/* Request Details Modal */}
-        {selectedRequest && (
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
