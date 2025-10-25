@@ -135,31 +135,41 @@ export default function UserDashboard() {
 
   const handleMridSearch = async (event) => {
     event.preventDefault();
-    const trimmed = mrid.trim();
+    const trimmed = mrid.trim().toUpperCase(); // Convert to uppercase to match database
     if (!trimmed) {
       setMridError('Please enter a patient MRID to search.');
       setMridSuccess('');
       setMridResults([]);
+      setSelectedBloodBank('');
       return;
     }
 
     setMridLoading(true);
     setMridError('');
     setMridSuccess('');
+    setSelectedBloodBank(''); // Reset blood bank selection
 
     try {
-      const response = await api.get(`/donors/searchByMrid/${encodeURIComponent(trimmed)}`);
-      // Support both shapes: { data: Donor[] } or { data: { data: Donor[] } }
-      const dataNode = response?.data?.data;
-      const payload = Array.isArray(dataNode) ? dataNode : (dataNode?.data || []);
-      setMridResults(payload);
-      if (payload.length === 0) {
-        setMridError('No available donors matched this MRID.');
+      const response = await api.get(`/patients/search-by-mrid?mrid=${encodeURIComponent(trimmed)}`);
+      
+      if (response.data.success) {
+        const patients = response.data.data || [];
+        setMridResults(patients);
+        
+        if (patients.length === 0) {
+          setMridError('No patients found with this MRID.');
+        } else if (patients.length === 1) {
+          setMridSuccess(`Found 1 patient for MRID ${trimmed}`);
+          setSelectedBloodBank(patients[0].bloodBankId._id); // Auto-select if only one
+        } else {
+          setMridSuccess(`Found ${patients.length} patients with MRID ${trimmed} from different blood banks. Please select a blood bank.`);
+        }
       } else {
-        setMridSuccess(`Found ${payload.length} donor${payload.length > 1 ? 's' : ''} for MRID ${trimmed}.`);
+        setMridError('No patients found with this MRID.');
+        setMridResults([]);
       }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Unable to fetch donors for the provided MRID.';
+      const message = error?.response?.data?.message || 'Unable to search for patients with the provided MRID.';
       setMridError(message);
       setMridResults([]);
     } finally {
