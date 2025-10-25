@@ -1665,13 +1665,8 @@ export default function UserDashboard() {
         )}
 
         {/* Profile and Settings tabs have been removed */}
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Customize your account preferences and privacy settings
-              </p>
-            </div>
 
-            <div className="max-w-4xl mx-auto space-y-6">
-              {/* Notification Settings */}
+        {/* Booking Modal */}
               <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <span>🔔</span>
