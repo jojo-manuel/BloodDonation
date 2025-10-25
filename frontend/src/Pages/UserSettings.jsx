@@ -480,8 +480,93 @@ export default function UserSettings() {
                 <span className="mr-2">←</span>
                 Back to Profile
               </Link>
+              </div>
             </div>
           </form>
+
+          {/* Password Update Section */}
+          <div className="mt-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <span>🔐</span>
+              Change Password
+            </h2>
+
+            {passwordError && (
+              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                <p className="text-red-600 dark:text-red-400">{passwordError}</p>
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+                <p className="text-green-600 dark:text-green-400">{passwordSuccess}</p>
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordUpdate} className="space-y-6">
+              <div>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Current Password *
+                </label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  className="w-full rounded-xl border border-white/30 bg-white/50 px-4 py-3 text-gray-900 placeholder-gray-500 backdrop-blur-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                  placeholder="Enter your current password"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    New Password * (min 8 characters)
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    className="w-full rounded-xl border border-white/30 bg-white/50 px-4 py-3 text-gray-900 placeholder-gray-500 backdrop-blur-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                    placeholder="Enter new password"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Confirm New Password *
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="w-full rounded-xl border border-white/30 bg-white/50 px-4 py-3 text-gray-900 placeholder-gray-500 backdrop-blur-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-gray-400"
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={updatingPassword}
+                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updatingPassword ? (
+                  <>
+                    <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Updating Password...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">🔐</span>
+                    Update Password
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </Layout>
