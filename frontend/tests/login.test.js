@@ -154,4 +154,30 @@ describe('Login Functionality Tests', () => {
     const href = await backLink.getAttribute('href');
     expect(href).toContain('/');
   });
+
+  test('should successfully login with jeevan@gmail.com', async () => {
+    // Wait for the form to load
+    await driver.wait(until.elementLocated(By.css('form')), 10000);
+
+    // Enter valid email - jeevan@gmail.com
+    const emailInput = await driver.findElement(By.css('input[type="email"]'));
+    await emailInput.clear();
+    await emailInput.sendKeys('jeevan@gmail.com');
+
+    // Enter valid password
+    const passwordInput = await driver.findElement(By.css('input[type="password"]'));
+    await passwordInput.clear();
+    await passwordInput.sendKeys('Jeevan123!@#');
+
+    // Click login button
+    const loginButton = await driver.findElement(By.css('button[type="submit"]'));
+    await loginButton.click();
+
+    // Wait for redirect (successful login should redirect away from /login)
+    await driver.sleep(3000);
+    const currentUrl = await driver.getCurrentUrl();
+
+    // Verify redirect happened (should not be on login page anymore)
+    expect(currentUrl.includes('dashboard') || !currentUrl.includes('login')).toBeTruthy();
+  }, 30000);
 });
