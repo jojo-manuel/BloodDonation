@@ -99,7 +99,7 @@ const CitySearchDropdown = ({ value, onChange, placeholder = "Search city...", c
     const fetchCities = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/api/donors/cities/available');
+        const response = await api.get('/donors/cities/available');
         if (response.data.success) {
           setCities(response.data.data);
           setFilteredCities(response.data.data.slice(0, 10));
