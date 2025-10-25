@@ -452,10 +452,10 @@ export default function UserSettings() {
                   placeholder="Enter your state"
                 />
               </div>
-            </div>
+              </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/20">
+              {/* Action Buttons for Basic Info */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/20">
               <button
                 type="submit"
                 disabled={saving}
