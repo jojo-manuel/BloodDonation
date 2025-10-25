@@ -2241,6 +2241,326 @@ export default function UserDashboard() {
         )}
       </div>
 
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">👤 My Profile</h2>
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Profile Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-pink-500/20 to-purple-500/20 p-4 rounded-xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-pink-500 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-2">
+                      {profileData.name ? profileData.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Status</div>
+                    <div className="font-bold text-gray-900 dark:text-white">
+                      {profileData.isSuspended ? '⏸️ Suspended' : '✅ Active'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-4 rounded-xl">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">📧</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Email</div>
+                    <div className="font-bold text-gray-900 dark:text-white">
+                      {profileData.isEmailVerified ? '✅ Verified' : '⏳ Pending'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 p-4 rounded-xl">
+                  <div className="text-center">
+                    <div className="text-3xl mb-2">👤</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Role</div>
+                    <div className="font-bold text-gray-900 dark:text-white capitalize">
+                      {profileData.role || 'User'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Edit Profile */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">✏️ Edit Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.name || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={profileData.phone || ''}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Email 🔒
+                    </label>
+                    <input
+                      type="email"
+                      value={profileData.email || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Username 🔒
+                    </label>
+                    <input
+                      type="text"
+                      value={profileData.username || ''}
+                      readOnly
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Change Password Section */}
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 mb-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">🔐 Change Password</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Current Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      New Password * (min 8 characters)
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Confirm New Password *
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleUpdatePassword}
+                    disabled={updatingPassword}
+                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-4 rounded-lg hover:from-orange-700 hover:to-red-700 disabled:opacity-50 font-semibold"
+                  >
+                    {updatingPassword ? '⏳ Updating Password...' : '🔐 Update Password'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={updatingProfile}
+                  className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-pink-700 hover:to-purple-700 disabled:opacity-50 font-semibold"
+                >
+                  {updatingProfile ? '⏳ Saving...' : '💾 Save Profile'}
+                </button>
+
+                <button
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {profileData.isSuspended && (
+                <div className="mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded">
+                  <p className="font-semibold">⚠️ Account Suspended</p>
+                  <p className="text-sm mt-1">
+                    Your account is suspended until {profileData.suspendedUntil ? new Date(profileData.suspendedUntil).toLocaleDateString() : 'reactivated'}.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">⚙️ Settings</h2>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Notification Settings */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-4">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">🔔 Notifications</h3>
+                <div className="space-y-3">
+                  {[
+                    { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive donation requests via email' },
+                    { key: 'smsNotifications', label: 'SMS Notifications', desc: 'Receive urgent alerts via SMS' },
+                    { key: 'pushNotifications', label: 'Push Notifications', desc: 'Browser push notifications' },
+                    { key: 'donationReminders', label: 'Donation Reminders', desc: 'Periodic reminders to donate' }
+                  ].map(item => (
+                    <div key={item.key} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">{item.label}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settingsData[item.key]}
+                          onChange={(e) => setSettingsData(prev => ({...prev, [item.key]: e.target.checked}))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-4">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">🔒 Privacy</h3>
+                <div className="space-y-3">
+                  {[
+                    { key: 'twoFactorAuth', label: 'Two-Factor Authentication', desc: 'Extra security for your account' },
+                    { key: 'marketingEmails', label: 'Marketing Emails', desc: 'Promotional emails and updates' }
+                  ].map(item => (
+                    <div key={item.key} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                      <div>
+                        <p className="font-semibold text-gray-900 dark:text-white">{item.label}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settingsData[item.key]}
+                          onChange={(e) => setSettingsData(prev => ({...prev, [item.key]: e.target.checked}))}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Appearance */}
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 mb-4">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">🎨 Appearance</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Language
+                    </label>
+                    <select
+                      value={settingsData.language}
+                      onChange={(e) => setSettingsData(prev => ({...prev, language: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">हिन्दी (Hindi)</option>
+                      <option value="ta">தமிழ் (Tamil)</option>
+                      <option value="te">తెలుగు (Telugu)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Timezone
+                    </label>
+                    <select
+                      value={settingsData.timezone}
+                      onChange={(e) => setSettingsData(prev => ({...prev, timezone: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                      <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+                      <option value="Europe/London">Europe/London (GMT)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    localStorage.setItem('userSettings', JSON.stringify(settingsData));
+                    alert('✅ Settings saved successfully!');
+                    setShowSettingsModal(false);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-pink-700 hover:to-purple-700 font-semibold"
+                >
+                  💾 Save Settings
+                </button>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Medical Consent Form */}
       {showConsentForm && bookingModal && (
         <MedicalConsentForm
