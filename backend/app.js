@@ -66,6 +66,19 @@ app.use(express.json({ limit: '1mb' }));
 // Cookie parser for signed/unsigned cookies
 app.use(cookieParser());
 
+// Serve static files from uploads directory
+const path = require('path');
+const fs = require('fs');
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('📁 Created uploads directory');
+}
+
+app.use('/uploads', express.static(uploadsDir));
+
 // Passport middleware
 app.use(passport.initialize());
 

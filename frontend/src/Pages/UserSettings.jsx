@@ -12,7 +12,8 @@ export default function UserSettings() {
     city: '',
     state: '',
     bloodGroup: '',
-    profileImage: ''
+    profileImage: '',
+    provider: '' // To check if user signed in with OAuth
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -484,7 +485,8 @@ export default function UserSettings() {
             </div>
           </form>
 
-          {/* Password Update Section */}
+          {/* Password Update Section - Only show for non-OAuth users */}
+          {(!user.provider || user.provider === 'local') && (
           <div className="mt-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>🔐</span>
@@ -567,6 +569,25 @@ export default function UserSettings() {
               </button>
             </form>
           </div>
+          )}
+
+          {/* Info message for OAuth users */}
+          {user.provider && user.provider !== 'local' && (
+          <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/20">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">ℹ️</span>
+              <div>
+                <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">
+                  Google Sign-In Account
+                </h3>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  You signed in with Google. Password management is handled through your Google account. 
+                  To change your password, please visit your Google Account settings.
+                </p>
+              </div>
+            </div>
+          </div>
+          )}
         </div>
       </div>
     </Layout>

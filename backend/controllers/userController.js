@@ -416,31 +416,28 @@ exports.updateDonorAvailability = asyncHandler(async (req, res) => {
 /**
  * Upload profile image
  */
-exports.uploadProfileImage = [
-  upload.single('profileImage'),
-  asyncHandler(async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No file uploaded."
-      });
-    }
-
-    const imagePath = `/uploads/${req.file.filename}`;
-
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { profileImage: imagePath },
-      { new: true }
-    ).select('-password');
-
-    res.json({
-      success: true,
-      message: "Profile image uploaded successfully.",
-      data: user
+exports.uploadProfileImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "No file uploaded."
     });
-  })
-];
+  }
+
+  const imagePath = `/uploads/${req.file.filename}`;
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { profileImage: imagePath },
+    { new: true }
+  ).select('-password');
+
+  res.json({
+    success: true,
+    message: "Profile image uploaded successfully.",
+    data: user
+  });
+});
 const DonationRequest = require('../Models/DonationRequest');
 const BloodBank = require('../Models/BloodBank');
 const Booking = require('../Models/Booking');
