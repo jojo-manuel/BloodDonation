@@ -1381,10 +1381,10 @@ export default function UserDashboard() {
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-full bg-pink-600 flex items-center justify-center font-bold text-lg text-white">
-                            {donor.userId?.username?.slice(0, 2).toUpperCase() || "NA"}
+                            {(donor.userId?.name || donor.name || donor.userId?.username)?.slice(0, 2).toUpperCase() || "NA"}
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.userId?.username || "N/A"}</h4>
+                            <h4 className="font-bold text-lg text-gray-900 dark:text-white">{donor.userId?.name || donor.name || donor.userId?.username || "N/A"}</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
                               <p>🩸 Blood Type: {donor.bloodGroup}</p>
                               <p>📍 Location: {donor.houseAddress?.city || "N/A"}</p>
