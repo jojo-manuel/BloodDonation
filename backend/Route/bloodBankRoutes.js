@@ -52,6 +52,13 @@ router.get(
   bloodBankController.getBookingByToken
 );
 
+// Get all donors (for manage donors section)
+router.get(
+  "/donors",
+  authMiddleware,
+  bloodBankController.getAllDonors
+);
+
 // Get all donors who have visited with their visit history
 router.get(
   "/visited-donors",
