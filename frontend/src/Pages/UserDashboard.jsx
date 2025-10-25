@@ -1666,12 +1666,7 @@ export default function UserDashboard() {
 
         {/* Profile and Settings tabs have been removed */}
 
-        {/* Booking Modal */}
-              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span>🔔</span>
-                  Notification Preferences
-                </h3>
+        {/* Request Details Modal */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
                     <div>
