@@ -7,8 +7,8 @@ describe('Donor Complete Flow Tests', () => {
   
   // Test credentials
   const DONOR_CREDENTIALS = {
-    email: 'jojo2001p@gmail.com',
-    password: 'MyPassword123!'
+    email: 'jeevan@gmail.com',
+    password: 'Jeevan123!@#'
   };
 
   beforeAll(async () => {
