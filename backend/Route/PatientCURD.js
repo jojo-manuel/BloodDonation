@@ -197,6 +197,90 @@ router.get("/admin/all", authMiddleware, async (req, res) => {
 });
 
 /**
+ * @route   GET /api/patients/search-by-mrid
+ * @desc    Search patients by MRID (returns all patients with matching MRID from all blood banks)
+ * @access  Private (User)
+ */
+router.get("/search-by-mrid", authMiddleware, async (req, res) => {
+  try {
+    const { mrid } = req.query;
+
+    console.log('🔍 MRID Search Request:', mrid);
+
+    if (!mrid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "MRID is required" 
+      });
+    }
+
+    // Search for all patients with matching MRID (case-insensitive exact match)
+    const patients = await Patient.find({ 
+      mrid: { $regex: `^${mrid}$`, $options: 'i' }
+    })
+    .populate('bloodBankId', 'name address phoneNumber email')
+    .sort({ bloodBankName: 1 });
+
+    console.log(`  Found ${patients.length} patient(s) with MRID: ${mrid}`);
+    
+    if (patients.length > 0) {
+      console.log('  Patient Details:');
+      patients.forEach((p, index) => {
+        console.log(`    ${index + 1}. ${p.name} | MRID: ${p.mrid} | Blood Bank: ${p.bloodBankName} | Units: ${p.unitsReceived}/${p.unitsRequired} | Status: ${p.isFulfilled ? 'Fulfilled' : 'Pending'}`);
+      });
+    }
+
+    // Fetch donation requests for these patients
+    const patientIds = patients.map(p => p._id);
+    const donationRequests = await DonationRequest.find({
+      patientId: { $in: patientIds }
+    })
+    .populate('donorId', 'userId')
+    .populate({
+      path: 'donorId',
+      populate: {
+        path: 'userId',
+        select: 'name username email'
+      }
+    })
+    .sort({ createdAt: -1 });
+
+    // Attach donation requests to patients
+    const patientsWithDetails = patients.map(patient => {
+      const requests = donationRequests.filter(r => 
+        r.patientId.toString() === patient._id.toString()
+      );
+      
+      return {
+        ...patient.toObject(),
+        donationHistory: requests.map(r => ({
+          _id: r._id,
+          donorName: r.donorId?.userId?.name || r.donorId?.userId?.username || 'Unknown',
+          status: r.status,
+          requestedDate: r.requestedDate,
+          requestedTime: r.requestedTime,
+          createdAt: r.createdAt
+        }))
+      };
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      data: patientsWithDetails,
+      count: patients.length,
+      multipleBloodBanks: patients.length > 1
+    });
+  } catch (err) {
+    console.error("❌ MRID Search Error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error while searching by MRID",
+      error: err.message 
+    });
+  }
+});
+
+/**
  * @route   GET /api/patients/search
  * @desc    Search patients by blood bank ID and MRID
  * @access  Private (User)
