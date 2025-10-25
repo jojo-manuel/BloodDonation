@@ -1413,6 +1413,253 @@ export default function UserDashboard() {
           </>
         )}
 
+        {/* Search by MRID Tab */}
+        {activeTab === "searchByMrid" && (
+          <div className="space-y-6">
+            {/* MRID Search Form */}
+            <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5 md:p-8">
+              <div className="mb-6 text-center">
+                <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                  🆔 Search Patient by MRID
+                </h2>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Enter a patient's Medical Record ID to view their blood donation status
+                </p>
+              </div>
+
+              <form onSubmit={handleMridSearch} className="max-w-2xl mx-auto space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">
+                    Patient MRID *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter patient MRID (e.g., MR12345)"
+                    value={mrid}
+                    onChange={(e) => setMrid(e.target.value.toUpperCase())}
+                    required
+                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300 uppercase"
+                  />
+                </div>
+
+                {mridError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                    <p className="text-sm text-red-600 dark:text-red-400">{mridError}</p>
+                  </div>
+                )}
+
+                {mridSuccess && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+                    <p className="text-sm text-green-700 dark:text-green-400">{mridSuccess}</p>
+                  </div>
+                )}
+
+                <div className="flex justify-center">
+                  <button
+                    type="submit"
+                    disabled={mridLoading}
+                    className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-8 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-indigo-500/30 active:scale-[0.99] disabled:opacity-50"
+                  >
+                    <span className="mr-2">🔍</span>
+                    {mridLoading ? 'Searching...' : 'Search Patient'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Blood Bank Selector (if multiple results) */}
+            {mridResults.length > 1 && (
+              <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
+                <div className="mb-4 text-center">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                    🏥 Select Blood Bank
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Multiple patients found with this MRID from different blood banks
+                  </p>
+                </div>
+
+                <div className="max-w-2xl mx-auto">
+                  <select
+                    value={selectedBloodBank}
+                    onChange={(e) => setSelectedBloodBank(e.target.value)}
+                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
+                  >
+                    <option value="">-- Select a Blood Bank --</option>
+                    {mridResults.map((patient) => (
+                      <option key={patient._id} value={patient.bloodBankId._id}>
+                        {patient.bloodBankName} - {patient.bloodBankId.address?.city || 'Unknown City'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Patient Details */}
+            {mridResults.length > 0 && (mridResults.length === 1 || selectedBloodBank) && (
+              <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5 md:p-8">
+                {mridResults
+                  .filter((p) => mridResults.length === 1 || p.bloodBankId._id === selectedBloodBank)
+                  .map((patient) => (
+                    <div key={patient._id} className="space-y-6">
+                      {/* Header */}
+                      <div className="text-center">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                          👤 Patient Information
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Blood donation status and requirements
+                        </p>
+                      </div>
+
+                      {/* Patient Status Card */}
+                      <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-pink-200 dark:border-pink-800">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Basic Info */}
+                          <div className="space-y-3">
+                            <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+                              📋 Basic Information
+                            </h4>
+                            <div className="space-y-2">
+                              <p className="text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">Name:</span> {patient.name}
+                              </p>
+                              <p className="text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">MRID:</span> {patient.mrid}
+                              </p>
+                              <p className="text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">Blood Group:</span> {patient.bloodGroup}
+                              </p>
+                              <p className="text-gray-700 dark:text-gray-300">
+                                <span className="font-semibold">Phone:</span> {patient.phoneNumber}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Blood Units Status */}
+                          <div className="space-y-3">
+                            <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+                              🩸 Blood Units Status
+                            </h4>
+                            <div className="space-y-3">
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Units Required</p>
+                                <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
+                                  {patient.unitsRequired}
+                                </p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Units Received</p>
+                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                  {patient.unitsReceived}
+                                </p>
+                              </div>
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Remaining</p>
+                                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                  {patient.unitsRequired - patient.unitsReceived}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mt-6">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              Progress
+                            </span>
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              {Math.round((patient.unitsReceived / patient.unitsRequired) * 100)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-green-500 to-emerald-500 h-4 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min((patient.unitsReceived / patient.unitsRequired) * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Fulfillment Status */}
+                        <div className="mt-4 text-center">
+                          {patient.isFulfilled ? (
+                            <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 font-semibold">
+                              <span className="mr-2">✅</span>
+                              Requirement Fulfilled
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center px-4 py-2 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 font-semibold">
+                              <span className="mr-2">⏳</span>
+                              Awaiting Donations
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Blood Bank Information */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+                          🏥 Blood Bank Details
+                        </h4>
+                        <div className="space-y-2">
+                          <p className="text-gray-700 dark:text-gray-300">
+                            <span className="font-semibold">Name:</span> {patient.bloodBankName}
+                          </p>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            <span className="font-semibold">Location:</span>{' '}
+                            {patient.bloodBankId.address?.city}, {patient.bloodBankId.address?.state}
+                          </p>
+                          {patient.bloodBankId.phoneNumber && (
+                            <p className="text-gray-700 dark:text-gray-300">
+                              <span className="font-semibold">Contact:</span> {patient.bloodBankId.phoneNumber}
+                            </p>
+                          )}
+                          {patient.bloodBankId.email && (
+                            <p className="text-gray-700 dark:text-gray-300">
+                              <span className="font-semibold">Email:</span> {patient.bloodBankId.email}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Donation History */}
+                      {patient.donationHistory && patient.donationHistory.length > 0 && (
+                        <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                          <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">
+                            📜 Donation History ({patient.donationHistory.length})
+                          </h4>
+                          <div className="space-y-3">
+                            {patient.donationHistory.map((donation) => (
+                              <div
+                                key={donation._id}
+                                className="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg"
+                              >
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">
+                                    {donation.donorName}
+                                  </p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {donation.requestedDate ? new Date(donation.requestedDate).toLocaleDateString() : 'Date pending'}
+                                  </p>
+                                </div>
+                                <div>
+                                  {getStatusBadge(donation.status)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "myRequests" && (
           <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
             <div className="mb-6 text-center">
