@@ -965,6 +965,44 @@ export default function UserDashboard() {
     }
   };
 
+  // Handle password update
+  const handleUpdatePassword = async () => {
+    try {
+      if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+        alert('Please fill in all password fields');
+        return;
+      }
+      
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        alert('New passwords do not match');
+        return;
+      }
+      
+      if (passwordData.newPassword.length < 8) {
+        alert('New password must be at least 8 characters long');
+        return;
+      }
+      
+      setUpdatingPassword(true);
+      const res = await api.put('/users/me/password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      
+      if (res.data.success) {
+        alert('✅ Password updated successfully!');
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        setShowProfileModal(false);
+      } else {
+        alert(res.data.message || 'Failed to update password');
+      }
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to update password');
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   // Handle account suspension
   const handleSuspendAccount = async () => {
     const confirmSuspend = window.confirm(
