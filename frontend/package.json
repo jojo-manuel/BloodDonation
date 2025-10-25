@@ -15,7 +15,10 @@
     "test:playwright": "playwright test",
     "test:playwright:ui": "playwright test --ui",
     "test:playwright:headed": "playwright test --headed",
-    "test:playwright:debug": "playwright test --debug"
+    "test:playwright:debug": "playwright test --debug",
+    "test:bdd": "cucumber-js",
+    "test:bdd:report": "cucumber-js && node generate-report.js",
+    "test:bdd:tags": "cucumber-js --tags"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
