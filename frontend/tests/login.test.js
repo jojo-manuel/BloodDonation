@@ -178,17 +178,35 @@ describe('Login Functionality Tests', () => {
   }, 30000);
 
   test('should navigate to forgot password section', async () => {
-    // Wait for the form to load
-    await driver.wait(until.elementLocated(By.css('form')), 10000);
+    console.log('TEST 4: Navigate to Forgot Password');
+    console.log('----------------------------------------');
+    
+    try {
+      console.log('Step 1: Waiting for form to load...');
+      await driver.wait(until.elementLocated(By.css('form')), 10000);
+      console.log('✓ Form loaded');
 
-    // Click forgot password link
-    const forgotPasswordLink = await driver.findElement(By.xpath("//button[contains(text(), 'Forgot your password?')]"));
-    await forgotPasswordLink.click();
+      console.log('Step 2: Locating forgot password link...');
+      const forgotPasswordLink = await driver.findElement(By.xpath("//button[contains(text(), 'Forgot your password?')]"));
+      console.log('✓ Forgot password link found');
 
-    // Check if reset email input appears
-    const resetEmailInput = await driver.wait(until.elementLocated(By.css('input[placeholder*="password reset"]')), 5000);
-    expect(resetEmailInput).toBeTruthy();
-  });
+      console.log('Step 3: Clicking forgot password link...');
+      await forgotPasswordLink.click();
+      console.log('✓ Link clicked');
+
+      console.log('Step 4: Waiting for reset email input...');
+      const resetEmailInput = await driver.wait(until.elementLocated(By.css('input[placeholder*="password reset"]')), 5000);
+      expect(resetEmailInput).toBeTruthy();
+      console.log('✓ Reset email input found');
+      
+      console.log('✓ TEST 4 PASSED\n');
+      testResults.push({ name: 'Navigate to Forgot Password', status: 'PASS' });
+    } catch (error) {
+      console.log('✗ TEST 4 FAILED:', error.message, '\n');
+      testResults.push({ name: 'Navigate to Forgot Password', status: 'FAIL', error: error.message });
+      throw error;
+    }
+  }, 30000);
 
   test('should show Firebase login option', async () => {
     // Wait for the form to load
