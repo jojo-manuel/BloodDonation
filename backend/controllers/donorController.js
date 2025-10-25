@@ -150,7 +150,7 @@ exports.searchDonors = asyncHandler(async (req, res) => {
 
   // Fetch all eligible donors
   let donors = await Donor.find(filter)
-    .populate('userId', 'username email phone')
+    .populate('userId', 'username name email phone profileImage')
     .lean();
 
   // Get booking statistics for each donor
@@ -263,7 +263,7 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     filter._id = { $nin: completedDonorIds };
   }
 
-  const donors = await Donor.find(filter).populate('userId', 'username email').sort({ updatedAt: -1 });
+  const donors = await Donor.find(filter).populate('userId', 'username name email phone profileImage').sort({ updatedAt: -1 });
 
   return res.json({ success: true, message: 'Donors found', data: donors });
 });
