@@ -254,36 +254,28 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Patient not found with given MR number' });
   }
 
-  // Calculate date 3 months ago (90 days)
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
-
-  // Use patient's bloodGroup to find donors
-  // Include donors who never donated OR donated more than 3 months ago
+  // Use patient's bloodGroup to find ALL donors with matching blood group
   const filter = {
-    bloodGroup: patient.bloodGroup,
-    $or: [
-      { lastDonatedDate: null }, // Never donated
-      { lastDonatedDate: { $exists: false } }, // Field doesn't exist
-      { lastDonatedDate: { $lt: threeMonthsAgo } } // Donated more than 3 months ago
-    ]
+    bloodGroup: patient.bloodGroup
   };
 
-  // Exclude suspended donors from search results
+  // Exclude suspended and blocked donors from search results
   const User = require('../Models/User');
-  const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
-  filter.userId = { $nin: suspendedUserIds };
-
-  // Exclude donors who have completed bookings that are still active (not yet donated)
-  const Booking = require('../Models/Booking');
-  const activeDonorIds = await Booking.find({ 
-    status: { $in: ['pending', 'confirmed'] } 
-  }).distinct('donorId');
-  if (activeDonorIds.length > 0) {
-    filter._id = { $nin: activeDonorIds };
+  const suspendedUserIds = await User.find({ 
+    $or: [{ isSuspended: true }, { isBlocked: true }] 
+  }).distinct('_id');
+  if (suspendedUserIds.length > 0) {
+    filter.userId = { $nin: suspendedUserIds };
   }
 
-  const donors = await Donor.find(filter).populate('userId', 'username name email phone profileImage').sort({ updatedAt: -1 });
+  // Exclude donors who are blocked at donor level
+  filter.isBlocked = { $ne: true };
+
+  // Find all donors with matching blood group, sorted by eligibility
+  const donors = await Donor.find(filter)
+    .populate('userId', 'username name email phone profileImage')
+    .lean()
+    .sort({ lastDonatedDate: 1 }); // Sort by oldest donation first (most eligible first)
 
   return res.json({ success: true, message: 'Donors found', data: donors });
 });
