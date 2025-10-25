@@ -346,20 +346,8 @@ export default function UserDashboard() {
     if (activeTab === "myRequests") {
       fetchRequests();
       fetchReceivedRequests();
-
-    } else if (activeTab === "profile") {
-      fetchProfileData();
-    } else if (activeTab === "settings") {
-      // Load settings from localStorage if available
-      const savedSettings = localStorage.getItem('userSettings');
-      if (savedSettings) {
-        try {
-          setSettingsData(JSON.parse(savedSettings));
-        } catch (e) {
-          console.error('Failed to load settings', e);
-        }
-      }
     }
+    // Profile and Settings tabs have been removed
   }, [activeTab]);
 
   // Polling to keep My Requests up-to-date in near real-time
