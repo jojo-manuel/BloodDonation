@@ -5,7 +5,7 @@ const express = require('express');
 const auth = require('../Middleware/auth');
 const validate = require('../Middleware/validate');
 const { userUpdateBody } = require('../validators/schemas');
-const { me, updateMe, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks, requestDonation, getMyRequests, cancelRequest, getAddressFromPincode, getComprehensiveProfile } = require('../controllers/userController');
+const { me, updateMe, updatePassword, updateDonorAvailability, uploadProfileImage, completeProfile, directBookSlot, getApprovedBloodBanks, requestDonation, getMyRequests, cancelRequest, getAddressFromPincode, getComprehensiveProfile } = require('../controllers/userController');
 
 console.log('directBookSlot:', typeof directBookSlot);
 console.log('getApprovedBloodBanks:', typeof getApprovedBloodBanks);
@@ -26,7 +26,7 @@ router.patch('/me', auth(true), validate({ body: userUpdateBody }), updateMe);
 router.put('/me', auth(true), validate({ body: userUpdateBody }), updateMe);
 
 // Update current user's password
-router.put('/me/password', auth(true), userController.updatePassword);
+router.put('/me/password', auth(true), updatePassword);
 
 // Update donor availability
 router.patch('/me/availability', auth(true), updateDonorAvailability);
