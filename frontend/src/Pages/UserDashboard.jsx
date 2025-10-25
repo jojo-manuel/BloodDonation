@@ -583,7 +583,6 @@ export default function UserDashboard() {
   const [patients, setPatients] = useState([]); // Available patients
   const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
   const [selectedPatient, setSelectedPatient] = useState('');
-  const [selectedBloodBank, setSelectedBloodBank] = useState('');
   const [patientSearchMRID, setPatientSearchMRID] = useState(''); // For MRID search
   const [patientSearchBloodBank, setPatientSearchBloodBank] = useState(''); // For blood bank filter
   const [searchedPatients, setSearchedPatients] = useState([]); // Patients from database search
