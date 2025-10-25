@@ -150,18 +150,32 @@ describe('Login Functionality Tests', () => {
   }, 30000);
 
   test('should show validation error for empty fields', async () => {
-    // Wait for the form to load
-    await driver.wait(until.elementLocated(By.css('form')), 10000);
+    console.log('TEST 3: Validate Empty Fields');
+    console.log('----------------------------------------');
+    
+    try {
+      console.log('Step 1: Waiting for form to load...');
+      await driver.wait(until.elementLocated(By.css('form')), 10000);
+      console.log('✓ Form loaded');
 
-    // Try to submit form without filling fields
-    const loginButton = await driver.findElement(By.css('button[type="submit"]'));
-    await loginButton.click();
+      console.log('Step 2: Attempting to submit with empty fields...');
+      const loginButton = await driver.findElement(By.css('button[type="submit"]'));
+      await loginButton.click();
+      console.log('✓ Submit attempted');
 
-    // Check if browser validation prevents submission (HTML5 validation)
-    // The form should not submit due to required attributes
-    const currentUrl = await driver.getCurrentUrl();
-    expect(currentUrl).toContain('/login'); // Should still be on login page
-  });
+      console.log('Step 3: Verifying page URL (should remain on login)...');
+      const currentUrl = await driver.getCurrentUrl();
+      expect(currentUrl).toContain('/login');
+      console.log(`✓ Still on login page: ${currentUrl}`);
+      
+      console.log('✓ TEST 3 PASSED\n');
+      testResults.push({ name: 'Validate Empty Fields', status: 'PASS' });
+    } catch (error) {
+      console.log('✗ TEST 3 FAILED:', error.message, '\n');
+      testResults.push({ name: 'Validate Empty Fields', status: 'FAIL', error: error.message });
+      throw error;
+    }
+  }, 30000);
 
   test('should navigate to forgot password section', async () => {
     // Wait for the form to load
