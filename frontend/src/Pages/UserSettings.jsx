@@ -246,16 +246,95 @@ export default function UserSettings() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center mb-8">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-rose-500/80 to-red-600/80 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg ring-1 ring-white/10 mb-4">
-                <span className="text-white font-bold text-xl">
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </span>
+          {/* Profile Image Upload Section */}
+          <div className="mb-8 rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>📸</span>
+              Profile Picture
+            </h2>
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              {/* Current Avatar or Preview */}
+              <div className="flex-shrink-0">
+                {imagePreview || user.profileImage ? (
+                  <img
+                    src={imagePreview || user.profileImage}
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white/30 dark:border-white/20 shadow-lg"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-rose-500/80 to-red-600/80 backdrop-blur-md border-4 border-white/30 dark:border-white/20 flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-4xl">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Profile Picture</p>
+
+              {/* Upload Controls */}
+              <div className="flex-1 w-full space-y-4">
+                <div>
+                  <input
+                    type="file"
+                    id="profileImage"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="profileImage"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold cursor-pointer hover:scale-[1.02] transition shadow-lg"
+                  >
+                    <span className="mr-2">📁</span>
+                    Choose Image
+                  </label>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    JPG, PNG or GIF (max 5MB)
+                  </p>
+                </div>
+
+                {selectedImage && (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="inline-flex items-center justify-center px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:scale-[1.02] transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <span className="mr-2">⬆️</span>
+                          Upload Image
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedImage(null);
+                        setImagePreview(null);
+                      }}
+                      className="inline-flex items-center justify-center px-6 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-semibold hover:scale-[1.02] transition shadow-lg"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
+
+          {/* Basic Information Form */}
+          <form onSubmit={handleSubmit} className="space-y-6"
+            <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <span>👤</span>
+                Basic Information
+              </h2>
 
             {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
