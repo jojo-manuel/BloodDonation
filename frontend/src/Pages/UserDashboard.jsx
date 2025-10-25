@@ -1667,11 +1667,7 @@ export default function UserDashboard() {
         {/* Profile and Settings tabs have been removed */}
 
         {/* Request Details Modal */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">Email Notifications</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Receive donation requests via email</p>
+        {selectedRequest && (
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
