@@ -248,6 +248,65 @@ exports.updateMe = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Update current authenticated user's password
+ * Body: currentPassword, newPassword
+ */
+exports.updatePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'Current password and new password are required'
+    });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({
+      success: false,
+      message: 'New password must be at least 8 characters long'
+    });
+  }
+
+  // Get user with password field
+  const user = await User.findById(req.user.id).select('+password');
+  
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  // Check if user has a password (not OAuth user)
+  if (!user.password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password update not available for OAuth accounts'
+    });
+  }
+
+  // Verify current password
+  const isPasswordValid = await user.comparePassword(currentPassword);
+  
+  if (!isPasswordValid) {
+    return res.status(401).json({
+      success: false,
+      message: 'Current password is incorrect'
+    });
+  }
+
+  // Update password
+  user.password = newPassword;
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Password updated successfully'
+  });
+});
+
+/**
  * Fetch address details from pincode using postalpincode.in API
  * Query param: pincode
  */
