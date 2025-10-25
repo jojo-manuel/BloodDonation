@@ -59,6 +59,13 @@ router.get(
   bloodBankController.getAllDonors
 );
 
+// Update donor status (block/suspend/warn)
+router.put(
+  "/donors/:id/status",
+  authMiddleware,
+  bloodBankController.setDonorStatus
+);
+
 // Get all donors who have visited with their visit history
 router.get(
   "/visited-donors",
