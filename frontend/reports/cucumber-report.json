@@ -1,0 +1,1082 @@
+[
+  {
+    "description": "  As a user of the Blood Donation System\n  I want to be able to login to my account\n  So that I can access my dashboard and manage blood donation requests",
+    "elements": [
+      {
+        "description": "",
+        "id": "user-login;successfully-load-the-login-page",
+        "keyword": "Scenario",
+        "line": 9,
+        "name": "Successfully load the login page",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2621971400
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3672577499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 10,
+            "name": "I should see the login form",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:86"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 43827100
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 11,
+            "name": "I should see the email input field",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:93"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 65924199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 12,
+            "name": "I should see the password input field",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:100"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 102030600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 13,
+            "name": "I should see the submit button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:107"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 68612100
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 263509400
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;login-with-valid-credentials",
+        "keyword": "Scenario",
+        "line": 15,
+        "name": "Login with valid credentials",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 3102722499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3091004300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 16,
+            "name": "I enter email \"jeevan@gmail.com\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:48"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1226317399
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 17,
+            "name": "I enter password \"Jeevan123!@#\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 858777799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 18,
+            "name": "I click the login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:64"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 525819499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 19,
+            "name": "I should be redirected to the dashboard",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:114"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3020998899
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 20,
+            "name": "I should not be on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:124"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 20326499
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 188992600
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;login-with-invalid-credentials",
+        "keyword": "Scenario",
+        "line": 22,
+        "name": "Login with invalid credentials",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2065387600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3421971499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 23,
+            "name": "I enter email \"invalid@example.com\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:48"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2007947400
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 24,
+            "name": "I enter password \"wrongpassword\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 952048800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 25,
+            "name": "I click the login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:64"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 251073500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 26,
+            "name": "I should see an error alert",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:131"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 312326499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 27,
+            "name": "the alert should contain \"Login Failed\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:140"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 745200
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 123471600
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;attempt-to-login-with-empty-fields",
+        "keyword": "Scenario",
+        "line": 29,
+        "name": "Attempt to login with empty fields",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2333645400
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2020274799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 30,
+            "name": "I click the login button without entering credentials",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:71"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 541029199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 31,
+            "name": "I should remain on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:146"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 37199699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 32,
+            "name": "the form should show validation errors",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:153"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 66657600
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 285626300
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;navigate-to-forgot-password",
+        "keyword": "Scenario",
+        "line": 34,
+        "name": "Navigate to forgot password",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2097618000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2922584999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 35,
+            "name": "I click on \"Forgot your password?\" link",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:78"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 325396499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 36,
+            "name": "I should see the password reset form",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:160"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 30442900
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 37,
+            "name": "I should see the reset email input field",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:170"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 40452399
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 67498399
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;check-firebase-login-option",
+        "keyword": "Scenario",
+        "line": 39,
+        "name": "Check Firebase login option",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2093403400
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 4133398800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 40,
+            "name": "I should see the Firebase login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:177"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 41982100
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 41,
+            "name": "the Firebase button should be visible",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:186"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 68349600
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 132362799
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;verify-form-field-requirements",
+        "keyword": "Scenario",
+        "line": 43,
+        "name": "Verify form field requirements",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2001675999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2442636200
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 44,
+            "name": "the email field should be required",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:196"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 109178800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 45,
+            "name": "the password field should be required",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:204"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 72773499
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 317043299
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;check-navigation-elements",
+        "keyword": "Scenario",
+        "line": 47,
+        "name": "Check navigation elements",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 3519259500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2290090599
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 48,
+            "name": "I should see the \"Back to Home\" link",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:212"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 59102700,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"link text\",\"selector\":\"Back to Home\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:214:16)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 49,
+            "name": "the link should point to the home page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:219"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 205807699
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;login-with-multiple-valid-users",
+        "keyword": "Scenario Outline",
+        "line": 59,
+        "name": "Login with multiple valid users",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1927633499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2242474300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 52,
+            "name": "I enter email \"jeevan@gmail.com\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:48"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 658851499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 53,
+            "name": "I enter password \"Jeevan123!@#\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 423153899
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 54,
+            "name": "I click the login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:64"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 175367899
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 55,
+            "name": "I should be redirected to the dashboard",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:114"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3024582699
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 79993999
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;login-with-multiple-valid-users",
+        "keyword": "Scenario Outline",
+        "line": 60,
+        "name": "Login with multiple valid users",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2099995699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1981322200
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 52,
+            "name": "I enter email \"test@example.com\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:48"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 650413599
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 53,
+            "name": "I enter password \"Test123!@#\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 418465599
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 54,
+            "name": "I click the login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:64"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 226244699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 55,
+            "name": "I should be redirected to the dashboard",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:114"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 3008285100,
+              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 75625799
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;login-with-multiple-valid-users",
+        "keyword": "Scenario Outline",
+        "line": 61,
+        "name": "Login with multiple valid users",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2183739199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3203040699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 52,
+            "name": "I enter email \"abhi@gmail.com\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:48"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 976154699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 53,
+            "name": "I enter password \"AbhiPassword123!\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1173193100
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 54,
+            "name": "I click the login button",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:64"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 343042000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 55,
+            "name": "I should be redirected to the dashboard",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:114"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 3017770099,
+              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 152203399
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;check-password-field-security",
+        "keyword": "Scenario",
+        "line": 63,
+        "name": "Check password field security",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2036930999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2114314099
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 64,
+            "name": "I enter password \"secretpassword\"",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:56"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1115577700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 65,
+            "name": "the password field should hide the password text",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:227"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 232860700
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 188191900
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "user-login;verify-page-title-and-branding",
+        "keyword": "Scenario",
+        "line": 67,
+        "name": "Verify page title and branding",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2130762199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the login page",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:40"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2778821700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 68,
+            "name": "the page should display \"Blood Donation\" branding",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:235"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 114807199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 69,
+            "name": "the page should have proper styling",
+            "match": {
+              "location": "features\\step_definitions\\login_steps.cjs:243"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 228850600
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 413173600
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "user-login",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "User Login",
+    "tags": [],
+    "uri": "features\\login.feature"
+  }
+]
