@@ -1848,32 +1848,15 @@ export default function UserDashboard() {
                                 </td>
                                 <td className="px-2 py-1">
                                   <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-1">
-                                      <select
-                                        value={newStatuses[request._id] || request.status}
-                                        onChange={(e) => handleStatusChange(request._id, e.target.value)}
-                                        className="px-2 py-1 text-xs border rounded dark:bg-gray-700 dark:border-gray-600"
-                                      >
-                                        <option value="pending">Pending</option>
-                                        <option value="pending_booking">Pending Booking</option>
-                                        <option value="accepted">Accepted</option>
-                                        <option value="rejected">Rejected</option>
-                                        <option value="booked">Booked</option>
-                                        <option value="cancelled">Cancelled</option>
-                                      </select>
-                                      <button
-                                        onClick={() => handleUpdateStatus(request._id)}
-                                        disabled={updatingId === request._id}
-                                        className="px-2 py-1 text-xs bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600"
-                                      >
-                                        {updatingId === request._id ? '...' : '✓'}
-                                      </button>
-                                    </div>
-                                    {request.status !== 'cancelled' && (
+                                    {/* Display status as read-only badge */}
+                                    {getStatusBadge(request.status)}
+                                    
+                                    {/* Keep cancel button for pending/accepted requests */}
+                                    {!['cancelled', 'booked', 'completed', 'rejected'].includes(request.status) && (
                                       <button
                                         onClick={() => handleCancelRequest(request._id)}
                                         disabled={updatingId === request._id}
-                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50 hover:bg-red-600 w-full"
+                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50 hover:bg-red-600 w-full mt-1"
                                       >
                                         🚫 Cancel
                                       </button>
