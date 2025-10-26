@@ -1931,33 +1931,8 @@ export default function UserDashboard() {
                                   </span>
                                 </td>
                                 <td className="px-2 py-1">
-                                  {request.status === 'pending' ? (
-                                    <div className="flex gap-1">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleAccept(request._id); }}
-                                        disabled={updatingId === request._id}
-                                        className="px-2 py-1 text-xs bg-green-500 text-white rounded disabled:opacity-50"
-                                      >
-                                        {updatingId === request._id ? 'Accepting...' : 'Accept'}
-                                      </button>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); handleReject(request._id); }}
-                                        disabled={updatingId === request._id}
-                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50"
-                                      >
-                                        {updatingId === request._id ? 'Rejecting...' : 'Reject'}
-                                      </button>
-                                    </div>
-                                  ) : request.status === 'accepted' ? (
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); handleBookSlot(request); }}
-                                      className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                    >
-                                      📅 Book Slot
-                                    </button>
-                                  ) : (
-                                    <span className="text-xs text-gray-500">{request.status}</span>
-                                  )}
+                                  {/* Display status as read-only badge */}
+                                  {getStatusBadge(request.status)}
                                 </td>
                               </tr>
                             ))}
