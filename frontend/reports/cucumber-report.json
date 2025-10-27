@@ -1,0 +1,2984 @@
+[
+  {
+    "description": "  As a user of the Blood Donation System\n  I want to register patients requiring blood transfusion\n  So that they can receive the blood they need",
+    "elements": [
+      {
+        "description": "",
+        "id": "patient-registration;successfully-load-the-patient-registration-page",
+        "keyword": "Scenario",
+        "line": 9,
+        "name": "Successfully load the patient registration page",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2337871400
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1142875300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3363475199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 10,
+            "name": "I should see the patient registration form",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:143"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 10131966900,
+              "error_message": "TimeoutError: Waiting for element to be located By(css selector, form)\nWait timed out after 10131ms\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:929:22\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 11,
+            "name": "I should see the page title \"Register New Patient\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:148"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 12,
+            "name": "I should see all required form fields",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:154"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 13,
+            "name": "I should see the submit button",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 90782100
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 473500,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-a-new-patient-with-valid-data",
+        "keyword": "Scenario",
+        "line": 15,
+        "name": "Register a new patient with valid data",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1392281599
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1166488199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2397498400
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 16,
+            "name": "I enter patient name \"John Doe\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 16061600,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 17,
+            "name": "I select blood group \"A+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 18,
+            "name": "I enter MRID \"MR12345\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 19,
+            "name": "I enter phone number \"9876543210\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 20,
+            "name": "I enter required units \"2\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 21,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 22,
+            "name": "I enter address \"123 Main Street, City, State\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 23,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 24,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 25,
+            "name": "I should be redirected to patient management page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:183"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 104346599
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 274600,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;attempt-to-register-patient-with-empty-fields",
+        "keyword": "Scenario",
+        "line": 27,
+        "name": "Attempt to register patient with empty fields",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1113587599
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1118149600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2310542300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 28,
+            "name": "I click the register patient button without entering data",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:115"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 14172399,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"button[type=\"submit\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:116:24)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 29,
+            "name": "I should remain on the registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:190"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 30,
+            "name": "I should see validation errors",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:195"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 98003100
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 254600,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-patient-with-invalid-phone-number",
+        "keyword": "Scenario",
+        "line": 32,
+        "name": "Register patient with invalid phone number",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1236167300
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1197795999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2357172699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 33,
+            "name": "I enter patient name \"Jane Smith\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 14430400,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 34,
+            "name": "I select blood group \"B+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 35,
+            "name": "I enter MRID \"MR54321\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 36,
+            "name": "I enter phone number \"123\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 37,
+            "name": "I enter required units \"1\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 38,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 39,
+            "name": "I enter address \"456 Oak Street\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 40,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 41,
+            "name": "I should see an error about invalid phone number",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:201"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 88732899
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 275399,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-patient-with-past-date",
+        "keyword": "Scenario",
+        "line": 43,
+        "name": "Register patient with past date",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1171681599
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1134612600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2402737399
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 44,
+            "name": "I enter patient name \"Bob Johnson\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 12213999,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 45,
+            "name": "I select blood group \"O+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 46,
+            "name": "I enter MRID \"MR99999\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 47,
+            "name": "I enter phone number \"9999999999\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 48,
+            "name": "I enter required units \"3\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 49,
+            "name": "I select past date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:97"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 50,
+            "name": "I enter address \"789 Pine Avenue\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 51,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 52,
+            "name": "I should see an error about invalid date",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:210"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 118669200
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 224699,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-all-blood-groups-are-available",
+        "keyword": "Scenario",
+        "line": 54,
+        "name": "Verify all blood groups are available",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1296894399
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1129334999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2331567699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 55,
+            "name": "I should see blood group option \"A+\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 15172899,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"select[name=\"bloodGroup\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:229:28)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 56,
+            "name": "I should see blood group option \"A-\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 57,
+            "name": "I should see blood group option \"B+\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 58,
+            "name": "I should see blood group option \"B-\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 59,
+            "name": "I should see blood group option \"AB+\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 60,
+            "name": "I should see blood group option \"AB-\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 61,
+            "name": "I should see blood group option \"O+\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 62,
+            "name": "I should see blood group option \"O-\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:228"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 96388200
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 273600,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-form-field-validations",
+        "keyword": "Scenario",
+        "line": 64,
+        "name": "Verify form field validations",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1263029099
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1304312500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2376466000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 65,
+            "name": "the patient name field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:244"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19210200,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:245:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 66,
+            "name": "the blood group field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:250"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 67,
+            "name": "the MRID field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:256"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 68,
+            "name": "the phone number field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:262"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 69,
+            "name": "the units required field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:268"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 70,
+            "name": "the date needed field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:274"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 71,
+            "name": "the address field should be required",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:280"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 144098200
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 274199,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;cancel-registration-and-navigate-back",
+        "keyword": "Scenario",
+        "line": 73,
+        "name": "Cancel registration and navigate back",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1372403700
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1305402700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2476622000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 74,
+            "name": "I click the cancel button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:120"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 14445700,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"xpath\",\"selector\":\"//button[contains(text(), 'Cancel')]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:121:24)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 75,
+            "name": "I should be redirected to patient management page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:183"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 90936500
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 165500,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-minimum-units-requirement",
+        "keyword": "Scenario",
+        "line": 77,
+        "name": "Verify minimum units requirement",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1232484600
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1262745600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2433414799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 78,
+            "name": "I enter patient name \"Test Patient\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 13190499,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 79,
+            "name": "I select blood group \"AB+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 80,
+            "name": "I enter MRID \"MR11111\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 81,
+            "name": "I enter phone number \"8888888888\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 82,
+            "name": "I enter required units \"0\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 83,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 84,
+            "name": "I enter address \"Test Address\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 85,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 86,
+            "name": "I should see an error about minimum units",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:219"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 99504999
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 250800,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-phone-number-format-validation",
+        "keyword": "Scenario",
+        "line": 88,
+        "name": "Verify phone number format validation",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1441115099
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1311494800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2547948199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 89,
+            "name": "I enter patient name \"Phone Test\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 15512800,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 90,
+            "name": "I enter phone number \"abcdefghij\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 91,
+            "name": "the phone number field should not accept letters",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:286"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 82927700
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 304100,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-multiple-patients-successfully",
+        "keyword": "Scenario Outline",
+        "line": 106,
+        "name": "Register multiple patients successfully",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1419340299
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1289895600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2010466099
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 94,
+            "name": "I enter patient name \"Alice Brown\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 13267100,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 95,
+            "name": "I select blood group \"A+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 96,
+            "name": "I enter MRID \"MR10001\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 97,
+            "name": "I enter phone number \"9111111111\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 98,
+            "name": "I enter required units \"1\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 99,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 100,
+            "name": "I enter address \"Address 1\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 101,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 102,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 103630499
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 232499,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-multiple-patients-successfully",
+        "keyword": "Scenario Outline",
+        "line": 107,
+        "name": "Register multiple patients successfully",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1458603000
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1265607300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2477117700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 94,
+            "name": "I enter patient name \"Charlie Davis\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 20771299,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 95,
+            "name": "I select blood group \"B-\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 96,
+            "name": "I enter MRID \"MR10002\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 97,
+            "name": "I enter phone number \"9222222222\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 98,
+            "name": "I enter required units \"2\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 99,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 100,
+            "name": "I enter address \"Address 2\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 101,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 102,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 70909899
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 236399,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-multiple-patients-successfully",
+        "keyword": "Scenario Outline",
+        "line": 108,
+        "name": "Register multiple patients successfully",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1474474699
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1377967399
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2534844000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 94,
+            "name": "I enter patient name \"Diana Evans\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 14035399,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 95,
+            "name": "I select blood group \"O+\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 96,
+            "name": "I enter MRID \"MR10003\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 97,
+            "name": "I enter phone number \"9333333333\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 98,
+            "name": "I enter required units \"3\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 99,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 100,
+            "name": "I enter address \"Address 3\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 101,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 102,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 59461300
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 284599,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;register-multiple-patients-successfully",
+        "keyword": "Scenario Outline",
+        "line": 109,
+        "name": "Register multiple patients successfully",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1312377600
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1362745599
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2304609200
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 94,
+            "name": "I enter patient name \"Frank Green\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 16882700,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 95,
+            "name": "I select blood group \"AB-\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 96,
+            "name": "I enter MRID \"MR10004\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 97,
+            "name": "I enter phone number \"9444444444\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 98,
+            "name": "I enter required units \"4\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 99,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 100,
+            "name": "I enter address \"Address 4\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 101,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 102,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 64866299
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 251000,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-form-clears-after-successful-submission",
+        "keyword": "Scenario",
+        "line": 111,
+        "name": "Verify form clears after successful submission",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1568434099
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1417963499
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2008384099
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 112,
+            "name": "I enter patient name \"Clear Test\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 15889100,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 113,
+            "name": "I select blood group \"A-\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 114,
+            "name": "I enter MRID \"MR77777\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 115,
+            "name": "I enter phone number \"9777777777\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 116,
+            "name": "I enter required units \"1\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 117,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 118,
+            "name": "I enter address \"Test Clear Address\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 119,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 120,
+            "name": "I wait for success confirmation",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:138"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 121,
+            "name": "I should be redirected to patient management page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:183"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 63723599
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 297200,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-mrid-field-accepts-alphanumeric",
+        "keyword": "Scenario",
+        "line": 123,
+        "name": "Verify MRID field accepts alphanumeric",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1566109500
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1482688600
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2398220199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 124,
+            "name": "I enter MRID \"MR-2024-001\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 13954299,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"mrid\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:74:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 125,
+            "name": "the MRID field should display \"MR-2024-001\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:294"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 86128099
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 216499,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-patient-name-field-accepts-full-names",
+        "keyword": "Scenario",
+        "line": 127,
+        "name": "Verify patient name field accepts full names",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1512130600
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1479155700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3622543200
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 128,
+            "name": "I enter patient name \"Dr. Robert Smith Jr.\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 53852100,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 129,
+            "name": "the patient name field should display \"Dr. Robert Smith Jr.\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:300"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 145318599
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 442900,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-address-textarea-accepts-multiple-lines",
+        "keyword": "Scenario",
+        "line": 131,
+        "name": "Verify address textarea accepts multiple lines",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1673365200
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1544423699
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2229287500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 132,
+            "name": "I enter address \"Line 1\\nLine 2\\nLine 3\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 16495199,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"textarea[name=\"address\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:104:24)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 133,
+            "name": "the address field should accept multiline input",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:306"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 92555099
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 306000,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;check-responsive-form-layout",
+        "keyword": "Scenario",
+        "line": 135,
+        "name": "Check responsive form layout",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1608730599
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1509876799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2250635399
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 136,
+            "name": "the form should display properly on different screen sizes",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:312"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 16009200,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"form\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:314:16)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 137,
+            "name": "the form fields should be organized in a grid layout",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:319"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 78648900
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 214500,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-page-navigation-elements",
+        "keyword": "Scenario",
+        "line": 139,
+        "name": "Verify page navigation elements",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1577642199
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1503628900
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1942537899
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 140,
+            "name": "I should see navigation back to home",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:325"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 14135299
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 141,
+            "name": "the page should have proper branding",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:330"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 14940199
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 100702199
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 231200,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;test-form-with-maximum-valid-units",
+        "keyword": "Scenario",
+        "line": 143,
+        "name": "Test form with maximum valid units",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1576030199
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1464636800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 3284434799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 144,
+            "name": "I enter patient name \"Max Units Test\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:62"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 142397599,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:63:21)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 145,
+            "name": "I select blood group \"O-\"",
+            "result": {
+              "status": "ambiguous",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 146,
+            "name": "I enter MRID \"MR88888\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 147,
+            "name": "I enter phone number \"9888888888\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:79"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 148,
+            "name": "I enter required units \"10\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:85"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 149,
+            "name": "I select future date for requirement",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:91"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 150,
+            "name": "I enter address \"Max Units Address\"",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:103"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 151,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 152,
+            "name": "I should see a success message",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:175"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 69233099
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 183100,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "patient-registration;verify-loading-state-during-submission",
+        "keyword": "Scenario",
+        "line": 154,
+        "name": "Verify loading state during submission",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1594138000
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1710108999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am on the patient registration page",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:55"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 2569634999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 155,
+            "name": "I fill all patient details correctly",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:128"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 14644700,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"css selector\",\"selector\":\"input[name=\"patientName\"]\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async toWireValue (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:149:15)\n    at async D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:195:16\n    at async forEachKey (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:189:9)\n    at async convertKeys (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:194:3)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:743:22)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 156,
+            "name": "I click the register patient button",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:109"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 157,
+            "name": "the submit button should show loading state",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:336"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 158,
+            "name": "the submit button should be disabled during submission",
+            "match": {
+              "location": "features\\step_definitions\\patient_registration_steps.cjs:348"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 60843999
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 226700,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "patient-registration",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Patient Registration",
+    "tags": [],
+    "uri": "features\\patient-registration.feature"
+  }
+]
