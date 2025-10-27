@@ -10,15 +10,12 @@ setDefaultTimeout(30000);
 let driver;
 
 Before(async function() {
-  console.log('\n🚀 Starting test scenario...');
   const chromeOptions = new chrome.Options();
-  chromeOptions.addArguments('--headless');
   chromeOptions.addArguments('--no-sandbox');
   chromeOptions.addArguments('--disable-dev-shm-usage');
   chromeOptions.addArguments('--window-size=1920,1080');
   chromeOptions.addArguments('--disable-background-networking');
   chromeOptions.addArguments('--disable-sync');
-  chromeOptions.excludeSwitches(['enable-logging']);
 
   driver = await new Builder()
     .forBrowser('chrome')
@@ -26,60 +23,46 @@ Before(async function() {
     .build();
   
   this.driver = driver;
-  console.log('✓ Browser initialized');
 });
 
 After(async function() {
   if (this.driver) {
     await this.driver.quit();
-    console.log('✓ Browser closed');
   }
 });
 
 // Background Steps
 Given('I am on the login page', async function() {
-  console.log('→ Navigating to login page...');
   await this.driver.get('http://localhost:5173/login');
   await this.driver.wait(until.elementLocated(By.css('body')), 10000);
-  console.log('✓ Login page loaded');
 });
 
 // When Steps
 When('I enter email {string}', async function(email) {
-  console.log(`→ Entering email: ${email}`);
   const emailInput = await this.driver.findElement(By.css('input[type="email"]'));
   await emailInput.clear();
   await emailInput.sendKeys(email);
-  console.log('✓ Email entered');
 });
 
 When('I enter password {string}', async function(password) {
-  console.log('→ Entering password: ************');
   const passwordInput = await this.driver.findElement(By.css('input[type="password"]'));
   await passwordInput.clear();
   await passwordInput.sendKeys(password);
-  console.log('✓ Password entered');
 });
 
 When('I click the login button', async function() {
-  console.log('→ Clicking login button...');
   const loginButton = await this.driver.findElement(By.css('button[type="submit"]'));
   await loginButton.click();
-  console.log('✓ Login button clicked');
 });
 
 When('I click the login button without entering credentials', async function() {
-  console.log('→ Attempting to submit without credentials...');
   const loginButton = await this.driver.findElement(By.css('button[type="submit"]'));
   await loginButton.click();
-  console.log('✓ Submit attempted');
 });
 
 When('I click on {string} link', async function(linkText) {
-  console.log(`→ Clicking on "${linkText}" link...`);
   const link = await this.driver.findElement(By.xpath(`//button[contains(text(), '${linkText}')]`));
   await link.click();
-  console.log('✓ Link clicked');
 });
 
 // Then Steps
