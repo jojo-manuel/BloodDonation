@@ -1908,15 +1908,16 @@ export default function UserDashboard() {
                             {filteredReceivedRequests.map((request) => (
                               <tr
                                 key={request._id}
-                                className="border-t border-white/10 cursor-pointer hover:bg-white/5"
-                                onClick={() => setSelectedRequest(request)}
+                                className="border-t border-white/10 hover:bg-white/5"
                               >
-                                <td className="px-2 py-1 font-mono text-xs">{request._id}</td>
+                                <td className="px-2 py-1 font-mono text-xs cursor-pointer hover:text-pink-600" onClick={() => setSelectedRequest(request)}>
+                                  {request._id.substring(0, 8)}...
+                                </td>
                                 <td className="px-2 py-1">{request.senderId?.username || request.requesterId?.username || request.requesterUsername || request.senderId?.name || 'N/A'}</td>
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
                                 <td className="px-2 py-1">{getStatusBadge(request.status)}</td>
-                                <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
-                                <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
+                                <td className="px-2 py-1 text-xs">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
+                                <td className="px-2 py-1">{request.isActive ? '✓' : '✗'}</td>
                                 <td className="px-2 py-1">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
                                     🏥 {request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || 'Not Specified'}
@@ -1930,9 +1931,75 @@ export default function UserDashboard() {
                                     )}
                                   </span>
                                 </td>
-                                <td className="px-2 py-1">
-                                  {/* Display status as read-only badge */}
-                                  {getStatusBadge(request.status)}
+                                <td className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex flex-col gap-1 min-w-[180px]">
+                                    {/* Pending: Show Accept & Reject */}
+                                    {request.status === 'pending' && (
+                                      <div className="flex gap-1">
+                                        <button
+                                          onClick={() => handleAccept(request._id)}
+                                          disabled={updatingId === request._id}
+                                          className="flex-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-semibold"
+                                          title="Accept this donation request"
+                                        >
+                                          ✓ Accept
+                                        </button>
+                                        <button
+                                          onClick={() => handleReject(request._id)}
+                                          disabled={updatingId === request._id}
+                                          className="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
+                                          title="Reject this donation request"
+                                        >
+                                          ✗ Reject
+                                        </button>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Accepted: Show Book Slot */}
+                                    {request.status === 'accepted' && (
+                                      <div className="flex flex-col gap-1">
+                                        <button
+                                          onClick={() => setBookingModal(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded hover:from-blue-700 hover:to-indigo-700 font-semibold flex items-center justify-center gap-1"
+                                          title="Book a donation slot"
+                                        >
+                                          <span>📅</span>
+                                          Book Slot
+                                        </button>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Booked: Show View Details & Book Taxi */}
+                                    {request.status === 'booked' && (
+                                      <div className="flex flex-col gap-1">
+                                        <button
+                                          onClick={() => setSelectedRequest(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded hover:from-purple-700 hover:to-pink-700 font-semibold"
+                                          title="View booking details and download PDF"
+                                        >
+                                          📋 View Details
+                                        </button>
+                                        <button
+                                          onClick={() => setTaxiBookingModal(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                          title="Book taxi for donation appointment"
+                                        >
+                                          <span>🚖</span>
+                                          Book Taxi
+                                        </button>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Rejected/Cancelled/Completed: Show Status Only */}
+                                    {['rejected', 'cancelled', 'completed'].includes(request.status) && (
+                                      <button
+                                        onClick={() => setSelectedRequest(request)}
+                                        className="w-full px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 font-semibold"
+                                      >
+                                        👁️ View
+                                      </button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             ))}
