@@ -42,7 +42,8 @@ async function loginAsBloodBank(driver) {
   await driver.get('http://localhost:5173/login');
   await driver.wait(until.elementLocated(By.css('input[name="username"]')), 10000);
   
-  await driver.findElement(By.css('input[name="username"]')).sendKeys('bloodbank1');
+  // Login with jeevan@gmail.com
+  await driver.findElement(By.css('input[name="username"]')).sendKeys('jeevan@gmail.com');
   await driver.findElement(By.css('input[name="password"]')).sendKeys('password123');
   await driver.findElement(By.css('button[type="submit"]')).click();
   
