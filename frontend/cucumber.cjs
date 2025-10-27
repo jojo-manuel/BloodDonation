@@ -8,8 +8,6 @@ module.exports = {
     ],
     publishQuiet: true,
     parallel: 1,
-    retry: 0,
-    retryTagFilter: '@flaky',
     tags: 'not @wip and not @skip',
   },
   
