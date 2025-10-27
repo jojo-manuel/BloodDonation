@@ -6,6 +6,7 @@ import ReviewTab from '../components/ReviewTab';
 import TaxiBookingModal from '../components/TaxiBookingModal';
 import CitySearchDropdown from '../components/CitySearchDropdown';
 import MedicalConsentForm from '../components/MedicalConsentForm';
+import RescheduleNotificationModal from '../components/RescheduleNotificationModal';
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
@@ -64,6 +65,8 @@ export default function UserDashboard() {
   const [notifications, setNotifications] = useState([]); // For notifications
   const [taxiBookingModal, setTaxiBookingModal] = useState(null); // For taxi booking modal
   const [taxiBookings, setTaxiBookings] = useState({}); // Map of requestId -> taxi booking data
+  const [rescheduleNotifications, setRescheduleNotifications] = useState([]); // Reschedule notifications
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false); // Show reschedule modal
   const [settingsData, setSettingsData] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -260,6 +263,42 @@ export default function UserDashboard() {
     }
   };
 
+  // Fetch unread reschedule notifications
+  const fetchRescheduleNotifications = async () => {
+    try {
+      const res = await api.get('/notifications/unread');
+      if (res.data.success) {
+        // Filter only slot_reschedule notifications
+        const reschedules = res.data.data.filter(n => n.type === 'slot_reschedule');
+        if (reschedules.length > 0) {
+          setRescheduleNotifications(reschedules);
+          setShowRescheduleModal(true);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
+  // Mark notification as read
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      await api.put(`/notifications/${notificationId}/read`);
+      
+      // Remove from local state
+      setRescheduleNotifications(prev => 
+        prev.filter(n => n._id !== notificationId)
+      );
+      
+      // If no more notifications, close modal
+      if (rescheduleNotifications.length <= 1) {
+        setShowRescheduleModal(false);
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
   const filteredRequests = useMemo(() => {
     let filtered = sentRequests;
 
@@ -404,6 +443,9 @@ export default function UserDashboard() {
   useEffect(() => {
     // Fetch profile data on mount for avatar display
     fetchProfileData();
+    
+    // Check for reschedule notifications on mount (after login)
+    fetchRescheduleNotifications();
   }, []);
 
   useEffect(() => {
@@ -3237,6 +3279,15 @@ export default function UserDashboard() {
             fetchRequests();
             fetchReceivedRequests();
           }}
+        />
+      )}
+
+      {/* Reschedule Notification Modal */}
+      {showRescheduleModal && rescheduleNotifications.length > 0 && (
+        <RescheduleNotificationModal
+          notifications={rescheduleNotifications}
+          onClose={() => setShowRescheduleModal(false)}
+          onMarkAsRead={markNotificationAsRead}
         />
       )}
     </Layout>
