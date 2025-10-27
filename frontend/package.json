@@ -22,6 +22,7 @@
     "test:bdd:login": "cucumber-js features/login.feature",
     "test:bdd:donor-booking": "cucumber-js features/donor-booking.feature",
     "test:bdd:patient": "cucumber-js features/patient-management.feature",
+    "test:bdd:patient-registration": "cucumber-js features/patient-registration.feature",
     "test:bdd:donor-slots": "cucumber-js features/donor-slot-booking.feature"
   },
   "dependencies": {
