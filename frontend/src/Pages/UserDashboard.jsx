@@ -3134,8 +3134,9 @@ export default function UserDashboard() {
           onSuccess={(booking) => {
             console.log('Taxi booked:', booking);
             setTaxiBookingModal(null);
-            // Optionally refresh sent requests to show taxi booking status
-            fetchSent();
+            // Refresh requests to show updated status
+            fetchRequests();
+            fetchReceivedRequests();
           }}
         />
       )}
