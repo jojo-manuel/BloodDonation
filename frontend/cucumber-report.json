@@ -1,0 +1,708 @@
+[
+  {
+    "description": "  As a blood bank user (jeevan@gmail.com)\n  I want to search for compatible donors using patient MRID\n  So that I can find suitable donors for blood transfusions",
+    "elements": [
+      {
+        "description": "",
+        "id": "donor-search-by-mrid---standalone-test;successfully-search-for-donors-with-valid-mrid",
+        "keyword": "Scenario",
+        "line": 12,
+        "name": "Successfully search for donors with valid MRID",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1323231000
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1304395399
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1378536999
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1373490100
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1406293800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I am logged in as blood bank with jeevan@gmail.com",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:35"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 2511427799,
+              "error_message": "WebDriverError: unknown error: net::ERR_CONNECTION_REFUSED\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:37:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:50"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 13,
+            "name": "test patient with MRID \"402\" exists in database",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:66"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 14,
+            "name": "I search for donors using patient MRID \"402\"",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:72"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 15,
+            "name": "I should see donor search results",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:123"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 16,
+            "name": "the search results show matching blood group",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 17,
+            "name": "patient information is displayed",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:156"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 79131100
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 964999,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1380900
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 855900,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 860800,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 657400,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_by_mrid_steps.cjs:36:5)"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@donor-search",
+            "line": 1
+          },
+          {
+            "name": "@smoke",
+            "line": 11
+          },
+          {
+            "name": "@critical",
+            "line": 11
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "donor-search-by-mrid---standalone-test;search-with-empty-mrid-shows-validation-error",
+        "keyword": "Scenario",
+        "line": 20,
+        "name": "Search with empty MRID shows validation error",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1329615200
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1485921300
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1742535699
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1592037099
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2143939999
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I am logged in as blood bank with jeevan@gmail.com",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:35"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 3131728399,
+              "error_message": "WebDriverError: unknown error: cannot determine loading status\nfrom unknown error: net::ERR_CONNECTION_REFUSED\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:37:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:50"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 21,
+            "name": "I leave MRID field empty and search",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:100"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 22,
+            "name": "I see validation error for empty MRID",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:172"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 80047700
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 605800,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 145300
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 349200,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 324400,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 443900,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_by_mrid_steps.cjs:36:5)"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@donor-search",
+            "line": 1
+          },
+          {
+            "name": "@validation",
+            "line": 19
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "donor-search-by-mrid---standalone-test;search-with-invalid-mrid-shows-no-results",
+        "keyword": "Scenario",
+        "line": 25,
+        "name": "Search with invalid MRID shows no results",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1837753000
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1640640100
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1801208200
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2070161899
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1627467700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I am logged in as blood bank with jeevan@gmail.com",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:35"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 2525759699,
+              "error_message": "WebDriverError: unknown error: net::ERR_CONNECTION_REFUSED\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:37:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:50"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 26,
+            "name": "I search for donors using patient MRID \"INVALID9999\"",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:72"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 27,
+            "name": "the page shows no results for invalid MRID",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:211"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 72703599
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 596899,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 194100
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 349300,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 351399,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 322899,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_by_mrid_steps.cjs:36:5)"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@donor-search",
+            "line": 1
+          },
+          {
+            "name": "@validation",
+            "line": 24
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "donor-search-by-mrid---standalone-test;verify-mrid-search-form-ui-elements",
+        "keyword": "Scenario",
+        "line": 30,
+        "name": "Verify MRID search form UI elements",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1670186199
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2026185000
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1964404600
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2020623599
+            }
+          },
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 2108565199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 8,
+            "name": "I am logged in as blood bank with jeevan@gmail.com",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:35"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 2565870399,
+              "error_message": "WebDriverError: unknown error: net::ERR_CONNECTION_REFUSED\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:37:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:50"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 31,
+            "name": "I see MRID search form elements",
+            "match": {
+              "location": "features\\step_definitions\\donor_search_standalone_steps.cjs:190"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 204824599
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 288599,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:101:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\patient_registration_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 124300
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 248700,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 233899,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_standalone_steps.cjs:30:5)"
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "failed",
+              "duration": 227100,
+              "error_message": "NoSuchSessionError: This driver instance does not have a valid session ID (did you call WebDriver.quit()?) and may no longer be used.\n    at D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:776:9\n    at Object.thenFinally [as finally] (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\promise.js:103:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\donor_search_by_mrid_steps.cjs:36:5)"
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@donor-search",
+            "line": 1
+          },
+          {
+            "name": "@ui",
+            "line": 29
+          }
+        ],
+        "type": "scenario"
+      }
+    ],
+    "id": "donor-search-by-mrid---standalone-test",
+    "line": 2,
+    "keyword": "Feature",
+    "name": "Donor Search by MRID - Standalone Test",
+    "tags": [
+      {
+        "name": "@donor-search",
+        "line": 1
+      }
+    ],
+    "uri": "features\\donor-search-standalone.feature"
+  }
+]
