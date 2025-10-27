@@ -485,11 +485,14 @@ const MedicalConsentForm = ({ onConsent, onCancel, donorName }) => {
           </div>
 
           {/* Serious Conditions */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2">
-              <span className="text-2xl">⚠️</span> {t('seriousConditions')}
+          <div className="mb-6 border-4 border-red-500 rounded-xl p-4 bg-red-50 dark:bg-red-900/20">
+            <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-3 flex items-center gap-2 animate-pulse">
+              <span className="text-3xl">⚠️</span> {t('seriousConditions')}
             </h3>
-            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
+            <div className="bg-red-100 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 rounded-lg p-4 mb-4">
+              <p className="text-sm font-bold text-red-800 dark:text-red-200 mb-2">
+                ⚠️ IMPORTANT - 7 CRITICAL QUESTIONS BELOW
+              </p>
               <p className="text-xs text-red-700 dark:text-red-300">
                 {t('seriousConditionsWarning')}
               </p>
