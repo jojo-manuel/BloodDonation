@@ -18,6 +18,9 @@ router.post('/verify-payment', taxiController.verifyPayment);
 // Get user's taxi bookings
 router.get('/my-bookings', taxiController.getMyBookings);
 
+// Check if taxi booking exists for a donation request
+router.get('/check/:donationRequestId', taxiController.checkTaxiBooking);
+
 // Cancel booking
 router.put('/:bookingId/cancel', taxiController.cancelBooking);
 

@@ -372,6 +372,42 @@ exports.getMyBookings = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Check if taxi booking exists for a donation request
+ * GET /api/taxi/check/:donationRequestId
+ */
+exports.checkTaxiBooking = asyncHandler(async (req, res) => {
+  const { donationRequestId } = req.params;
+  
+  const booking = await TaxiBooking.findOne({
+    donationRequestId,
+    status: { $nin: ['cancelled'] } // Exclude cancelled bookings
+  }).sort({ createdAt: -1 }); // Get the most recent booking
+  
+  if (booking) {
+    res.json({
+      success: true,
+      hasBooking: true,
+      data: {
+        bookingId: booking._id,
+        status: booking.status,
+        pickupAddress: booking.pickupAddress,
+        dropAddress: booking.dropAddress,
+        bookingDate: booking.bookingDate,
+        bookingTime: booking.bookingTime,
+        totalFare: booking.totalFare,
+        paymentStatus: booking.paymentStatus
+      }
+    });
+  } else {
+    res.json({
+      success: true,
+      hasBooking: false,
+      data: null
+    });
+  }
+});
+
+/**
  * Cancel taxi booking
  * PUT /api/taxi/:bookingId/cancel
  */

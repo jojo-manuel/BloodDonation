@@ -63,6 +63,7 @@ export default function UserDashboard() {
   const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
   const [notifications, setNotifications] = useState([]); // For notifications
   const [taxiBookingModal, setTaxiBookingModal] = useState(null); // For taxi booking modal
+  const [taxiBookings, setTaxiBookings] = useState({}); // Map of requestId -> taxi booking data
   const [settingsData, setSettingsData] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -204,6 +205,58 @@ export default function UserDashboard() {
       }
     } catch (err) {
       setReceivedRequests([]);
+    }
+  };
+
+  // Check taxi booking status for multiple requests
+  const checkTaxiBookings = async (requests) => {
+    const bookingsMap = {};
+    
+    for (const request of requests) {
+      if (request.status === 'booked' || request.status === 'accepted') {
+        try {
+          const res = await api.get(`/taxi/check/${request._id}`);
+          if (res.data.success && res.data.hasBooking) {
+            bookingsMap[request._id] = res.data.data;
+          }
+        } catch (err) {
+          // Silently fail for individual requests
+          console.error(`Failed to check taxi for request ${request._id}:`, err);
+        }
+      }
+    }
+    
+    setTaxiBookings(bookingsMap);
+  };
+
+  // Cancel taxi booking
+  const handleCancelTaxi = async (bookingId, requestId) => {
+    if (!window.confirm('Are you sure you want to cancel this taxi booking?')) {
+      return;
+    }
+
+    try {
+      const res = await api.put(`/taxi/${bookingId}/cancel`, {
+        cancellationReason: 'Cancelled by user'
+      });
+
+      if (res.data.success) {
+        alert('✅ Taxi booking cancelled successfully!');
+        
+        // Remove from taxi bookings map
+        setTaxiBookings(prev => {
+          const updated = { ...prev };
+          delete updated[requestId];
+          return updated;
+        });
+        
+        // Refresh requests
+        fetchRequests();
+        fetchReceivedRequests();
+      }
+    } catch (err) {
+      console.error('Cancel taxi error:', err);
+      alert('Failed to cancel taxi booking: ' + (err.response?.data?.message || 'Unknown error'));
     }
   };
 
@@ -360,6 +413,19 @@ export default function UserDashboard() {
     }
     // Profile and Settings tabs have been removed
   }, [activeTab]);
+
+  // Check taxi bookings when requests are loaded
+  useEffect(() => {
+    if (sentRequests.length > 0) {
+      checkTaxiBookings(sentRequests);
+    }
+  }, [sentRequests]);
+
+  useEffect(() => {
+    if (receivedRequests.length > 0) {
+      checkTaxiBookings(receivedRequests);
+    }
+  }, [receivedRequests]);
 
   // Polling to keep My Requests up-to-date in near real-time
   useEffect(() => {
@@ -1862,25 +1928,36 @@ export default function UserDashboard() {
 
                                     {request.status === 'accepted' && (
                                       <div className="flex flex-col gap-1">
-                                        <button
-                                          onClick={() => setTaxiBookingModal(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                          title="Book taxi for donation appointment"
-                                        >
-                                          <span>🚖</span>
-                                          Book Taxi
-                                        </button>
+                                        {taxiBookings[request._id] ? (
+                                          <button
+                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
+                                            title="Cancel taxi booking"
+                                          >
+                                            <span>🚫</span>
+                                            Cancel Taxi
+                                          </button>
+                                        ) : (
+                                          <button
+                                            onClick={() => setTaxiBookingModal(request)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                            title="Book taxi for donation appointment"
+                                          >
+                                            <span>🚖</span>
+                                            Book Taxi
+                                          </button>
+                                        )}
                                         <button
                                           onClick={() => handleCancelRequest(request._id)}
                                           disabled={updatingId === request._id}
                                           className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
                                         >
-                                          🚫 Cancel
+                                          🚫 Cancel Request
                                         </button>
                                       </div>
                                     )}
 
-                                    {/* Booked: Show View Details & Book Taxi */}
+                                    {/* Booked: Show View Details & Book/Cancel Taxi */}
                                     {request.status === 'booked' && (
                                       <div className="flex flex-col gap-1">
                                         <button
@@ -1890,14 +1967,25 @@ export default function UserDashboard() {
                                         >
                                           📋 View Details
                                         </button>
-                                        <button
-                                          onClick={() => setTaxiBookingModal(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                          title="Book taxi for donation appointment"
-                                        >
-                                          <span>🚖</span>
-                                          Book Taxi
-                                        </button>
+                                        {taxiBookings[request._id] ? (
+                                          <button
+                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
+                                            title="Cancel taxi booking"
+                                          >
+                                            <span>🚫</span>
+                                            Cancel Taxi
+                                          </button>
+                                        ) : (
+                                          <button
+                                            onClick={() => setTaxiBookingModal(request)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                            title="Book taxi for donation appointment"
+                                          >
+                                            <span>🚖</span>
+                                            Book Taxi
+                                          </button>
+                                        )}
                                       </div>
                                     )}
 
@@ -2007,7 +2095,7 @@ export default function UserDashboard() {
                                       </div>
                                     )}
                                     
-                                    {/* Booked: Show View Details & Book Taxi */}
+                                    {/* Booked: Show View Details & Book/Cancel Taxi */}
                                     {request.status === 'booked' && (
                                       <div className="flex flex-col gap-1">
                                         <button
@@ -2017,14 +2105,25 @@ export default function UserDashboard() {
                                         >
                                           📋 View Details
                                         </button>
-                                        <button
-                                          onClick={() => setTaxiBookingModal(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                          title="Book taxi for donation appointment"
-                                        >
-                                          <span>🚖</span>
-                                          Book Taxi
-                                        </button>
+                                        {taxiBookings[request._id] ? (
+                                          <button
+                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
+                                            title="Cancel taxi booking"
+                                          >
+                                            <span>🚫</span>
+                                            Cancel Taxi
+                                          </button>
+                                        ) : (
+                                          <button
+                                            onClick={() => setTaxiBookingModal(request)}
+                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                            title="Book taxi for donation appointment"
+                                          >
+                                            <span>🚖</span>
+                                            Book Taxi
+                                          </button>
+                                        )}
                                       </div>
                                     )}
                                     
