@@ -14,7 +14,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 20840252299
+              "duration": 1091784200
             }
           },
           {
@@ -23,11 +23,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 2971482400
+              "duration": 2115700899
             }
           },
           {
@@ -36,11 +36,11 @@
             "line": 10,
             "name": "I should see the login form",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:86"
+              "location": "features\\step_definitions\\login_steps.cjs:69"
             },
             "result": {
               "status": "passed",
-              "duration": 15454099
+              "duration": 17252399
             }
           },
           {
@@ -49,11 +49,11 @@
             "line": 11,
             "name": "I should see the email input field",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:93"
+              "location": "features\\step_definitions\\login_steps.cjs:74"
             },
             "result": {
               "status": "passed",
-              "duration": 14784599
+              "duration": 16326699
             }
           },
           {
@@ -62,11 +62,11 @@
             "line": 12,
             "name": "I should see the password input field",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:100"
+              "location": "features\\step_definitions\\login_steps.cjs:79"
             },
             "result": {
               "status": "passed",
-              "duration": 13572499
+              "duration": 19311899
             }
           },
           {
@@ -75,11 +75,11 @@
             "line": 13,
             "name": "I should see the submit button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:107"
+              "location": "features\\step_definitions\\login_steps.cjs:84"
             },
             "result": {
               "status": "passed",
-              "duration": 13069600
+              "duration": 20136599
             }
           },
           {
@@ -87,7 +87,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 49314500
+              "duration": 64602399
             }
           }
         ],
@@ -106,7 +106,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 922830300
+              "duration": 1137470999
             }
           },
           {
@@ -115,11 +115,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1674977099
+              "duration": 1131695200
             }
           },
           {
@@ -128,11 +128,11 @@
             "line": 16,
             "name": "I enter email \"jeevan@gmail.com\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:48"
+              "location": "features\\step_definitions\\login_steps.cjs:41"
             },
             "result": {
               "status": "passed",
-              "duration": 198329300
+              "duration": 301123499
             }
           },
           {
@@ -141,11 +141,11 @@
             "line": 17,
             "name": "I enter password \"Jeevan123!@#\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 144873500
+              "duration": 274086800
             }
           },
           {
@@ -154,11 +154,11 @@
             "line": 18,
             "name": "I click the login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:64"
+              "location": "features\\step_definitions\\login_steps.cjs:53"
             },
             "result": {
               "status": "passed",
-              "duration": 76846400
+              "duration": 118426099
             }
           },
           {
@@ -167,12 +167,11 @@
             "line": 19,
             "name": "I should be redirected to the dashboard",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:114"
+              "location": "features\\step_definitions\\login_steps.cjs:89"
             },
             "result": {
-              "status": "failed",
-              "duration": 3017786599,
-              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Warning: hello}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+              "status": "passed",
+              "duration": 3015909699
             }
           },
           {
@@ -181,11 +180,11 @@
             "line": 20,
             "name": "I should not be on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:124"
+              "location": "features\\step_definitions\\login_steps.cjs:96"
             },
             "result": {
-              "status": "skipped",
-              "duration": 0
+              "status": "passed",
+              "duration": 6751500
             }
           },
           {
@@ -193,7 +192,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 66600800
+              "duration": 68884899
             }
           }
         ],
@@ -212,7 +211,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 877797100
+              "duration": 1241062299
             }
           },
           {
@@ -221,11 +220,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1277417399
+              "duration": 3032194099
             }
           },
           {
@@ -234,11 +233,11 @@
             "line": 23,
             "name": "I enter email \"invalid@example.com\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:48"
+              "location": "features\\step_definitions\\login_steps.cjs:41"
             },
             "result": {
               "status": "passed",
-              "duration": 205539899
+              "duration": 344563700
             }
           },
           {
@@ -247,11 +246,11 @@
             "line": 24,
             "name": "I enter password \"wrongpassword\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 127940300
+              "duration": 213234000
             }
           },
           {
@@ -260,11 +259,11 @@
             "line": 25,
             "name": "I click the login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:64"
+              "location": "features\\step_definitions\\login_steps.cjs:53"
             },
             "result": {
               "status": "passed",
-              "duration": 79475100
+              "duration": 130672800
             }
           },
           {
@@ -273,11 +272,11 @@
             "line": 26,
             "name": "I should see an error alert",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:131"
+              "location": "features\\step_definitions\\login_steps.cjs:101"
             },
             "result": {
               "status": "passed",
-              "duration": 222366399
+              "duration": 646688000
             }
           },
           {
@@ -286,11 +285,11 @@
             "line": 27,
             "name": "the alert should contain \"Login Failed\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:140"
+              "location": "features\\step_definitions\\login_steps.cjs:108"
             },
             "result": {
               "status": "passed",
-              "duration": 430499
+              "duration": 495399
             }
           },
           {
@@ -298,7 +297,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 62843600
+              "duration": 61950499
             }
           }
         ],
@@ -317,7 +316,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 909582900
+              "duration": 1120190800
             }
           },
           {
@@ -326,11 +325,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1512935600
+              "duration": 3166327399
             }
           },
           {
@@ -339,11 +338,11 @@
             "line": 30,
             "name": "I click the login button without entering credentials",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:71"
+              "location": "features\\step_definitions\\login_steps.cjs:58"
             },
             "result": {
               "status": "passed",
-              "duration": 84041299
+              "duration": 130796699
             }
           },
           {
@@ -352,11 +351,11 @@
             "line": 31,
             "name": "I should remain on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:146"
+              "location": "features\\step_definitions\\login_steps.cjs:112"
             },
             "result": {
               "status": "passed",
-              "duration": 9435100
+              "duration": 10355799
             }
           },
           {
@@ -365,11 +364,11 @@
             "line": 32,
             "name": "the form should show validation errors",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:153"
+              "location": "features\\step_definitions\\login_steps.cjs:117"
             },
             "result": {
               "status": "passed",
-              "duration": 6500600
+              "duration": 7900799
             }
           },
           {
@@ -377,7 +376,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 56368900
+              "duration": 58539400
             }
           }
         ],
@@ -396,7 +395,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 856591899
+              "duration": 1045422099
             }
           },
           {
@@ -405,11 +404,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1427371399
+              "duration": 1835165099
             }
           },
           {
@@ -418,11 +417,11 @@
             "line": 35,
             "name": "I click on \"Forgot your password?\" link",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:78"
+              "location": "features\\step_definitions\\login_steps.cjs:63"
             },
             "result": {
               "status": "passed",
-              "duration": 104558400
+              "duration": 158684599
             }
           },
           {
@@ -431,11 +430,11 @@
             "line": 36,
             "name": "I should see the password reset form",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:160"
+              "location": "features\\step_definitions\\login_steps.cjs:122"
             },
             "result": {
               "status": "passed",
-              "duration": 15691100
+              "duration": 19633400
             }
           },
           {
@@ -444,11 +443,11 @@
             "line": 37,
             "name": "I should see the reset email input field",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:170"
+              "location": "features\\step_definitions\\login_steps.cjs:130"
             },
             "result": {
               "status": "passed",
-              "duration": 12197299
+              "duration": 16661100
             }
           },
           {
@@ -456,7 +455,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 41488400
+              "duration": 58046399
             }
           }
         ],
@@ -475,7 +474,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 842983299
+              "duration": 1032327300
             }
           },
           {
@@ -484,11 +483,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1342069299
+              "duration": 1821087499
             }
           },
           {
@@ -497,11 +496,11 @@
             "line": 40,
             "name": "I should see the Firebase login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:177"
+              "location": "features\\step_definitions\\login_steps.cjs:135"
             },
             "result": {
               "status": "passed",
-              "duration": 11513299
+              "duration": 20534200
             }
           },
           {
@@ -510,11 +509,11 @@
             "line": 41,
             "name": "the Firebase button should be visible",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:186"
+              "location": "features\\step_definitions\\login_steps.cjs:142"
             },
             "result": {
               "status": "passed",
-              "duration": 19573400
+              "duration": 27511599
             }
           },
           {
@@ -522,7 +521,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 44698799
+              "duration": 52414499
             }
           }
         ],
@@ -541,7 +540,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 913435899
+              "duration": 1035013100
             }
           },
           {
@@ -550,11 +549,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 4284145999
+              "duration": 1529501100
             }
           },
           {
@@ -563,11 +562,11 @@
             "line": 44,
             "name": "the email field should be required",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:196"
+              "location": "features\\step_definitions\\login_steps.cjs:150"
             },
             "result": {
               "status": "passed",
-              "duration": 21419800
+              "duration": 28490999
             }
           },
           {
@@ -576,11 +575,11 @@
             "line": 45,
             "name": "the password field should be required",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:204"
+              "location": "features\\step_definitions\\login_steps.cjs:156"
             },
             "result": {
               "status": "passed",
-              "duration": 20538199
+              "duration": 25485400
             }
           },
           {
@@ -588,7 +587,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 54593999
+              "duration": 77586800
             }
           }
         ],
@@ -607,7 +606,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 916121400
+              "duration": 1117373199
             }
           },
           {
@@ -616,11 +615,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 6436709000
+              "duration": 1061779500
             }
           },
           {
@@ -629,12 +628,12 @@
             "line": 48,
             "name": "I should see the \"Back to Home\" link",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:212"
+              "location": "features\\step_definitions\\login_steps.cjs:162"
             },
             "result": {
               "status": "failed",
-              "duration": 15298099,
-              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"link text\",\"selector\":\"Back to Home\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:214:16)"
+              "duration": 26238199,
+              "error_message": "NoSuchElementError: no such element: Unable to locate element: {\"method\":\"link text\",\"selector\":\"Back to Home\"}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:163:16)"
             }
           },
           {
@@ -643,7 +642,7 @@
             "line": 49,
             "name": "the link should point to the home page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:219"
+              "location": "features\\step_definitions\\login_steps.cjs:167"
             },
             "result": {
               "status": "skipped",
@@ -655,7 +654,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 53920200
+              "duration": 69629799
             }
           }
         ],
@@ -674,7 +673,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 912703599
+              "duration": 1206084099
             }
           },
           {
@@ -683,11 +682,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 2754705000
+              "duration": 3205583100
             }
           },
           {
@@ -696,11 +695,11 @@
             "line": 52,
             "name": "I enter email \"jeevan@gmail.com\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:48"
+              "location": "features\\step_definitions\\login_steps.cjs:41"
             },
             "result": {
               "status": "passed",
-              "duration": 223017800
+              "duration": 224552000
             }
           },
           {
@@ -709,11 +708,11 @@
             "line": 53,
             "name": "I enter password \"Jeevan123!@#\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 128385199
+              "duration": 169755600
             }
           },
           {
@@ -722,11 +721,11 @@
             "line": 54,
             "name": "I click the login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:64"
+              "location": "features\\step_definitions\\login_steps.cjs:53"
             },
             "result": {
               "status": "passed",
-              "duration": 148972200
+              "duration": 116811199
             }
           },
           {
@@ -735,12 +734,11 @@
             "line": 55,
             "name": "I should be redirected to the dashboard",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:114"
+              "location": "features\\step_definitions\\login_steps.cjs:89"
             },
             "result": {
-              "status": "failed",
-              "duration": 3015373999,
-              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Warning: hello}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+              "status": "passed",
+              "duration": 3015501799
             }
           },
           {
@@ -748,7 +746,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 76509699
+              "duration": 72985699
             }
           }
         ],
@@ -767,7 +765,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 933881899
+              "duration": 1067838499
             }
           },
           {
@@ -776,11 +774,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 4398999800
+              "duration": 2823204000
             }
           },
           {
@@ -789,11 +787,11 @@
             "line": 52,
             "name": "I enter email \"test@example.com\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:48"
+              "location": "features\\step_definitions\\login_steps.cjs:41"
             },
             "result": {
               "status": "passed",
-              "duration": 196744500
+              "duration": 298764500
             }
           },
           {
@@ -802,11 +800,11 @@
             "line": 53,
             "name": "I enter password \"Test123!@#\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 144086699
+              "duration": 184198900
             }
           },
           {
@@ -815,11 +813,11 @@
             "line": 54,
             "name": "I click the login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:64"
+              "location": "features\\step_definitions\\login_steps.cjs:53"
             },
             "result": {
               "status": "passed",
-              "duration": 96646299
+              "duration": 108050400
             }
           },
           {
@@ -828,12 +826,12 @@
             "line": 55,
             "name": "I should be redirected to the dashboard",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:114"
+              "location": "features\\step_definitions\\login_steps.cjs:89"
             },
             "result": {
               "status": "failed",
-              "duration": 3005999400,
-              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+              "duration": 3005427400,
+              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:91:22)"
             }
           },
           {
@@ -841,7 +839,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 63225600
+              "duration": 71839500
             }
           }
         ],
@@ -860,7 +858,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 921686599
+              "duration": 1059806300
             }
           },
           {
@@ -869,11 +867,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1358229600
+              "duration": 1770359400
             }
           },
           {
@@ -882,11 +880,11 @@
             "line": 52,
             "name": "I enter email \"abhi@gmail.com\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:48"
+              "location": "features\\step_definitions\\login_steps.cjs:41"
             },
             "result": {
               "status": "passed",
-              "duration": 203366500
+              "duration": 271436200
             }
           },
           {
@@ -895,11 +893,11 @@
             "line": 53,
             "name": "I enter password \"AbhiPassword123!\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 153290599
+              "duration": 240337899
             }
           },
           {
@@ -908,11 +906,11 @@
             "line": 54,
             "name": "I click the login button",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:64"
+              "location": "features\\step_definitions\\login_steps.cjs:53"
             },
             "result": {
               "status": "passed",
-              "duration": 82898900
+              "duration": 112493599
             }
           },
           {
@@ -921,12 +919,12 @@
             "line": 55,
             "name": "I should be redirected to the dashboard",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:114"
+              "location": "features\\step_definitions\\login_steps.cjs:89"
             },
             "result": {
               "status": "failed",
-              "duration": 3012008300,
-              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:117:22)"
+              "duration": 3009611199,
+              "error_message": "UnexpectedAlertOpenError: unexpected alert open: {Alert text : Login Failed: Invalid credentials\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com}\n  (Session info: chrome=141.0.7390.123)\n    at Object.throwDecodedError (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\error.js:523:15)\n    at parseHttpResponse (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:524:13)\n    at Executor.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\http.js:456:28)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Driver.execute (D:\\BloodDonation\\frontend\\node_modules\\selenium-webdriver\\lib\\webdriver.js:745:17)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\login_steps.cjs:91:22)"
             }
           },
           {
@@ -934,7 +932,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 69983999
+              "duration": 69860500
             }
           }
         ],
@@ -953,7 +951,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 894100800
+              "duration": 1047471099
             }
           },
           {
@@ -962,11 +960,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 2040562900
+              "duration": 2010298799
             }
           },
           {
@@ -975,11 +973,11 @@
             "line": 64,
             "name": "I enter password \"secretpassword\"",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:56"
+              "location": "features\\step_definitions\\login_steps.cjs:47"
             },
             "result": {
               "status": "passed",
-              "duration": 213361199
+              "duration": 265986600
             }
           },
           {
@@ -988,11 +986,11 @@
             "line": 65,
             "name": "the password field should hide the password text",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:227"
+              "location": "features\\step_definitions\\login_steps.cjs:173"
             },
             "result": {
               "status": "passed",
-              "duration": 16278800
+              "duration": 48409999
             }
           },
           {
@@ -1000,7 +998,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 58218399
+              "duration": 74905500
             }
           }
         ],
@@ -1019,7 +1017,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 861294699
+              "duration": 1177282800
             }
           },
           {
@@ -1028,11 +1026,11 @@
             "line": 7,
             "name": "I am on the login page",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:40"
+              "location": "features\\step_definitions\\login_steps.cjs:35"
             },
             "result": {
               "status": "passed",
-              "duration": 1485681000
+              "duration": 1709834300
             }
           },
           {
@@ -1041,11 +1039,11 @@
             "line": 68,
             "name": "the page should display \"Blood Donation\" branding",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:235"
+              "location": "features\\step_definitions\\login_steps.cjs:179"
             },
             "result": {
               "status": "passed",
-              "duration": 28938600
+              "duration": 34332900
             }
           },
           {
@@ -1054,11 +1052,11 @@
             "line": 69,
             "name": "the page should have proper styling",
             "match": {
-              "location": "features\\step_definitions\\login_steps.cjs:243"
+              "location": "features\\step_definitions\\login_steps.cjs:185"
             },
             "result": {
               "status": "passed",
-              "duration": 8836400
+              "duration": 10425700
             }
           },
           {
@@ -1066,7 +1064,7 @@
             "hidden": true,
             "result": {
               "status": "passed",
-              "duration": 60475700
+              "duration": 54533099
             }
           }
         ],
