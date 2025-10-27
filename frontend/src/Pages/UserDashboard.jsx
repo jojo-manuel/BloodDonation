@@ -1820,13 +1820,14 @@ export default function UserDashboard() {
                               <th className="px-2 py-1">Blood Bank</th>
                               <th className="px-2 py-1">Patient</th>
                               <th className="px-2 py-1">Actions</th>
-                              <th className="px-2 py-1">Taxi</th>
                             </tr>
                           </thead>
                           <tbody className="text-gray-800 dark:text-gray-200">
                             {filteredRequests.map((request) => (
-                              <tr key={request._id} className="border-t border-white/10">
-                                <td className="px-2 py-1 font-mono text-xs">{request._id}</td>
+                              <tr key={request._id} className="border-t border-white/10 hover:bg-white/5">
+                                <td className="px-2 py-1 font-mono text-xs cursor-pointer hover:text-pink-600" onClick={() => setSelectedRequest(request)}>
+                                  {request._id.substring(0, 8)}...
+                                </td>
                                 <td className="px-2 py-1">{loginUsername || 'Me'}</td>
                                 <td className="px-2 py-1">{request.receiverId?.username || request.donorId?.userId?.username || request.donorUsername || request.receiverId?.name || 'N/A'}</td>
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
@@ -1846,33 +1847,70 @@ export default function UserDashboard() {
                                     )}
                                   </span>
                                 </td>
-                                <td className="px-2 py-1">
-                                  <div className="flex flex-col gap-1">
-                                    {/* Display status as read-only badge */}
-                                    {getStatusBadge(request.status)}
-                                    
-                                    {/* Keep cancel button for pending/accepted requests */}
-                                    {!['cancelled', 'booked', 'completed', 'rejected'].includes(request.status) && (
+                                <td className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex flex-col gap-1 min-w-[180px]">
+                                    {/* Pending/Accepted: Show Cancel & Book Taxi */}
+                                    {request.status === 'pending' && (
                                       <button
                                         onClick={() => handleCancelRequest(request._id)}
                                         disabled={updatingId === request._id}
-                                        className="px-2 py-1 text-xs bg-red-500 text-white rounded disabled:opacity-50 hover:bg-red-600 w-full mt-1"
+                                        className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
                                       >
                                         🚫 Cancel
                                       </button>
                                     )}
+
+                                    {request.status === 'accepted' && (
+                                      <div className="flex flex-col gap-1">
+                                        <button
+                                          onClick={() => setTaxiBookingModal(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                          title="Book taxi for donation appointment"
+                                        >
+                                          <span>🚖</span>
+                                          Book Taxi
+                                        </button>
+                                        <button
+                                          onClick={() => handleCancelRequest(request._id)}
+                                          disabled={updatingId === request._id}
+                                          className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
+                                        >
+                                          🚫 Cancel
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {/* Booked: Show View Details & Book Taxi */}
+                                    {request.status === 'booked' && (
+                                      <div className="flex flex-col gap-1">
+                                        <button
+                                          onClick={() => setSelectedRequest(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded hover:from-purple-700 hover:to-pink-700 font-semibold"
+                                          title="View booking details and download PDF"
+                                        >
+                                          📋 View Details
+                                        </button>
+                                        <button
+                                          onClick={() => setTaxiBookingModal(request)}
+                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
+                                          title="Book taxi for donation appointment"
+                                        >
+                                          <span>🚖</span>
+                                          Book Taxi
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {/* Rejected/Cancelled/Completed: Show View */}
+                                    {['rejected', 'cancelled', 'completed'].includes(request.status) && (
+                                      <button
+                                        onClick={() => setSelectedRequest(request)}
+                                        className="w-full px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 font-semibold"
+                                      >
+                                        👁️ View
+                                      </button>
+                                    )}
                                   </div>
-                                </td>
-                                <td className="px-2 py-1">
-                                  {(request.status === 'booked' || request.status === 'accepted') && (
-                                    <button
-                                      onClick={() => setTaxiBookingModal(request)}
-                                      className="px-3 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition font-semibold flex items-center gap-1 whitespace-nowrap"
-                                    >
-                                      <span>🚖</span>
-                                      Book Taxi
-                                    </button>
-                                  )}
                                 </td>
                               </tr>
                             ))}
