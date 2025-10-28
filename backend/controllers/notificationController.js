@@ -1,6 +1,6 @@
 const Notification = require('../Models/Notification');
 const Booking = require('../Models/Booking');
-const User = require('../Models/user');
+const User = require('../Models/User');
 const Donor = require('../Models/donor');
 const { sendEmail } = require('../utils/email');
 const asyncHandler = require('../Middleware/asyncHandler');
