@@ -984,6 +984,13 @@ export default function UserDashboard() {
 
   // Step 2: Proceed with booking after consent
   const proceedWithBooking = async (medicalConsentData) => {
+    // Slot booking feature removed
+    setShowConsentForm(false);
+    setBookingLoading(false);
+    setConsentData(null);
+    alert('Slot booking has been removed.');
+    setBookingModal(null);
+    return;
     try {
       setBookingLoading(true);
       setShowConsentForm(false);
