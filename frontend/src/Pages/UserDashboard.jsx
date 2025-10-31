@@ -10,6 +10,9 @@ import RescheduleNotificationModal from '../components/RescheduleNotificationMod
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
+// Stubbed TaxiBookingModal to safely remove taxi booking feature without breaking JSX
+const TaxiBookingModal = () => null;
+
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
   { value: 'pending', label: 'Pending' },
@@ -482,13 +485,9 @@ export default function UserDashboard() {
   // Fetch available patients and blood banks for request
   const fetchPatientsAndBloodBanks = async () => {
     try {
-      const [patientsRes, bloodBanksRes] = await Promise.all([
-        api.get('/patients'),
-        api.get('/bloodbank/approved')
-      ]);
+      const patientsRes = await api.get('/patients');
       
       console.log('📊 Patients Response:', patientsRes.data);
-      console.log('🏥 Blood Banks Response:', bloodBanksRes.data);
       
       if (patientsRes.data.success) {
         const patientsData = patientsRes.data.data || patientsRes.data.patients || [];
@@ -496,15 +495,13 @@ export default function UserDashboard() {
         setPatients(patientsData);
       }
       
-      if (bloodBanksRes.data.success) {
-        const bloodBanksData = bloodBanksRes.data.data || bloodBanksRes.data.bloodBanks || [];
-        console.log('✅ Blood Banks loaded:', bloodBanksData.length);
-        console.log('🏥 Blood Banks data:', bloodBanksData);
-        setBloodBanks(bloodBanksData);
-      }
+      // Blood bank feature removed; ensure empty list
+      setBloodBanks([]);
     } catch (error) {
-      console.error('❌ Error fetching patients/blood banks:', error);
+      console.error('❌ Error fetching patients:', error);
       console.error('Error details:', error.response?.data);
+      // Ensure UI has empty blood banks when feature removed
+      setBloodBanks([]);
     }
   };
 

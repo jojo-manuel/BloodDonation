@@ -97,9 +97,8 @@ app.use('/api/settings', require('./Route/settingsRoutes'));
 app.use('/api/donors', require('./Route/donorRoutes'));
 app.use('/api/reviews', require('./Route/reviewRoutes'));
 app.use('/api/admin', require('./Route/adminRoutes'));
-app.use('/api/bloodbank', require('./Route/bloodBankRoutes'));
 app.use('/api/patients', require('./Route/PatientCURD'));
-app.use('/api/bloodbank-analytics', require('./Route/bloodBankAnalytics'));
+// Blood bank feature removed
 // Taxi booking feature removed
 app.use('/api/notifications', require('./Route/notificationRoutes'));
 

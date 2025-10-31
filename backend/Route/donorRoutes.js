@@ -4,8 +4,8 @@
 const express = require('express');
 const authMiddleware = require('../Middleware/authMiddleware');
 const validate = require('../Middleware/validate');
-const { donorRegisterBody, bookSlotBody } = require('../validators/schemas');
-const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, respondToRequest, bookSlot, getAddressByPostalCode, getAvailableCities } = require('../controllers/donorController');
+const { donorRegisterBody } = require('../validators/schemas');
+const { registerOrUpdateDonor, updateDonor, deleteDonor, searchDonors, getOne, getMe, searchDonorsByMrid, respondToRequest, getAddressByPostalCode, getAvailableCities } = require('../controllers/donorController');
 const donationRequestController = require('../controllers/donationRequestController');
 
 const router = express.Router();
@@ -34,8 +34,7 @@ router.get('/me', authMiddleware, getMe);
 // Respond to a donation request (accept or reject)
 router.put('/requests/:requestId/respond', authMiddleware, respondToRequest);
 
-// Book a slot for an accepted donation request
-router.put('/:donorId/requests/:requestId/book-slot', authMiddleware, validate({ body: bookSlotBody }), donationRequestController.bookSlot);
+// Slot booking feature removed
 
 // Create a donation request to a donor (sender is current user)
 router.post('/:donorId/requests', authMiddleware, donationRequestController.createRequest);
