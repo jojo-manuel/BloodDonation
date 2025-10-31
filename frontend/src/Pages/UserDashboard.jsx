@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import Layout from '../components/Layout';
 import ReviewTab from '../components/ReviewTab';
-import TaxiBookingModal from '../components/TaxiBookingModal';
+// TaxiBookingModal removed with taxi booking feature
 import CitySearchDropdown from '../components/CitySearchDropdown';
 import MedicalConsentForm from '../components/MedicalConsentForm';
 import RescheduleNotificationModal from '../components/RescheduleNotificationModal';
