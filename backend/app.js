@@ -100,7 +100,7 @@ app.use('/api/admin', require('./Route/adminRoutes'));
 app.use('/api/bloodbank', require('./Route/bloodBankRoutes'));
 app.use('/api/patients', require('./Route/PatientCURD'));
 app.use('/api/bloodbank-analytics', require('./Route/bloodBankAnalytics'));
-app.use('/api/taxi', require('./Route/taxiRoutes'));
+// Taxi booking feature removed
 app.use('/api/notifications', require('./Route/notificationRoutes'));
 
 // 404 fallback for unmatched routes
