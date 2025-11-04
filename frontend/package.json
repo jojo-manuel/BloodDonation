@@ -24,7 +24,6 @@
     "test:bdd:patient": "cucumber-js features/patient-management.feature",
     "test:bdd:patient-registration": "cucumber-js features/patient-registration.feature",
     "test:bdd:donor-slots": "cucumber-js features/donor-slot-booking.feature",
-    "test:bdd:bloodbank-patient": "cucumber-js features/bloodbank-patient-registration.feature",
     "test:bdd:bloodbank": "cucumber-js --profile bloodbank",
     "test:bdd:bloodbank-donor": "cucumber-js --profile bloodbankDonor",
     "test:bdd:bloodbank-donor:report": "cucumber-js --profile bloodbankDonor && node generate-donor-report.js",
