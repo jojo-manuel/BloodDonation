@@ -73,7 +73,7 @@ async function loginAsBloodBank(driver) {
   
   // Fill login credentials - use email format since the API expects email
   await usernameInput.clear();
-  await usernameInput.sendKeys('bloodbank1@example.com');
+  await usernameInput.sendKeys('bloodbank12@gmail.com');
   
   const passwordInput = await driver.findElement(By.css('input[type="password"]'));
   await passwordInput.clear();
