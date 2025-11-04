@@ -23,6 +23,18 @@ module.exports = {
     publishQuiet: true,
   },
 
+  // Profile for bloodbank donor management tests
+  bloodbankDonor: {
+    require: ['features/step_definitions/bloodbank_donor_management_steps.cjs'],
+    format: [
+      'progress-bar',
+      'html:reports/bloodbank-donor-management-report.html',
+      'json:reports/bloodbank-donor-management-report.json'
+    ],
+    paths: ['features/bloodbank-donor-management.feature'],
+    publishQuiet: true,
+  },
+
   // Profile for smoke tests
   smoke: {
     require: ['features/step_definitions/**/*.cjs'],
