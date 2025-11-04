@@ -246,10 +246,10 @@ When('I fill in the patient form with:', async function(dataTable) {
       } else if (field === 'Address') {
         // Address in BloodBankDashboard is a complex object with multiple fields
         // We'll fill the houseAddress field and pincode (required)
-        const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
+        const addressTextInputs = await this.driver.findElements(By.css('input[type="text"]'));
         
         // Find and fill houseAddress field
-        for (const input of textInputs) {
+        for (const input of addressTextInputs) {
           const placeholder = await input.getAttribute('placeholder');
           if (placeholder && placeholder.toLowerCase().includes('house address')) {
             await input.clear();
@@ -259,7 +259,7 @@ When('I fill in the patient form with:', async function(dataTable) {
         }
         
         // Fill pincode (required field) - use a default test pincode
-        for (const input of textInputs) {
+        for (const input of addressTextInputs) {
           const placeholder = await input.getAttribute('placeholder');
           if (placeholder && placeholder.toLowerCase().includes('pincode')) {
             await input.clear();
