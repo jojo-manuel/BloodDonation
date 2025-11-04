@@ -288,12 +288,18 @@ router.post("/login", async (req, res) => {
       });
 
     // Add max retry and catch for admin user existence check
+    // Try to find user by username first, then by email if username lookup fails
     let user;
     let attempts = 0;
     const maxAttempts = 3;
     while (attempts < maxAttempts) {
       try {
+        // First try to find by username
         user = await User.findOne({ username });
+        // If not found and we have an email, try looking up by email
+        if (!user && email) {
+          user = await User.findOne({ email });
+        }
         break;
       } catch (e) {
         attempts++;
