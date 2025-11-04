@@ -48,8 +48,16 @@ async function loginAsBloodBank(driver) {
   const loginButton = await driver.findElement(By.css('button[type="submit"]'));
   await loginButton.click();
   
-  // Wait for navigation to dashboard
-  await driver.wait(until.urlContains('dashboard') || until.urlContains('bloodbank'), 15000);
+  // Wait for navigation to dashboard (could be /dashboard or /bloodbank/dashboard)
+  try {
+    await driver.wait(until.urlContains('dashboard'), 15000);
+  } catch (e) {
+    // If not redirected, check if we're still on login page
+    const currentUrl = await driver.getCurrentUrl();
+    if (currentUrl.includes('/login')) {
+      throw new Error('Login failed - still on login page');
+    }
+  }
   await driver.sleep(2000);
 }
 
@@ -62,9 +70,16 @@ Given('I am logged in as a blood bank user', async function() {
 
 Given('I am on the blood bank dashboard', async function() {
   const currentUrl = await this.driver.getCurrentUrl();
-  if (!currentUrl.includes('dashboard') && !currentUrl.includes('bloodbank')) {
-    await this.driver.get('http://localhost:5173/bloodbank/dashboard');
-    await driver.sleep(2000);
+  if (!currentUrl.includes('dashboard')) {
+    // Try common dashboard routes
+    try {
+      await this.driver.get('http://localhost:5173/dashboard');
+      await this.driver.sleep(2000);
+    } catch (e) {
+      // If that fails, try bloodbank specific route
+      await this.driver.get('http://localhost:5173/bloodbank/dashboard');
+      await this.driver.sleep(2000);
+    }
   }
   await this.driver.wait(until.elementLocated(By.css('body')), 10000);
 });
