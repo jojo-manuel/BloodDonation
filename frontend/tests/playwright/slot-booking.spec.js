@@ -491,13 +491,15 @@ test.describe('Slot Booking Tests', () => {
           expect(minDate).toBeTruthy();
           
           // Min date should be approximately 3 hours from now
-          const minDateObj = new Date(minDate);
-          const now = new Date();
-          const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-          
-          // Allow some tolerance (within 1 hour)
-          const diff = Math.abs(minDateObj.getTime() - threeHoursFromNow.getTime());
-          expect(diff).toBeLessThan(60 * 60 * 1000);
+          if (minDate) {
+            const minDateObj = new Date(minDate);
+            const now = new Date();
+            const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+            
+            // Allow some tolerance (within 1 hour)
+            const diff = Math.abs(minDateObj.getTime() - threeHoursFromNow.getTime());
+            expect(diff).toBeLessThan(60 * 60 * 1000);
+          }
         }
       }
     });
@@ -520,13 +522,15 @@ test.describe('Slot Booking Tests', () => {
           expect(maxDate).toBeTruthy();
           
           // Max date should be approximately 7 days from now
-          const maxDateObj = new Date(maxDate);
-          const now = new Date();
-          const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-          
-          // Allow some tolerance (within 1 day)
-          const diff = Math.abs(maxDateObj.getTime() - sevenDaysFromNow.getTime());
-          expect(diff).toBeLessThan(24 * 60 * 60 * 1000);
+          if (maxDate) {
+            const maxDateObj = new Date(maxDate);
+            const now = new Date();
+            const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            // Allow some tolerance (within 1 day)
+            const diff = Math.abs(maxDateObj.getTime() - sevenDaysFromNow.getTime());
+            expect(diff).toBeLessThan(24 * 60 * 60 * 1000);
+          }
         }
       }
     });
