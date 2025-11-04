@@ -1,0 +1,1121 @@
+[
+  {
+    "description": "  As a blood bank user\n  I want to search and manage donors\n  So that I can add donors to my system and track their information",
+    "elements": [
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-searches-for-donors-by-blood-group",
+        "keyword": "Scenario",
+        "line": 12,
+        "name": "Blood bank searches for donors by blood group",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 987271500
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19670853300,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 13,
+            "name": "I search for donors with blood group \"O+\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:231"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 14,
+            "name": "I should see a list of donors with blood group \"O+\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:329"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 15,
+            "name": "each donor should display their name and contact information",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:336"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 86919699
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 11
+          },
+          {
+            "name": "@donor",
+            "line": 11
+          },
+          {
+            "name": "@critical",
+            "line": 11
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-searches-for-donors-by-email",
+        "keyword": "Scenario",
+        "line": 18,
+        "name": "Blood bank searches for donors by email",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 930012099
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19732187399,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 19,
+            "name": "I search for donors with email \"donor@example.com\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:249"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 20,
+            "name": "I should see donor information for \"donor@example.com\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:347"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 21,
+            "name": "the donor details should include name, blood group, and contact information",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:354"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 81276599
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 17
+          },
+          {
+            "name": "@donor",
+            "line": 17
+          },
+          {
+            "name": "@critical",
+            "line": 17
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-searches-for-donors-by-location",
+        "keyword": "Scenario",
+        "line": 24,
+        "name": "Blood bank searches for donors by location",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1043599399
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19563698799,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 25,
+            "name": "I search for donors in location \"Kochi\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:259"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 26,
+            "name": "I should see donors located in \"Kochi\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:361"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 27,
+            "name": "each donor should display their address information",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:368"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 156886600
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 23
+          },
+          {
+            "name": "@donor",
+            "line": 23
+          },
+          {
+            "name": "@critical",
+            "line": 23
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-views-all-donors",
+        "keyword": "Scenario",
+        "line": 30,
+        "name": "Blood bank views all donors",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1029598100
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19737569099,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 31,
+            "name": "I click on \"All Donors\" view",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:269"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 32,
+            "name": "I should see a list of all available donors",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:380"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 33,
+            "name": "each donor should display their basic information",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:386"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 142789799
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 29
+          },
+          {
+            "name": "@donor",
+            "line": 29
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-views-donor-visit-history",
+        "keyword": "Scenario",
+        "line": 36,
+        "name": "Blood bank views donor visit history",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 994195300
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19530089200,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 37,
+            "name": "I click on \"Visit History\" view",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:269"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 38,
+            "name": "I should see a list of donors who have visited",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:396"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 39,
+            "name": "each entry should show visit date and donation details",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:402"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 97307300
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 35
+          },
+          {
+            "name": "@donor",
+            "line": 35
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-searches-for-donors-with-multiple-criteria",
+        "keyword": "Scenario",
+        "line": 42,
+        "name": "Blood bank searches for donors with multiple criteria",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 921499200
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19493974199,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [
+              {
+                "rows": [
+                  {
+                    "cells": [
+                      "Blood Group",
+                      "O+"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Location",
+                      "Kochi"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "keyword": "When ",
+            "line": 43,
+            "name": "I search for donors with:",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:278"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 46,
+            "name": "I should see donors matching both criteria",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:412"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 47,
+            "name": "each donor should have blood group \"O+\" and be located in \"Kochi\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:418"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 99232600
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 41
+          },
+          {
+            "name": "@donor",
+            "line": 41
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-clears-donor-search-filters",
+        "keyword": "Scenario",
+        "line": 50,
+        "name": "Blood bank clears donor search filters",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 994606700
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19705819000,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 51,
+            "name": "I have searched for donors with blood group \"A+\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:212"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 52,
+            "name": "I clear the search filters",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:309"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 53,
+            "name": "I should see all donors again",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:429"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 54,
+            "name": "the search fields should be empty",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:435"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 133917700
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 49
+          },
+          {
+            "name": "@donor",
+            "line": 49
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-views-donor-details",
+        "keyword": "Scenario",
+        "line": 57,
+        "name": "Blood bank views donor details",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 999983799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19830841500,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 58,
+            "name": "I have searched for a donor",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:202"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 59,
+            "name": "I click on a donor from the list",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:318"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [
+              {
+                "rows": [
+                  {
+                    "cells": [
+                      "Field"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Name"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Blood Group"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Contact Number"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Email"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Address"
+                    ]
+                  },
+                  {
+                    "cells": [
+                      "Availability Status"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "keyword": "Then ",
+            "line": 60,
+            "name": "I should see detailed donor information including:",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:441"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 100474200
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 56
+          },
+          {
+            "name": "@donor",
+            "line": 56
+          }
+        ],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "blood-bank-donor-management;blood-bank-searches-for-non-existent-donor",
+        "keyword": "Scenario",
+        "line": 70,
+        "name": "Blood bank searches for non-existent donor",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1059181199
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 7,
+            "name": "I am logged in as a blood bank user",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:136"
+            },
+            "result": {
+              "status": "failed",
+              "duration": 19611723899,
+              "error_message": "Error: Login failed - still on login page. URL: http://localhost:5173/login\n    at loginAsBloodBank (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:128:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async World.<anonymous> (D:\\BloodDonation\\frontend\\features\\step_definitions\\bloodbank_donor_management_steps.cjs:137:3)"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "I am on the blood bank dashboard",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:142"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "I navigate to the donors tab",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:158"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 71,
+            "name": "I search for donors with email \"nonexistent@example.com\"",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:249"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 72,
+            "name": "I should see a message indicating no donors found or an empty donor list",
+            "match": {
+              "location": "features\\step_definitions\\bloodbank_donor_management_steps.cjs:469"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 138960300
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@bloodbank",
+            "line": 69
+          },
+          {
+            "name": "@donor",
+            "line": 69
+          },
+          {
+            "name": "@negative",
+            "line": 69
+          }
+        ],
+        "type": "scenario"
+      }
+    ],
+    "id": "blood-bank-donor-management",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Blood Bank Donor Management",
+    "tags": [],
+    "uri": "features\\bloodbank-donor-management.feature"
+  }
+]

@@ -300,6 +300,14 @@ router.post("/login", async (req, res) => {
         if (!user && email) {
           user = await User.findOne({ email });
         }
+        // Also try lowercase email lookup
+        if (!user && email) {
+          user = await User.findOne({ email: email.toLowerCase() });
+        }
+        // Try username as lowercase email
+        if (!user && username) {
+          user = await User.findOne({ username: username.toLowerCase() });
+        }
         break;
       } catch (e) {
         attempts++;
@@ -309,12 +317,16 @@ router.post("/login", async (req, res) => {
       }
     }
 
-    if (!user)
+    if (!user) {
+      console.log(`Login attempt failed: User not found for username=${username}, email=${email}`);
       return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok)
+    if (!ok) {
+      console.log(`Login attempt failed: Password mismatch for user ${user.username || user.email}`);
       return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
 
     // Remove admin login block
     // if (user.role === 'admin') {
