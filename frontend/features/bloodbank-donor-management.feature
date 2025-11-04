@@ -69,6 +69,5 @@ Feature: Blood Bank Donor Management
   @bloodbank @donor @negative
   Scenario: Blood bank searches for non-existent donor
     When I search for donors with email "nonexistent@example.com"
-    Then I should see a message indicating no donors found
-    Or I should see an empty donor list
+    Then I should see a message indicating no donors found or an empty donor list
 

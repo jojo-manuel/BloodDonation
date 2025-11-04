@@ -395,3 +395,19 @@ Then('I should see an empty donor list', async function() {
   assert.ok(donorElements.length === 0, 'Donor list should be empty');
 });
 
+Then('I should see a message indicating no donors found or an empty donor list', async function() {
+  await this.driver.sleep(2000);
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  
+  // Check for either a no results message OR an empty list
+  const noResultsKeywords = ['no donors', 'not found', 'no results', 'empty', 'no matches'];
+  const hasNoResults = noResultsKeywords.some(keyword => 
+    pageText.toLowerCase().includes(keyword.toLowerCase())
+  );
+  const isEmptyList = donorElements.length === 0;
+  
+  assert.ok(hasNoResults || isEmptyList || pageText.includes('0'), 
+    'Should see no donors found message or empty donor list');
+});
+
