@@ -314,88 +314,55 @@ When('I leave all patient form fields empty', async function() {
 });
 
 When('I add a patient with name {string} and MRID {string}', async function(name, mrid) {
-  await this.fillInPatientForm({
-    'Patient Name': name,
-    'Blood Group': 'A+',
-    'MRID': mrid,
-    'Phone Number': '9876543210',
-    'Required Units': '2',
-    'Address': 'Test Address'
-  });
-  await this.selectFutureDate();
-  await this.submitForm();
-});
-
-When('I add another patient with name {string} and MRID {string}', async function(name, mrid) {
-  await this.driver.sleep(2000);
-  await this.fillInPatientForm({
-    'Patient Name': name,
-    'Blood Group': 'B+',
-    'MRID': mrid,
-    'Phone Number': '9876543211',
-    'Required Units': '1',
-    'Address': 'Another Test Address'
-  });
-  await this.selectFutureDate();
-  await this.submitForm();
-});
-
-// Helper method for filling form
-this.fillInPatientForm = async function(data) {
-  const rows = data;
-  for (const [field, value] of Object.entries(rows)) {
-    try {
-      if (field === 'Patient Name') {
-        const inputs = await this.driver.findElements(By.css('input[type="text"]'));
-        await inputs[0].clear();
-        await inputs[0].sendKeys(value);
-      } else if (field === 'Blood Group') {
-        const select = await this.driver.findElement(By.css('select'));
-        await select.sendKeys(value);
-      } else if (field === 'MRID') {
-        const inputs = await this.driver.findElements(By.css('input[type="text"]'));
-        for (const input of inputs) {
-          const placeholder = await input.getAttribute('placeholder');
-          if (placeholder && placeholder.toLowerCase().includes('mrid')) {
-            await input.clear();
-            await input.sendKeys(value);
-            break;
-          }
-        }
-      } else if (field === 'Phone Number') {
-        const inputs = await this.driver.findElements(By.css('input[type="text"]'));
-        for (const input of inputs) {
-          const placeholder = await input.getAttribute('placeholder');
-          if (placeholder && placeholder.toLowerCase().includes('phone')) {
-            await input.clear();
-            await input.sendKeys(value);
-            break;
-          }
-        }
-      } else if (field === 'Required Units') {
-        const unitsInput = await this.driver.findElement(By.css('input[type="number"]'));
-        await unitsInput.clear();
-        await unitsInput.sendKeys(value);
-      } else if (field === 'Address') {
-        const addressInput = await this.driver.findElement(By.css('textarea'));
-        await addressInput.clear();
-        await addressInput.sendKeys(value);
-      }
-      await this.driver.sleep(300);
-    } catch (e) {
-      console.log(`Could not fill field ${field}:`, e.message);
+  // Fill patient name
+  const nameInputs = await this.driver.findElements(By.css('input[type="text"]'));
+  if (nameInputs.length > 0) {
+    await nameInputs[0].clear();
+    await nameInputs[0].sendKeys(name);
+  }
+  
+  // Select blood group
+  const bloodGroupSelect = await this.driver.findElement(By.css('select'));
+  await bloodGroupSelect.sendKeys('A+');
+  
+  // Find and fill MRID
+  const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('mrid')) {
+      await input.clear();
+      await input.sendKeys(mrid);
+      break;
     }
   }
-};
-
-this.selectFutureDate = async function() {
+  
+  // Fill phone
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('phone')) {
+      await input.clear();
+      await input.sendKeys('9876543210');
+      break;
+    }
+  }
+  
+  // Fill units
+  const unitsInput = await this.driver.findElement(By.css('input[type="number"]'));
+  await unitsInput.clear();
+  await unitsInput.sendKeys('2');
+  
+  // Fill address
+  const addressInput = await this.driver.findElement(By.css('textarea'));
+  await addressInput.clear();
+  await addressInput.sendKeys('Test Address');
+  
+  // Select future date
   const futureDate = getFutureDate(7);
   const dateInput = await this.driver.findElement(By.css('input[type="date"]'));
   await dateInput.clear();
   await dateInput.sendKeys(futureDate);
-};
-
-this.submitForm = async function() {
+  
+  // Submit
   this.driver.executeScript(() => {
     window.alert = function() { return true; };
     window.confirm = function() { return true; };
@@ -413,7 +380,78 @@ this.submitForm = async function() {
   }
   
   await this.driver.sleep(2000);
-};
+});
+
+When('I add another patient with name {string} and MRID {string}', async function(name, mrid) {
+  await this.driver.sleep(2000);
+  
+  // Fill patient name
+  const nameInputs = await this.driver.findElements(By.css('input[type="text"]'));
+  if (nameInputs.length > 0) {
+    await nameInputs[0].clear();
+    await nameInputs[0].sendKeys(name);
+  }
+  
+  // Select blood group
+  const bloodGroupSelect = await this.driver.findElement(By.css('select'));
+  await bloodGroupSelect.sendKeys('B+');
+  
+  // Find and fill MRID
+  const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('mrid')) {
+      await input.clear();
+      await input.sendKeys(mrid);
+      break;
+    }
+  }
+  
+  // Fill phone
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('phone')) {
+      await input.clear();
+      await input.sendKeys('9876543211');
+      break;
+    }
+  }
+  
+  // Fill units
+  const unitsInput = await this.driver.findElement(By.css('input[type="number"]'));
+  await unitsInput.clear();
+  await unitsInput.sendKeys('1');
+  
+  // Fill address
+  const addressInput = await this.driver.findElement(By.css('textarea'));
+  await addressInput.clear();
+  await addressInput.sendKeys('Another Test Address');
+  
+  // Select future date
+  const futureDate = getFutureDate(7);
+  const dateInput = await this.driver.findElement(By.css('input[type="date"]'));
+  await dateInput.clear();
+  await dateInput.sendKeys(futureDate);
+  
+  // Submit
+  this.driver.executeScript(() => {
+    window.alert = function() { return true; };
+    window.confirm = function() { return true; };
+  });
+  
+  const submitButton = await this.driver.findElement(By.css('button[type="submit"]'));
+  await submitButton.click();
+  
+  try {
+    const alert = await this.driver.switchTo().alert();
+    this.alertMessage = await alert.getText();
+    await alert.accept();
+  } catch (alertError) {
+    // No alert
+  }
+  
+  await this.driver.sleep(2000);
+});
 
 // Then Steps
 Then('I should see a success message indicating patient was added', async function() {
