@@ -343,8 +343,8 @@ When('I add a patient with name {string} and MRID {string}', async function(name
   await bloodGroupSelect.sendKeys('A+');
   
   // Find and fill MRID
-  const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
-  for (const input of textInputs) {
+  const allTextInputs1 = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of allTextInputs1) {
     const placeholder = await input.getAttribute('placeholder');
     if (placeholder && placeholder.toLowerCase().includes('mrid')) {
       await input.clear();
@@ -354,7 +354,7 @@ When('I add a patient with name {string} and MRID {string}', async function(name
   }
   
   // Fill phone
-  for (const input of textInputs) {
+  for (const input of allTextInputs1) {
     const placeholder = await input.getAttribute('placeholder');
     if (placeholder && placeholder.toLowerCase().includes('phone')) {
       await input.clear();
@@ -369,8 +369,8 @@ When('I add a patient with name {string} and MRID {string}', async function(name
   await unitsInput.sendKeys('2');
   
   // Fill address - BloodBankDashboard uses houseAddress and pincode
-  const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
-  for (const input of textInputs) {
+  const allTextInputs1Addr = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of allTextInputs1Addr) {
     const placeholder = await input.getAttribute('placeholder');
     if (placeholder && placeholder.toLowerCase().includes('house address')) {
       await input.clear();
@@ -379,7 +379,7 @@ When('I add a patient with name {string} and MRID {string}', async function(name
     }
   }
   // Fill pincode (required)
-  for (const input of textInputs) {
+  for (const input of allTextInputs1Addr) {
     const placeholder = await input.getAttribute('placeholder');
     if (placeholder && placeholder.toLowerCase().includes('pincode')) {
       await input.clear();
