@@ -105,7 +105,16 @@ router.get('/visited-donors', authMiddleware, async (req, res) => {
       });
     }
     
-    const bloodBankId = req.user.id;
+    // Get the blood bank document to get the correct ID
+    const bloodBank = await BloodBank.findOne({ userId: req.user.id });
+    if (!bloodBank) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blood bank not found'
+      });
+    }
+    
+    const bloodBankId = bloodBank._id;
     
     // Get all bookings that have been completed or arrived at this blood bank
     const bookings = await Booking.find({
@@ -181,7 +190,16 @@ router.get('/bookings', authMiddleware, async (req, res) => {
       });
     }
     
-    const bloodBankId = req.user.id;
+    // Get the blood bank document to get the correct ID
+    const bloodBank = await BloodBank.findOne({ userId: req.user.id });
+    if (!bloodBank) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blood bank not found'
+      });
+    }
+    
+    const bloodBankId = bloodBank._id;
     const { date, bloodGroup, patientName, patientMRID, status } = req.query;
     
     // Build query
