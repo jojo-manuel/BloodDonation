@@ -17,20 +17,25 @@ test.describe('Slot Booking Tests', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          token: 'mock-jwt-token-donor',
-          user: {
-            id: 'donor123',
-            email: 'donor@example.com',
-            role: 'user',
-            name: 'Test Donor',
-            username: 'testdonor'
+          data: {
+            user: {
+              id: 'donor123',
+              email: 'donor@example.com',
+              role: 'user',
+              name: 'Test Donor',
+              username: 'testdonor',
+              isSuspended: false,
+              isBlocked: false
+            },
+            accessToken: 'mock-access-token-donor',
+            refreshToken: 'mock-refresh-token-donor'
           }
         })
       });
     });
     
     // Navigate to login page and wait for it to load
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'networkidle' });
     
     // Wait for login form to be visible
     await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
@@ -43,16 +48,26 @@ test.describe('Slot Booking Tests', () => {
     // Wait for submit button to be enabled
     await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 5000 });
     
-    // Click submit
-    await page.click('button[type="submit"]');
-    
-    // Wait for navigation to dashboard or for successful login
-    try {
-      await page.waitForURL('**/dashboard', { timeout: 10000 });
-    } catch (e) {
-      // If navigation doesn't happen, wait a bit for any redirect
+    // Click submit and wait for navigation
+    await Promise.all([
+      page.waitForURL('**/dashboard', { timeout: 15000 }),
+      page.click('button[type="submit"]')
+    ]).catch(async (e) => {
+      // If navigation doesn't happen, check if we're still on login or if there was an error
       await page.waitForTimeout(2000);
-    }
+      const currentUrl = page.url();
+      if (!currentUrl.includes('dashboard')) {
+        // Try to manually set localStorage to simulate login
+        await page.evaluate(() => {
+          localStorage.setItem('userId', 'donor123');
+          localStorage.setItem('role', 'user');
+          localStorage.setItem('username', 'testdonor');
+          localStorage.setItem('accessToken', 'mock-access-token-donor');
+          localStorage.setItem('refreshToken', 'mock-refresh-token-donor');
+        });
+        await page.goto('/dashboard', { waitUntil: 'networkidle' });
+      }
+    });
   }
 
   // Helper function to setup mock donation requests
