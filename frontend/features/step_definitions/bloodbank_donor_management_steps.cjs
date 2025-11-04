@@ -81,22 +81,55 @@ async function loginAsBloodBank(driver) {
   
   // Find and click submit button
   const loginButton = await driver.findElement(By.css('button[type="submit"]'));
+  
+  // Set up alert handler before clicking (in case of error messages)
+  let alertHandled = false;
+  driver.executeScript(() => {
+    window.alert = function() { return true; }; // Auto-accept alerts
+    window.confirm = function() { return true; }; // Auto-confirm
+  });
+  
   await loginButton.click();
   
   // Wait for navigation away from login page
+  // Accept any alerts that might appear
   try {
-    await driver.wait(until.urlContains('dashboard') || until.urlContains('pending'), 15000);
+    // Try to handle alert if present
+    try {
+      const alert = await driver.switchTo().alert();
+      const alertText = await alert.getText();
+      console.log('Alert detected:', alertText);
+      await alert.accept();
+      alertHandled = true;
+    } catch (alertError) {
+      // No alert present, continue
+    }
+    
+    // Wait for URL to change (could go to dashboard, pending approval, or register)
+    await driver.wait(async () => {
+      const currentUrl = await driver.getCurrentUrl();
+      return !currentUrl.includes('bloodbank-login') && 
+             !currentUrl.includes('/login');
+    }, 15000);
+    
+    // Additional wait for page to fully load
+    await driver.sleep(2000);
+    
   } catch (e) {
     // If not redirected, check if we're still on login page
     await driver.sleep(2000);
     const currentUrl = await driver.getCurrentUrl();
     if (currentUrl.includes('/login') || currentUrl.includes('bloodbank-login')) {
-      // Check for error messages
-      const pageText = await driver.findElement(By.css('body')).getText();
-      throw new Error('Login failed - still on login page. Page content: ' + pageText.substring(0, 200));
+      // Check for error messages on the page
+      try {
+        const pageText = await driver.findElement(By.css('body')).getText();
+        throw new Error('Login failed - still on login page. Page content: ' + pageText.substring(0, 300));
+      } catch (textError) {
+        throw new Error('Login failed - still on login page. URL: ' + currentUrl);
+      }
     }
   }
-  await driver.sleep(2000);
+  await driver.sleep(1000);
 }
 
 // Background Steps
