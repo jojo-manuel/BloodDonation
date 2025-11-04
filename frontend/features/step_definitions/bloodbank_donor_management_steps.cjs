@@ -39,23 +39,27 @@ async function loginAsBloodBank(driver) {
   await driver.get('http://localhost:5173/bloodbank-login');
   await driver.sleep(1000);
   
-  // Wait for username input (blood bank login uses username, not email)
+  // Wait for username/email input (blood bank login form has input with name="username" but type="email")
   let usernameInput;
   try {
+    // First try by name attribute
     usernameInput = await driver.wait(
       until.elementLocated(By.css('input[name="username"]')),
       15000
     );
   } catch (e) {
-    // Try alternative selectors
+    // Try by type="email" (the input is actually an email type)
     try {
-      usernameInput = await driver.findElement(By.css('input[type="text"]'));
+      usernameInput = await driver.wait(
+        until.elementLocated(By.css('input[type="email"]')),
+        15000
+      );
     } catch (e2) {
-      // Try by placeholder
+      // Try by finding first input that's not password
       const inputs = await driver.findElements(By.css('input'));
       for (const input of inputs) {
-        const placeholder = await input.getAttribute('placeholder');
-        if (placeholder && (placeholder.toLowerCase().includes('username') || placeholder.toLowerCase().includes('email'))) {
+        const type = await input.getAttribute('type');
+        if (type !== 'password' && type !== 'submit' && type !== 'button') {
           usernameInput = input;
           break;
         }
@@ -64,12 +68,12 @@ async function loginAsBloodBank(driver) {
   }
   
   if (!usernameInput) {
-    throw new Error('Could not find username input field');
+    throw new Error('Could not find username/email input field');
   }
   
-  // Fill login credentials
+  // Fill login credentials - use email format since the API expects email
   await usernameInput.clear();
-  await usernameInput.sendKeys('bloodbank1');
+  await usernameInput.sendKeys('bloodbank1@example.com');
   
   const passwordInput = await driver.findElement(By.css('input[type="password"]'));
   await passwordInput.clear();
