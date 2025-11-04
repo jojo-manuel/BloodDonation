@@ -164,11 +164,15 @@ test.describe('Slot Booking Tests', () => {
   }
 
   test.beforeEach(async ({ page }) => {
+    // Clear storage before each test
     await page.goto('/');
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
     });
+    
+    // Ensure page is ready
+    await page.waitForLoadState('networkidle');
   });
 
   test.describe('Booking Modal Access', () => {
