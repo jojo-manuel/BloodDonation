@@ -35,27 +35,61 @@ After(async function() {
 
 // Helper function to login as blood bank user
 async function loginAsBloodBank(driver) {
-  await driver.get('http://localhost:5173/login');
-  await driver.wait(until.elementLocated(By.css('input[type="email"]')), 15000);
+  // Navigate to blood bank login page
+  await driver.get('http://localhost:5173/bloodbank-login');
+  await driver.sleep(1000);
+  
+  // Wait for username input (blood bank login uses username, not email)
+  let usernameInput;
+  try {
+    usernameInput = await driver.wait(
+      until.elementLocated(By.css('input[name="username"]')),
+      15000
+    );
+  } catch (e) {
+    // Try alternative selectors
+    try {
+      usernameInput = await driver.findElement(By.css('input[type="text"]'));
+    } catch (e2) {
+      // Try by placeholder
+      const inputs = await driver.findElements(By.css('input'));
+      for (const input of inputs) {
+        const placeholder = await input.getAttribute('placeholder');
+        if (placeholder && (placeholder.toLowerCase().includes('username') || placeholder.toLowerCase().includes('email'))) {
+          usernameInput = input;
+          break;
+        }
+      }
+    }
+  }
+  
+  if (!usernameInput) {
+    throw new Error('Could not find username input field');
+  }
   
   // Fill login credentials
-  const emailInput = await driver.findElement(By.css('input[type="email"]'));
-  await emailInput.sendKeys('bloodbank@example.com');
+  await usernameInput.clear();
+  await usernameInput.sendKeys('bloodbank1');
   
   const passwordInput = await driver.findElement(By.css('input[type="password"]'));
+  await passwordInput.clear();
   await passwordInput.sendKeys('password123');
   
+  // Find and click submit button
   const loginButton = await driver.findElement(By.css('button[type="submit"]'));
   await loginButton.click();
   
-  // Wait for navigation to dashboard (could be /dashboard or /bloodbank/dashboard)
+  // Wait for navigation away from login page
   try {
-    await driver.wait(until.urlContains('dashboard'), 15000);
+    await driver.wait(until.urlContains('dashboard') || until.urlContains('pending'), 15000);
   } catch (e) {
     // If not redirected, check if we're still on login page
+    await driver.sleep(2000);
     const currentUrl = await driver.getCurrentUrl();
-    if (currentUrl.includes('/login')) {
-      throw new Error('Login failed - still on login page');
+    if (currentUrl.includes('/login') || currentUrl.includes('bloodbank-login')) {
+      // Check for error messages
+      const pageText = await driver.findElement(By.css('body')).getText();
+      throw new Error('Login failed - still on login page. Page content: ' + pageText.substring(0, 200));
     }
   }
   await driver.sleep(2000);
