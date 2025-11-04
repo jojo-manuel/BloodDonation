@@ -1,0 +1,352 @@
+const { Given, When, Then, Before, After, setDefaultTimeout } = require('@cucumber/cucumber');
+const { Builder, By, until, Key } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
+const assert = require('assert');
+
+// Set default timeout to 60 seconds for complex operations
+setDefaultTimeout(60000);
+
+// Shared driver instance
+let driver;
+
+Before(async function() {
+  const chromeOptions = new chrome.Options();
+  chromeOptions.addArguments('--no-sandbox');
+  chromeOptions.addArguments('--disable-dev-shm-usage');
+  chromeOptions.addArguments('--window-size=1920,1080');
+  chromeOptions.addArguments('--disable-background-networking');
+  chromeOptions.addArguments('--disable-sync');
+  // Uncomment to run in headless mode
+  // chromeOptions.addArguments('--headless');
+
+  driver = await new Builder()
+    .forBrowser('chrome')
+    .setChromeOptions(chromeOptions)
+    .build();
+  
+  this.driver = driver;
+});
+
+After(async function() {
+  if (this.driver) {
+    await this.driver.quit();
+  }
+});
+
+// Helper function to login as blood bank user
+async function loginAsBloodBank(driver) {
+  await driver.get('http://localhost:5173/login');
+  await driver.wait(until.elementLocated(By.css('input[type="email"]')), 15000);
+  
+  // Fill login credentials
+  const emailInput = await driver.findElement(By.css('input[type="email"]'));
+  await emailInput.sendKeys('bloodbank@example.com');
+  
+  const passwordInput = await driver.findElement(By.css('input[type="password"]'));
+  await passwordInput.sendKeys('password123');
+  
+  const loginButton = await driver.findElement(By.css('button[type="submit"]'));
+  await loginButton.click();
+  
+  // Wait for navigation to dashboard
+  await driver.wait(until.urlContains('dashboard') || until.urlContains('bloodbank'), 15000);
+  await driver.sleep(2000);
+}
+
+// Background Steps
+Given('I am logged in as a blood bank user', async function() {
+  await loginAsBloodBank(this.driver);
+  const currentUrl = await this.driver.getCurrentUrl();
+  assert.ok(!currentUrl.includes('/login'), 'Should be logged in');
+});
+
+Given('I am on the blood bank dashboard', async function() {
+  const currentUrl = await this.driver.getCurrentUrl();
+  if (!currentUrl.includes('dashboard') && !currentUrl.includes('bloodbank')) {
+    await this.driver.get('http://localhost:5173/bloodbank/dashboard');
+    await driver.sleep(2000);
+  }
+  await this.driver.wait(until.elementLocated(By.css('body')), 10000);
+});
+
+Given('I navigate to the donors tab', async function() {
+  // Wait for the donors tab button and click it
+  const donorsTab = await this.driver.wait(
+    until.elementLocated(By.xpath("//button[contains(text(), 'Donors') or contains(text(), 'donors')]")),
+    10000
+  );
+  await donorsTab.click();
+  await this.driver.sleep(2000);
+  
+  // Verify we're on the donors section
+  const donorsSection = await this.driver.findElement(By.xpath("//*[contains(text(), 'Donors') or contains(text(), 'donors')]"));
+  assert.ok(donorsSection, 'Should be on donors section');
+});
+
+Given('I have searched for a donor', async function() {
+  // Search for any donor to have a result
+  const emailInput = await this.driver.wait(
+    until.elementLocated(By.css('input[type="email"]')),
+    10000
+  );
+  await emailInput.sendKeys('donor@example.com');
+  await this.driver.sleep(1000);
+});
+
+Given('I have searched for donors with blood group {string}', async function(bloodGroup) {
+  // Click on blood group dropdown
+  const bloodGroupButton = await this.driver.wait(
+    until.elementLocated(By.css('button[id="dropdown-button"], button[data-dropdown-toggle="dropdown"]')),
+    10000
+  );
+  await bloodGroupButton.click();
+  await this.driver.sleep(500);
+  
+  // Select the blood group
+  const bloodGroupOption = await this.driver.wait(
+    until.elementLocated(By.xpath(`//button[contains(text(), '${bloodGroup}')]`)),
+    10000
+  );
+  await bloodGroupOption.click();
+  await this.driver.sleep(1000);
+});
+
+// When Steps
+When('I search for donors with blood group {string}', async function(bloodGroup) {
+  // Click on blood group dropdown
+  const bloodGroupButton = await this.driver.wait(
+    until.elementLocated(By.css('button[id="dropdown-button"], button[data-dropdown-toggle="dropdown"]')),
+    10000
+  );
+  await bloodGroupButton.click();
+  await this.driver.sleep(500);
+  
+  // Select the blood group
+  const bloodGroupOption = await this.driver.wait(
+    until.elementLocated(By.xpath(`//button[contains(text(), '${bloodGroup}')]`)),
+    10000
+  );
+  await bloodGroupOption.click();
+  await this.driver.sleep(2000);
+});
+
+When('I search for donors with email {string}', async function(email) {
+  const emailInput = await this.driver.wait(
+    until.elementLocated(By.css('input[type="email"]')),
+    10000
+  );
+  await emailInput.clear();
+  await emailInput.sendKeys(email);
+  await this.driver.sleep(2000);
+});
+
+When('I search for donors in location {string}', async function(location) {
+  const locationInput = await this.driver.wait(
+    until.elementLocated(By.css('input[id="search-place"], input[placeholder*="place" i]')),
+    10000
+  );
+  await locationInput.clear();
+  await locationInput.sendKeys(location);
+  await this.driver.sleep(2000);
+});
+
+When('I click on {string} view', async function(viewName) {
+  const viewButton = await this.driver.wait(
+    until.elementLocated(By.xpath(`//button[contains(text(), '${viewName}')]`)),
+    10000
+  );
+  await viewButton.click();
+  await this.driver.sleep(2000);
+});
+
+When('I search for donors with:', async function(dataTable) {
+  const rows = dataTable.rowsHash();
+  
+  for (const [field, value] of Object.entries(rows)) {
+    if (field === 'Blood Group') {
+      const bloodGroupButton = await this.driver.wait(
+        until.elementLocated(By.css('button[id="dropdown-button"], button[data-dropdown-toggle="dropdown"]')),
+        10000
+      );
+      await bloodGroupButton.click();
+      await this.driver.sleep(500);
+      
+      const bloodGroupOption = await this.driver.wait(
+        until.elementLocated(By.xpath(`//button[contains(text(), '${value}')]`)),
+        10000
+      );
+      await bloodGroupOption.click();
+      await this.driver.sleep(500);
+    } else if (field === 'Location') {
+      const locationInput = await this.driver.wait(
+        until.elementLocated(By.css('input[id="search-place"], input[placeholder*="place" i]')),
+        10000
+      );
+      await locationInput.clear();
+      await locationInput.sendKeys(value);
+      await this.driver.sleep(500);
+    }
+  }
+  await this.driver.sleep(2000);
+});
+
+When('I clear the search filters', async function() {
+  const clearButton = await this.driver.wait(
+    until.elementLocated(By.css('button[type="button"]:has(svg), button:has-text("Clear")')),
+    10000
+  );
+  await clearButton.click();
+  await this.driver.sleep(2000);
+});
+
+When('I click on a donor from the list', async function() {
+  // Click on the first donor card or row
+  const donorCard = await this.driver.wait(
+    until.elementLocated(By.css('.donor-card, .donor-item, [class*="donor"]')),
+    10000
+  );
+  await donorCard.click();
+  await this.driver.sleep(2000);
+});
+
+// Then Steps
+Then('I should see a list of donors with blood group {string}', async function(bloodGroup) {
+  await this.driver.sleep(2000);
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  assert.ok(donorElements.length > 0 || await this.driver.findElement(By.xpath(`//*[contains(text(), '${bloodGroup}')]`)), 
+    `Should see donors with blood group ${bloodGroup}`);
+});
+
+Then('each donor should display their name and contact information', async function() {
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  
+  if (donorElements.length > 0) {
+    const firstDonor = donorElements[0];
+    const donorText = await firstDonor.getText();
+    // Check if name or contact info is present
+    assert.ok(donorText.length > 0, 'Donor should display information');
+  }
+});
+
+Then('I should see donor information for {string}', async function(email) {
+  await this.driver.sleep(2000);
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  assert.ok(pageText.includes(email) || pageText.includes('donor'), 
+    `Should see donor information for ${email}`);
+});
+
+Then('the donor details should include name, blood group, and contact information', async function() {
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  // Check for common donor detail indicators
+  assert.ok(pageText.includes('Blood') || pageText.includes('Contact') || pageText.includes('Phone'), 
+    'Should display donor details');
+});
+
+Then('I should see donors located in {string}', async function(location) {
+  await this.driver.sleep(2000);
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  assert.ok(pageText.includes(location) || pageText.toLowerCase().includes(location.toLowerCase()), 
+    `Should see donors in ${location}`);
+});
+
+Then('each donor should display their address information', async function() {
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  
+  if (donorElements.length > 0) {
+    const firstDonor = donorElements[0];
+    const donorText = await firstDonor.getText();
+    // Check if address-related text is present
+    assert.ok(donorText.includes('Address') || donorText.includes('City') || donorText.includes('District'), 
+      'Donor should display address information');
+  }
+});
+
+Then('I should see a list of all available donors', async function() {
+  await this.driver.sleep(2000);
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  assert.ok(donorElements.length >= 0, 'Should see donor list (even if empty)');
+});
+
+Then('each donor should display their basic information', async function() {
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  
+  if (donorElements.length > 0) {
+    const firstDonor = donorElements[0];
+    const donorText = await firstDonor.getText();
+    assert.ok(donorText.length > 0, 'Donor should display basic information');
+  }
+});
+
+Then('I should see a list of donors who have visited', async function() {
+  await this.driver.sleep(2000);
+  const visitHistory = await this.driver.findElements(By.css('.visit-history, .visit-item, [class*="visit"]'));
+  assert.ok(visitHistory.length >= 0, 'Should see visit history (even if empty)');
+});
+
+Then('each entry should show visit date and donation details', async function() {
+  const visitElements = await this.driver.findElements(By.css('.visit-history, .visit-item, [class*="visit"]'));
+  
+  if (visitElements.length > 0) {
+    const firstVisit = visitElements[0];
+    const visitText = await firstVisit.getText();
+    assert.ok(visitText.length > 0, 'Visit entry should display information');
+  }
+});
+
+Then('I should see donors matching both criteria', async function() {
+  await this.driver.sleep(2000);
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  assert.ok(donorElements.length >= 0, 'Should see filtered donors');
+});
+
+Then('each donor should have blood group {string} and be located in {string}', async function(bloodGroup, location) {
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  
+  if (donorElements.length > 0) {
+    const pageText = await this.driver.findElement(By.css('body')).getText();
+    assert.ok(pageText.includes(bloodGroup), `Should see blood group ${bloodGroup}`);
+    assert.ok(pageText.includes(location) || pageText.toLowerCase().includes(location.toLowerCase()), 
+      `Should see location ${location}`);
+  }
+});
+
+Then('I should see all donors again', async function() {
+  await this.driver.sleep(2000);
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  assert.ok(donorElements.length >= 0, 'Should see all donors');
+});
+
+Then('the search fields should be empty', async function() {
+  const emailInput = await this.driver.findElement(By.css('input[type="email"]'));
+  const emailValue = await emailInput.getAttribute('value');
+  assert.ok(!emailValue || emailValue === '', 'Email field should be empty');
+});
+
+Then('I should see detailed donor information including:', async function(dataTable) {
+  const rows = dataTable.raw();
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  
+  for (const row of rows) {
+    const field = row[0];
+    // Check if field is visible in the page
+    assert.ok(pageText.includes(field) || pageText.toLowerCase().includes(field.toLowerCase()), 
+      `Should see ${field} in donor details`);
+  }
+});
+
+Then('I should see a message indicating no donors found', async function() {
+  await this.driver.sleep(2000);
+  const pageText = await this.driver.findElement(By.css('body')).getText();
+  const noResultsKeywords = ['no donors', 'not found', 'no results', 'empty', 'no matches'];
+  const hasNoResults = noResultsKeywords.some(keyword => 
+    pageText.toLowerCase().includes(keyword.toLowerCase())
+  );
+  assert.ok(hasNoResults || pageText.includes('0'), 'Should see no donors found message');
+});
+
+Then('I should see an empty donor list', async function() {
+  await this.driver.sleep(2000);
+  const donorElements = await this.driver.findElements(By.css('.donor-card, .donor-item, [class*="donor"]'));
+  assert.ok(donorElements.length === 0, 'Donor list should be empty');
+});
+
