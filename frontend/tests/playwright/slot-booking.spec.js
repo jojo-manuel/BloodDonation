@@ -10,6 +10,7 @@ test.describe('Slot Booking Tests', () => {
   
   // Helper function to login as a donor user
   async function loginAsDonor(page) {
+    // Setup route mocking before navigation
     await page.route('**/api/auth/login', async (route) => {
       await route.fulfill({
         status: 200,
@@ -28,15 +29,30 @@ test.describe('Slot Booking Tests', () => {
       });
     });
     
+    // Navigate to login page and wait for it to load
     await page.goto('/login');
+    
+    // Wait for login form to be visible
+    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 10000 });
+    
+    // Fill in credentials
     await page.fill('input[type="email"]', 'donor@example.com');
     await page.fill('input[type="password"]', 'Password123!');
+    
+    // Wait for submit button to be enabled
+    await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 5000 });
+    
+    // Click submit
     await page.click('button[type="submit"]');
     
-    // Wait for navigation to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 }).catch(() => {
-      // Dashboard might have different URL pattern
-    });
+    // Wait for navigation to dashboard or for successful login
+    try {
+      await page.waitForURL('**/dashboard', { timeout: 10000 });
+    } catch (e) {
+      // If navigation doesn't happen, wait a bit for any redirect
+      await page.waitForTimeout(2000);
+    }
   }
 
   // Helper function to setup mock donation requests
