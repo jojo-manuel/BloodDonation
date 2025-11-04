@@ -86,28 +86,27 @@ Given('I am on the blood bank dashboard', async function() {
 
 Given('I navigate to the donors tab', async function() {
   // Wait for the donors tab button and click it
-  // Try multiple selectors to find the tab button
+  // The button text is "🩸 Manage Donors"
   let donorsTab;
   try {
-    // Try by text content
-    donorsTab = await this.driver.wait(
-      until.elementLocated(By.xpath("//button[contains(text(), 'Donors') or contains(text(), 'donors')]")),
-      10000
-    );
-  } catch (e) {
-    // Try by onClick handler or data attribute
-    try {
-      donorsTab = await this.driver.findElement(By.css('button[onclick*="donors"], button[data-tab="donors"]'));
-    } catch (e2) {
-      // Try by finding any button that contains "Donor" in its text
-      const buttons = await this.driver.findElements(By.css('button'));
-      for (const btn of buttons) {
-        const text = await btn.getText();
-        if (text.toLowerCase().includes('donor')) {
-          donorsTab = btn;
-          break;
-        }
+    // Try by finding button with "Manage Donors" or "Donors" text
+    const buttons = await this.driver.findElements(By.css('button'));
+    for (const btn of buttons) {
+      const text = await btn.getText();
+      if (text.includes('Manage Donors') || text.includes('Donors') || text.includes('🩸')) {
+        donorsTab = btn;
+        break;
       }
+    }
+  } catch (e) {
+    // If that fails, try xpath
+    try {
+      donorsTab = await this.driver.wait(
+        until.elementLocated(By.xpath("//button[contains(text(), 'Manage Donors') or contains(text(), 'Donors')]")),
+        10000
+      );
+    } catch (e2) {
+      console.log('Could not find donors tab button');
     }
   }
   
