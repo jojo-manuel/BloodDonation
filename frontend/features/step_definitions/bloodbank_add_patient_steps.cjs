@@ -244,12 +244,29 @@ When('I fill in the patient form with:', async function(dataTable) {
         await unitsInput.clear();
         await unitsInput.sendKeys(value);
       } else if (field === 'Address') {
-        const addressInput = await this.driver.wait(
-          until.elementLocated(By.css('textarea, input[type="text"]')),
-          10000
-        );
-        await addressInput.clear();
-        await addressInput.sendKeys(value);
+        // Address in BloodBankDashboard is a complex object with multiple fields
+        // We'll fill the houseAddress field and pincode (required)
+        const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
+        
+        // Find and fill houseAddress field
+        for (const input of textInputs) {
+          const placeholder = await input.getAttribute('placeholder');
+          if (placeholder && placeholder.toLowerCase().includes('house address')) {
+            await input.clear();
+            await input.sendKeys(value);
+            break;
+          }
+        }
+        
+        // Fill pincode (required field) - use a default test pincode
+        for (const input of textInputs) {
+          const placeholder = await input.getAttribute('placeholder');
+          if (placeholder && placeholder.toLowerCase().includes('pincode')) {
+            await input.clear();
+            await input.sendKeys('682001'); // Default test pincode for Kochi
+            break;
+          }
+        }
       }
       await this.driver.sleep(300);
     } catch (e) {
@@ -351,10 +368,25 @@ When('I add a patient with name {string} and MRID {string}', async function(name
   await unitsInput.clear();
   await unitsInput.sendKeys('2');
   
-  // Fill address
-  const addressInput = await this.driver.findElement(By.css('textarea'));
-  await addressInput.clear();
-  await addressInput.sendKeys('Test Address');
+  // Fill address - BloodBankDashboard uses houseAddress and pincode
+  const textInputs = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('house address')) {
+      await input.clear();
+      await input.sendKeys('Test Address');
+      break;
+    }
+  }
+  // Fill pincode (required)
+  for (const input of textInputs) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('pincode')) {
+      await input.clear();
+      await input.sendKeys('682001');
+      break;
+    }
+  }
   
   // Select future date
   const futureDate = getFutureDate(7);
@@ -422,10 +454,25 @@ When('I add another patient with name {string} and MRID {string}', async functio
   await unitsInput.clear();
   await unitsInput.sendKeys('1');
   
-  // Fill address
-  const addressInput = await this.driver.findElement(By.css('textarea'));
-  await addressInput.clear();
-  await addressInput.sendKeys('Another Test Address');
+  // Fill address - BloodBankDashboard uses houseAddress and pincode
+  const textInputs2 = await this.driver.findElements(By.css('input[type="text"]'));
+  for (const input of textInputs2) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('house address')) {
+      await input.clear();
+      await input.sendKeys('Another Test Address');
+      break;
+    }
+  }
+  // Fill pincode (required)
+  for (const input of textInputs2) {
+    const placeholder = await input.getAttribute('placeholder');
+    if (placeholder && placeholder.toLowerCase().includes('pincode')) {
+      await input.clear();
+      await input.sendKeys('682002');
+      break;
+    }
+  }
   
   // Select future date
   const futureDate = getFutureDate(7);
