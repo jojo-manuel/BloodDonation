@@ -28,6 +28,8 @@
     "test:bdd:bloodbank": "cucumber-js --profile bloodbank",
     "test:bdd:bloodbank-donor": "cucumber-js --profile bloodbankDonor",
     "test:bdd:bloodbank-donor:report": "cucumber-js --profile bloodbankDonor && node generate-donor-report.js",
+    "test:bdd:bloodbank-patient": "cucumber-js --profile bloodbankPatient",
+    "test:bdd:bloodbank-patient:report": "cucumber-js --profile bloodbankPatient && node generate-patient-report.js",
     "test:bdd:donor-search-mrid": "cucumber-js features/donor-search-by-mrid.feature",
     "test:bdd:donor-search-quick": "cucumber-js features/donor-search-mrid-quick-test.feature",
     "test:bdd:donor-search": "cucumber-js features/donor-search-standalone.feature"

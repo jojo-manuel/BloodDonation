@@ -35,6 +35,18 @@ module.exports = {
     publishQuiet: true,
   },
 
+  // Profile for bloodbank patient adding tests
+  bloodbankPatient: {
+    require: ['features/step_definitions/bloodbank_add_patient_steps.cjs'],
+    format: [
+      'progress-bar',
+      'html:reports/bloodbank-add-patient-report.html',
+      'json:reports/bloodbank-add-patient-report.json'
+    ],
+    paths: ['features/bloodbank-add-patient.feature'],
+    publishQuiet: true,
+  },
+
   // Profile for smoke tests
   smoke: {
     require: ['features/step_definitions/**/*.cjs'],
