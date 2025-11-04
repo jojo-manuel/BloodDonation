@@ -148,18 +148,28 @@ test.describe('Slot Booking Tests', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Clear storage directly without navigating to avoid timeouts
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-    
-    // Optionally try to navigate to home, but don't fail if it times out
+    // Navigate to a page first to establish a valid origin (required for Mobile Safari)
     try {
       await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 10000 });
+      // Clear storage after navigation
+      await page.evaluate(() => {
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          // Ignore security errors in some browsers
+        }
+      });
     } catch (e) {
-      // If navigation fails, continue anyway - we've already cleared storage
-      console.log('Navigation to home page skipped due to timeout');
+      // If navigation fails, try to clear storage anyway (for other browsers)
+      try {
+        await page.evaluate(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+        });
+      } catch (storageError) {
+        // If both fail, continue - storage will be cleared when page loads
+      }
     }
   });
 
