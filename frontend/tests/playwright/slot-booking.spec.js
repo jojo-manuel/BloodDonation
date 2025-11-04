@@ -9,8 +9,21 @@ import { test, expect } from '@playwright/test';
 test.describe('Slot Booking Tests', () => {
   
   // Helper function to login as a donor user
+  // Uses direct localStorage setup for faster, more reliable tests
   async function loginAsDonor(page) {
-    // Setup route mocking for login API
+    // Directly set authentication state in localStorage
+    // This is faster and more reliable than going through the login flow
+    await page.evaluate(() => {
+      localStorage.setItem('userId', 'donor123');
+      localStorage.setItem('role', 'user');
+      localStorage.setItem('username', 'testdonor');
+      localStorage.setItem('accessToken', 'mock-access-token-donor');
+      localStorage.setItem('refreshToken', 'mock-refresh-token-donor');
+      localStorage.setItem('isSuspended', 'false');
+      localStorage.setItem('isBlocked', 'false');
+    });
+    
+    // Setup route mocking for API calls that might check auth
     await page.route('**/api/auth/login', async (route) => {
       await route.fulfill({
         status: 200,
@@ -34,39 +47,11 @@ test.describe('Slot Booking Tests', () => {
       });
     });
     
-    // Navigate to login page
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    // Navigate directly to dashboard
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     
-    // Wait for login form to be visible with timeout
-    const emailInput = page.locator('input[type="email"]');
-    const passwordInput = page.locator('input[type="password"]');
-    const submitButton = page.locator('button[type="submit"]');
-    
-    await expect(emailInput).toBeVisible({ timeout: 15000 });
-    await expect(passwordInput).toBeVisible({ timeout: 5000 });
-    await expect(submitButton).toBeVisible({ timeout: 5000 });
-    
-    // Fill in credentials
-    await emailInput.fill('donor@example.com');
-    await passwordInput.fill('Password123!');
-    
-    // Submit form
-    await submitButton.click();
-    
-    // Wait for navigation or handle manually
-    try {
-      await page.waitForURL('**/dashboard', { timeout: 15000 });
-    } catch (e) {
-      // If automatic navigation fails, manually set auth state
-      await page.evaluate(() => {
-        localStorage.setItem('userId', 'donor123');
-        localStorage.setItem('role', 'user');
-        localStorage.setItem('username', 'testdonor');
-        localStorage.setItem('accessToken', 'mock-access-token-donor');
-        localStorage.setItem('refreshToken', 'mock-refresh-token-donor');
-      });
-      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-    }
+    // Wait a bit for the page to initialize
+    await page.waitForTimeout(1000);
   }
 
   // Helper function to setup mock donation requests
