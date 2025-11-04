@@ -283,7 +283,16 @@ router.get('/donation-requests', authMiddleware, async (req, res) => {
       });
     }
     
-    const bloodBankId = req.user.id;
+    // Get the blood bank document to get the correct ID
+    const bloodBank = await BloodBank.findOne({ userId: req.user.id });
+    if (!bloodBank) {
+      return res.status(404).json({
+        success: false,
+        message: 'Blood bank not found'
+      });
+    }
+    
+    const bloodBankId = bloodBank._id;
     
     const requests = await DonationRequest.find({
       bloodBankId: bloodBankId
