@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Case - Donor Finding Test Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #d32f2f;
+            border-bottom: 3px solid #d32f2f;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #1976d2;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th {
+            background-color: #1976d2;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .pass {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .fail {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .info-table {
+            background-color: #e3f2fd;
+        }
+        .summary {
+            background-color: #c8e6c9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Case - Donor Finding Test</h1>
+        <p><strong>Hope Web - Blood Donor Finding and Donation Automation</strong></p>
+
+        <h2>Test Case Information</h2>
+        <table class="info-table">
+            <tr>
+                <td><strong>Test Case ID</strong></td>
+                <td>Test_Donor_Finding</td>
+            </tr>
+            <tr>
+                <td><strong>Test Designed By</strong></td>
+                <td>Test Team</td>
+            </tr>
+            <tr>
+                <td><strong>Test Priority</strong></td>
+                <td>High</td>
+            </tr>
+            <tr>
+                <td><strong>Test Designed Date</strong></td>
+                <td>21/10/2025</td>
+            </tr>
+            <tr>
+                <td><strong>Module Name</strong></td>
+                <td>UserModule</td>
+            </tr>
+            <tr>
+                <td><strong>Test Executed By</strong></td>
+                <td>Jojo Manuel P</td>
+            </tr>
+            <tr>
+                <td><strong>Test Title</strong></td>
+                <td>Donor finding test</td>
+            </tr>
+            <tr>
+                <td><strong>Test Execution Date</strong></td>
+                <td>21/10/2025</td>
+            </tr>
+            <tr>
+                <td><strong>Description</strong></td>
+                <td>This is conducted to ensure donor search and finding functionality works correctly</td>
+            </tr>
+            <tr>
+                <td><strong>Pre-Condition</strong></td>
+                <td>User has valid username and password, User is logged into dashboard</td>
+            </tr>
+            <tr>
+                <td><strong>Post-Condition</strong></td>
+                <td>Donors are displayed based on search criteria, Search results are accurate</td>
+            </tr>
+        </table>
+
+        <h2>Test Execution Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>Test Step</th>
+                    <th>Test Data</th>
+                    <th>Expected Result</th>
+                    <th>Actual Result</th>
+                    <th>Status (Pass/Fail)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Navigate to User Dashboard</td>
+                    <td>User logged in with valid credentials</td>
+                    <td>User dashboard displayed</td>
+                    <td>User dashboard displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Access donor search/find page</td>
+                    <td>-</td>
+                    <td>Donor search interface displayed</td>
+                    <td>Donor search interface displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>List donors on the find page</td>
+                    <td>Mock data: Alice Donor (O+), Bob Donor (A+)</td>
+                    <td>List of donors displayed (Alice Donor, Bob Donor)</td>
+                    <td>List of donors displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Search donors by blood group</td>
+                    <td>Blood Group: O+<br>Location: Kochi</td>
+                    <td>Donors with O+ blood group in Kochi displayed (Alice Donor, Oscar Donor)</td>
+                    <td>Donors with O+ blood group displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Search donors by location</td>
+                    <td>Location: Kochi</td>
+                    <td>Donors in Kochi location displayed</td>
+                    <td>Donors in Kochi location displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Test empty state when no donors match</td>
+                    <td>Search with filters that match no donors</td>
+                    <td>Empty state message displayed ("No donors", "No results", or "not found")</td>
+                    <td>Empty state message displayed</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Find donors using MRID quick search</td>
+                    <td>MRID: MR123<br>Patient: John Patient (O+)</td>
+                    <td>Donor found: Mira Donor (O+)</td>
+                    <td>Donor found successfully</td>
+                    <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Verify search results accuracy</td>
+                    <td>Multiple search criteria tested</td>
+                    <td>Search results match the search criteria</td>
+                    <td>Search results match criteria</td>
+                    <td class="pass">Pass</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <h2>Test Summary</h2>
+            <p><strong>Total Steps:</strong> 8</p>
+            <p><strong>Passed:</strong> 8</p>
+            <p><strong>Failed:</strong> 0</p>
+            <p><strong>Pass Rate:</strong> 100%</p>
+            <p><em>Note: All donor finding functionality tests passed successfully. The system correctly displays donors, handles search filters, shows empty states, and supports MRID-based quick search.</em></p>
+        </div>
+    </div>
+</body>
+</html>
+
