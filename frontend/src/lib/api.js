@@ -51,8 +51,32 @@ function onRefreshed(token) {
 
 // Auto-refresh access token on 401 and retry original request
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Log successful responses in production for debugging
+    console.log(`✅ API Response: ${res.config.method?.toUpperCase()} ${res.config.url} - ${res.status}`);
+    return res;
+  },
   async (error) => {
+    // Enhanced error logging
+    const requestUrl = error.config?.url || 'unknown';
+    const requestMethod = error.config?.method?.toUpperCase() || 'unknown';
+    const fullUrl = error.config ? `${error.config.baseURL}${error.config.url}` : 'unknown';
+    const status = error.response?.status;
+    const errorMessage = error.response?.data?.message || error.message;
+    
+    console.error(`❌ API Error: ${requestMethod} ${fullUrl}`);
+    console.error(`   Status: ${status || 'Network Error'}`);
+    console.error(`   Message: ${errorMessage}`);
+    console.error(`   Response Data:`, error.response?.data);
+    
+    // If it's a "Route not found" error, show more details
+    if (errorMessage === 'Route not found' || status === 404) {
+      console.error(`🚨 ROUTE NOT FOUND DETAILS:`);
+      console.error(`   Full URL: ${fullUrl}`);
+      console.error(`   Base URL: ${error.config?.baseURL}`);
+      console.error(`   Endpoint: ${requestUrl}`);
+      console.error(`   Check if this route exists in your backend API`);
+    }
     const original = error.config;
     
     // If we're already redirecting to login, don't process any more errors
