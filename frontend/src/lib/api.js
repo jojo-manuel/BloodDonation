@@ -8,13 +8,12 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 
-// Log configuration in development
-if (import.meta.env.DEV) {
-  console.log('🔧 API Configuration:');
-  console.log('  API URL:', API_URL);
-  console.log('  Base URL:', API_BASE_URL);
-  console.log('  Mode:', import.meta.env.MODE);
-}
+// Always log configuration (including production) for debugging
+console.log('🔧 API Configuration:');
+console.log('  API URL:', API_URL);
+console.log('  Base URL:', API_BASE_URL);
+console.log('  Mode:', import.meta.env.MODE);
+console.log('  VITE_API_URL env:', import.meta.env.VITE_API_URL || 'NOT SET');
 
 // Create a pre-configured axios client
 const api = axios.create({
@@ -31,7 +30,14 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+  
+  // Log request in production for debugging
+  console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  
   return config;
+}, (error) => {
+  console.error('❌ Request Error:', error);
+  return Promise.reject(error);
 });
 
 let isRefreshing = false;
