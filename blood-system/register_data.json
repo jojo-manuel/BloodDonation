@@ -1,0 +1,7 @@
+{
+    "name": "Test User",
+    "email": "testuser@example.com",
+    "password": "password123",
+    "role": "DONOR",
+    "hospital_id": "HUSP123"
+}

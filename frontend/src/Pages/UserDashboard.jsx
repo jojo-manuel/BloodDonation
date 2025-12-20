@@ -52,7 +52,7 @@ export default function UserDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('desc');
   const [requestType, setRequestType] = useState('sent'); // 'sent' or 'received'
-  
+
   // Additional filters
   const [filterMRID, setFilterMRID] = useState('');
   const [filterPatientName, setFilterPatientName] = useState('');
@@ -94,9 +94,9 @@ export default function UserDashboard() {
       cancelled: { color: 'bg-gray-100 text-gray-800', icon: '🚫' },
       completed: { color: 'bg-emerald-100 text-emerald-800', icon: '🎉' }
     };
-    
+
     const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: '❓' };
-    
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
         <span className="mr-1">{config.icon}</span>
@@ -159,13 +159,13 @@ export default function UserDashboard() {
     try {
       // Call donor search endpoint (not patient search!)
       const response = await api.get(`/donors/searchByMrid/${encodeURIComponent(trimmed)}`);
-      
+
       if (response.data.success) {
         const donors = response.data.data || [];
         const patientInfo = response.data.patientInfo;
-        
+
         setMridResults(donors);
-        
+
         if (donors.length === 0) {
           setMridError(`Patient found (MRID: ${trimmed}, Blood Group: ${patientInfo?.bloodGroup || 'Unknown'}), but no matching donors available.`);
         } else {
@@ -188,27 +188,31 @@ export default function UserDashboard() {
   const fetchRequests = async () => {
     try {
       const username = localStorage.getItem('username');
-      const sentRes = await api.get(`/donors/requests/sent?username=${username}`);
+      // Updated to use the correct Request Service endpoint
+      const sentRes = await api.get('/requests');
       if (sentRes.data.success) {
-        setSentRequests(sentRes.data.data);
+        setSentRequests(sentRes.data.data.requests || sentRes.data.data);
       } else {
         setSentRequests([]);
       }
     } catch (err) {
+      console.error("Error fetching requests:", err);
       setSentRequests([]);
     }
     setLoading(false);
   };
 
   // Fetch donation requests received by the authenticated user
+  // Note: Backend 'Request' model currently maps User -> Hospital, not User -> User.
+  // P2P requests are not fully supported yet.
   const fetchReceivedRequests = async () => {
     try {
-      const receivedRes = await api.get('/donors/requests/all');
-      if (receivedRes.data.success) {
-        setReceivedRequests(receivedRes.data.data);
-      } else {
-        setReceivedRequests([]);
-      }
+      // const receivedRes = await api.get('/donors/requests/all');
+      // if (receivedRes.data.success) {
+      //   setReceivedRequests(receivedRes.data.data);
+      // } else {
+      setReceivedRequests([]); // Default to empty
+      // }
     } catch (err) {
       setReceivedRequests([]);
     }
@@ -217,7 +221,7 @@ export default function UserDashboard() {
   // Check taxi booking status for multiple requests
   const checkTaxiBookings = async (requests) => {
     const bookingsMap = {};
-    
+
     for (const request of requests) {
       if (request.status === 'booked' || request.status === 'accepted') {
         try {
@@ -231,7 +235,7 @@ export default function UserDashboard() {
         }
       }
     }
-    
+
     setTaxiBookings(bookingsMap);
   };
 
@@ -248,14 +252,14 @@ export default function UserDashboard() {
 
       if (res.data.success) {
         alert('✅ Taxi booking cancelled successfully!');
-        
+
         // Remove from taxi bookings map
         setTaxiBookings(prev => {
           const updated = { ...prev };
           delete updated[requestId];
           return updated;
         });
-        
+
         // Refresh requests
         fetchRequests();
         fetchReceivedRequests();
@@ -287,12 +291,12 @@ export default function UserDashboard() {
   const markNotificationAsRead = async (notificationId) => {
     try {
       await api.put(`/notifications/${notificationId}/read`);
-      
+
       // Remove from local state
-      setRescheduleNotifications(prev => 
+      setRescheduleNotifications(prev =>
         prev.filter(n => n._id !== notificationId)
       );
-      
+
       // If no more notifications, close modal
       if (rescheduleNotifications.length <= 1) {
         setShowRescheduleModal(false);
@@ -312,7 +316,7 @@ export default function UserDashboard() {
 
     // Filter by MRID
     if (filterMRID) {
-      filtered = filtered.filter((request) => 
+      filtered = filtered.filter((request) =>
         (request.patientId?.mrid || request.patientMRID || '').toLowerCase().includes(filterMRID.toLowerCase())
       );
     }
@@ -369,7 +373,7 @@ export default function UserDashboard() {
 
     // Filter by MRID
     if (filterMRID) {
-      filtered = filtered.filter((request) => 
+      filtered = filtered.filter((request) =>
         (request.patientId?.mrid || request.patientMRID || '').toLowerCase().includes(filterMRID.toLowerCase())
       );
     }
@@ -425,7 +429,7 @@ export default function UserDashboard() {
       timestamp: new Date()
     };
     setNotifications(prev => [...prev, notification]);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== notification.id));
@@ -446,7 +450,7 @@ export default function UserDashboard() {
   useEffect(() => {
     // Fetch profile data on mount for avatar display
     fetchProfileData();
-    
+
     // Check for reschedule notifications on mount (after login)
     fetchRescheduleNotifications();
   }, []);
@@ -486,15 +490,15 @@ export default function UserDashboard() {
   const fetchPatientsAndBloodBanks = async () => {
     try {
       const patientsRes = await api.get('/patients');
-      
+
       console.log('📊 Patients Response:', patientsRes.data);
-      
+
       if (patientsRes.data.success) {
         const patientsData = patientsRes.data.data || patientsRes.data.patients || [];
         console.log('✅ Patients loaded:', patientsData.length);
         setPatients(patientsData);
       }
-      
+
       // Blood bank feature removed; ensure empty list
       setBloodBanks([]);
     } catch (error) {
@@ -531,14 +535,14 @@ export default function UserDashboard() {
 
     // Get patient details for confirmation
     const patient = patients.find(p => p._id === selectedPatient);
-    
+
     try {
       setRequestingId(requestModal._id);
       const body = {
         bloodGroup: requestModal.bloodGroup,
         patientId: selectedPatient,
       };
-      
+
       // Debug logging
       console.log('📤 Sending donation request:');
       console.log('  Donor ID:', requestModal._id);
@@ -547,18 +551,18 @@ export default function UserDashboard() {
       console.log('  Patient MRID:', patient?.mrid);
       console.log('  Blood Bank:', patient?.bloodBankId?.name);
       console.log('  Request Body:', body);
-      
+
       const res = await api.post(`/donors/${requestModal._id}/requests`, body);
-      
+
       console.log('✅ Request response:', res.data);
-      
+
       if (res.data.success) {
-        const successMsg = patient 
+        const successMsg = patient
           ? `✅ Request sent successfully!\n\n👤 Patient: ${patient.name || patient.patientName}\n🔢 MRID: ${patient.mrid}\n🏥 Blood Bank: ${patient.bloodBankId?.name || 'N/A'}`
           : 'Request sent successfully with patient and blood bank details!';
-        
+
         alert(successMsg);
-        
+
         // Close modal and reset
         setRequestModal(null);
         setSelectedPatient('');
@@ -711,11 +715,11 @@ export default function UserDashboard() {
       if (mrid) params.append('mrid', mrid);
 
       const res = await api.get(`/patients/search?${params.toString()}`);
-      
+
       if (res.data.success) {
         console.log('✅ Found patients:', res.data.count);
         setSearchedPatients(res.data.data);
-        
+
         // Auto-select if only one patient found
         if (res.data.count === 1) {
           const patient = res.data.data[0];
@@ -746,7 +750,7 @@ export default function UserDashboard() {
       const timeoutId = setTimeout(() => {
         searchPatientsInDatabase(patientSearchBloodBank, patientSearchMRID);
       }, 500);
-      
+
       return () => clearTimeout(timeoutId);
     } else {
       setSearchedPatients([]);
@@ -759,7 +763,7 @@ export default function UserDashboard() {
     console.log('  Blood Bank Selected:', patientSearchBloodBank);
     console.log('  MRID Entered:', patientSearchMRID);
     console.log('  Total Patients Loaded:', patients.length);
-    
+
     if (!patientSearchBloodBank || !patientSearchMRID || patients.length === 0) {
       console.log('⏸️ Skipping auto-selection (missing criteria)');
       return; // Need both blood bank and MRID to auto-populate
@@ -770,11 +774,11 @@ export default function UserDashboard() {
       const bbId = p.bloodBankId?._id || p.bloodBankId;
       const matchesBloodBank = bbId === patientSearchBloodBank;
       const matchesMRID = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
-      
+
       console.log(`  Checking patient: ${p.name} (MRID: ${p.mrid})`);
       console.log(`    Blood Bank Match: ${matchesBloodBank} (${bbId} === ${patientSearchBloodBank})`);
       console.log(`    MRID Match: ${matchesMRID}`);
-      
+
       return matchesBloodBank && matchesMRID;
     });
 
@@ -809,28 +813,28 @@ export default function UserDashboard() {
   const generateBookingPDF = async (bookingData) => {
     try {
       const doc = new jsPDF();
-      
+
       // Header - Booking Confirmation
       doc.setFillColor(220, 38, 38); // Red background
       doc.rect(0, 0, 210, 40, 'F');
-      
+
       doc.setTextColor(255, 255, 255); // White text
       doc.setFontSize(24);
       doc.setFont(undefined, 'bold');
       doc.text('BOOKING CONFIRMATION', 105, 18, { align: 'center' });
-      
+
       doc.setFontSize(14);
       doc.setFont(undefined, 'normal');
       doc.text('Blood Donation Appointment', 105, 28, { align: 'center' });
-      
+
       // Reset text color
       doc.setTextColor(0, 0, 0);
-      
+
       // Token Number (Large and prominent)
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
       doc.text(`Token #${bookingData.tokenNumber || 'PENDING'}`, 105, 52, { align: 'center' });
-      
+
       // Generate QR Code
       const qrData = JSON.stringify({
         token: bookingData.tokenNumber || 'PENDING',
@@ -841,7 +845,7 @@ export default function UserDashboard() {
         bloodBank: bookingData.bloodBankName,
         patientMRID: bookingData.patientMRID
       });
-      
+
       const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
         width: 150,
         margin: 1,
@@ -850,32 +854,32 @@ export default function UserDashboard() {
           light: '#FFFFFF'
         }
       });
-      
+
       // Add QR Code (centered)
       doc.addImage(qrCodeDataUrl, 'PNG', 55, 60, 100, 100);
-      
+
       // Booking Details Section
       let yPos = 170;
-      
+
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text('Appointment Details:', 20, yPos);
       yPos += 10;
-      
+
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      
+
       // Two column layout
       const leftX = 20;
       const rightX = 110;
-      
+
       // Left column
       doc.setFont(undefined, 'bold');
       doc.text('Date & Time:', leftX, yPos);
       doc.setFont(undefined, 'normal');
       doc.text(`${new Date(bookingData.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, leftX, yPos + 5);
       doc.text(`Time: ${bookingData.time}`, leftX, yPos + 10);
-      
+
       // Right column
       doc.setFont(undefined, 'bold');
       doc.text('Blood Group:', rightX, yPos);
@@ -885,25 +889,25 @@ export default function UserDashboard() {
       doc.text(bookingData.bloodGroup || 'N/A', rightX, yPos + 5);
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(11);
-      
+
       yPos += 20;
-      
+
       // Donor Details
       doc.setFont(undefined, 'bold');
       doc.text('Donor Information:', leftX, yPos);
       doc.setFont(undefined, 'normal');
       doc.text(`Name: ${bookingData.donorName}`, leftX, yPos + 5);
       doc.text(`Phone: ${bookingData.donorPhone || 'N/A'}`, leftX, yPos + 10);
-      
+
       // Patient Details
       doc.setFont(undefined, 'bold');
       doc.text('Patient Information:', rightX, yPos);
       doc.setFont(undefined, 'normal');
       doc.text(`Name: ${bookingData.patientName || 'N/A'}`, rightX, yPos + 5);
       doc.text(`MRID: ${bookingData.patientMRID || 'N/A'}`, rightX, yPos + 10);
-      
+
       yPos += 20;
-      
+
       // Blood Bank Details
       doc.setFont(undefined, 'bold');
       doc.text('Blood Bank:', leftX, yPos);
@@ -911,15 +915,15 @@ export default function UserDashboard() {
       doc.text(bookingData.bloodBankName || 'N/A', leftX, yPos + 5);
       doc.text(bookingData.bloodBankAddress || '', leftX, yPos + 10);
       doc.text(`Phone: ${bookingData.bloodBankPhone || 'N/A'}`, leftX, yPos + 15);
-      
+
       yPos += 25;
-      
+
       // Important Instructions
       doc.setFillColor(255, 248, 220);
       doc.rect(15, yPos, 180, 25, 'F');
       doc.setDrawColor(255, 193, 7);
       doc.rect(15, yPos, 180, 25, 'S');
-      
+
       doc.setFontSize(10);
       doc.setFont(undefined, 'bold');
       doc.text('Important Instructions:', 20, yPos + 6);
@@ -927,18 +931,18 @@ export default function UserDashboard() {
       doc.text('• Please arrive 15 minutes before your scheduled time', 20, yPos + 11);
       doc.text('• Bring a valid ID and this confirmation', 20, yPos + 15);
       doc.text('• Ensure you have eaten and are well hydrated', 20, yPos + 19);
-      
+
       // Footer
       yPos += 30;
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
       doc.text('Generated: ' + new Date().toLocaleString(), 105, yPos, { align: 'center' });
       doc.text('Thank you for saving lives! 💉', 105, yPos + 5, { align: 'center' });
-      
+
       // Save PDF
       const fileName = `booking_confirmation_${bookingData.tokenNumber || Date.now()}.pdf`;
       doc.save(fileName);
-      
+
       return true;
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -1029,7 +1033,7 @@ export default function UserDashboard() {
 
         // Generate PDF
         await generateBookingPDF(pdfData);
-        
+
         alert('✅ Booking confirmed! Your confirmation PDF has been downloaded.');
         setBookingModal(null);
         setSelectedDate('');
@@ -1094,23 +1098,23 @@ export default function UserDashboard() {
         alert('Please fill in all password fields');
         return;
       }
-      
+
       if (passwordData.newPassword !== passwordData.confirmPassword) {
         alert('New passwords do not match');
         return;
       }
-      
+
       if (passwordData.newPassword.length < 8) {
         alert('New password must be at least 8 characters long');
         return;
       }
-      
+
       setUpdatingPassword(true);
       const res = await api.put('/users/me/password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      
+
       if (res.data.success) {
         alert('✅ Password updated successfully!');
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -1204,13 +1208,12 @@ export default function UserDashboard() {
           {notifications.map(notification => (
             <div
               key={notification.id}
-              className={`px-4 py-3 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ${
-                notification.type === 'success' 
-                  ? 'bg-green-500/90 text-white' 
-                  : notification.type === 'error'
+              className={`px-4 py-3 rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ${notification.type === 'success'
+                ? 'bg-green-500/90 text-white'
+                : notification.type === 'error'
                   ? 'bg-red-500/90 text-white'
                   : 'bg-blue-500/90 text-white'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{notification.message}</span>
@@ -1246,7 +1249,7 @@ export default function UserDashboard() {
                   <span>{profileData.name ? profileData.name.charAt(0).toUpperCase() : loginUsername.charAt(0).toUpperCase()}</span>
                 )}
               </button>
-              
+
               {/* Dropdown Menu */}
               {showAvatarDropdown && (
                 <div className="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
@@ -1254,7 +1257,7 @@ export default function UserDashboard() {
                     <p className="font-semibold text-gray-900 dark:text-white">{profileData.name || loginUsername}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">{profileData.email}</p>
                   </div>
-                  
+
                   <button
                     onClick={() => {
                       setShowProfileModal(true);
@@ -1265,18 +1268,18 @@ export default function UserDashboard() {
                     <span className="text-xl">👤</span>
                     <span className="font-medium">My Profile</span>
                   </button>
-                  
-              <button
-                onClick={() => {
-                  window.location.href = "/user-settings";
-                  setShowAvatarDropdown(false);
-                }}
-                className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
-              >
-                <span className="text-xl">⚙️</span>
-                <span className="font-medium">Settings</span>
-              </button>
-                  
+
+                  <button
+                    onClick={() => {
+                      window.location.href = "/user-settings";
+                      setShowAvatarDropdown(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                  >
+                    <span className="text-xl">⚙️</span>
+                    <span className="font-medium">Settings</span>
+                  </button>
+
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-3 text-red-600 dark:text-red-400 border-t border-gray-200 dark:border-gray-700"
@@ -1287,7 +1290,7 @@ export default function UserDashboard() {
                 </div>
               )}
             </div>
-            
+
             {/* User Info */}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -1329,33 +1332,29 @@ export default function UserDashboard() {
         <div className="flex flex-wrap bg-white/20 rounded-full p-1 backdrop-blur-md gap-1">
           <button
             onClick={() => setActiveTab("findDonors")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "findDonors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "findDonors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             🔍 Find Donors
           </button>
           <button
             onClick={() => setActiveTab("searchByMrid")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "searchByMrid" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "searchByMrid" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             🆔 Search by MRID
           </button>
           <button
             onClick={() => setActiveTab("myRequests")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "myRequests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "myRequests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             📋 My Requests
           </button>
           <button
             onClick={() => setActiveTab("leaveReviews")}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              activeTab === "leaveReviews" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "leaveReviews" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             ⭐ Leave Reviews
           </button>
@@ -1590,7 +1589,7 @@ export default function UserDashboard() {
             </div>
 
             {/* Donor Results are already shown above in the "Available Donors" section */}
-            
+
             {/* Optional: Show patient info if you want to display which patient these donors match */}
             {false && mridResults.length > 0 && (
               <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-white/5 md:p-8">
@@ -1771,17 +1770,15 @@ export default function UserDashboard() {
               <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
                 <button
                   onClick={() => setRequestType('sent')}
-                  className={`px-6 py-2 rounded-full font-semibold transition ${
-                    requestType === 'sent' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
-                  }`}
+                  className={`px-6 py-2 rounded-full font-semibold transition ${requestType === 'sent' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
+                    }`}
                 >
                   📤 Sent Requests
                 </button>
                 <button
                   onClick={() => setRequestType('received')}
-                  className={`px-6 py-2 rounded-full font-semibold transition ${
-                    requestType === 'received' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
-                  }`}
+                  className={`px-6 py-2 rounded-full font-semibold transition ${requestType === 'received' ? 'bg-pink-600 text-white' : 'text-gray-700 dark:text-gray-300'
+                    }`}
                 >
                   📥 Received Requests
                 </button>
@@ -2126,7 +2123,7 @@ export default function UserDashboard() {
                                         </button>
                                       </div>
                                     )}
-                                    
+
                                     {/* Accepted: Show Book Slot */}
                                     {request.status === 'accepted' && (
                                       <div className="flex flex-col gap-1">
@@ -2140,7 +2137,7 @@ export default function UserDashboard() {
                                         </button>
                                       </div>
                                     )}
-                                    
+
                                     {/* Booked: Show View Details & Book/Cancel Taxi */}
                                     {request.status === 'booked' && (
                                       <div className="flex flex-col gap-1">
@@ -2172,7 +2169,7 @@ export default function UserDashboard() {
                                         )}
                                       </div>
                                     )}
-                                    
+
                                     {/* Rejected/Cancelled/Completed: Show Status Only */}
                                     {['rejected', 'cancelled', 'completed'].includes(request.status) && (
                                       <button
@@ -2735,7 +2732,7 @@ export default function UserDashboard() {
                         <input
                           type="checkbox"
                           checked={settingsData[item.key]}
-                          onChange={(e) => setSettingsData(prev => ({...prev, [item.key]: e.target.checked}))}
+                          onChange={(e) => setSettingsData(prev => ({ ...prev, [item.key]: e.target.checked }))}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
@@ -2762,7 +2759,7 @@ export default function UserDashboard() {
                         <input
                           type="checkbox"
                           checked={settingsData[item.key]}
-                          onChange={(e) => setSettingsData(prev => ({...prev, [item.key]: e.target.checked}))}
+                          onChange={(e) => setSettingsData(prev => ({ ...prev, [item.key]: e.target.checked }))}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 dark:peer-focus:ring-pink-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-pink-600"></div>
@@ -2782,7 +2779,7 @@ export default function UserDashboard() {
                     </label>
                     <select
                       value={settingsData.language}
-                      onChange={(e) => setSettingsData(prev => ({...prev, language: e.target.value}))}
+                      onChange={(e) => setSettingsData(prev => ({ ...prev, language: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="en">English</option>
@@ -2798,7 +2795,7 @@ export default function UserDashboard() {
                     </label>
                     <select
                       value={settingsData.timezone}
-                      onChange={(e) => setSettingsData(prev => ({...prev, timezone: e.target.value}))}
+                      onChange={(e) => setSettingsData(prev => ({ ...prev, timezone: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
@@ -2869,7 +2866,7 @@ export default function UserDashboard() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 🔍 Find Patient by Blood Bank & MRID
               </h3>
-              
+
               {/* Step 1: Select Blood Bank */}
               <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -2904,7 +2901,7 @@ export default function UserDashboard() {
                 <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-300 dark:border-blue-700">
                   <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                     <span className="text-2xl">📋</span>
-                    {patientSearchMRID 
+                    {patientSearchMRID
                       ? `Search Results${searchedPatients.length > 0 ? ` (${searchedPatients.length})` : ''}`
                       : `Available Patients in ${bloodBanks.find(bb => bb._id === patientSearchBloodBank)?.name || 'Blood Bank'}`
                     }
@@ -2916,23 +2913,23 @@ export default function UserDashboard() {
                     </div>
                   ) : (() => {
                     // Use searched patients if MRID is entered, otherwise filter from loaded patients
-                    const displayPatients = (patientSearchMRID && searchedPatients.length > 0) 
-                      ? searchedPatients 
+                    const displayPatients = (patientSearchMRID && searchedPatients.length > 0)
+                      ? searchedPatients
                       : patients.filter(p => {
-                          const bbId = p.bloodBankId?._id || p.bloodBankId;
-                          return bbId === patientSearchBloodBank;
-                        });
+                        const bbId = p.bloodBankId?._id || p.bloodBankId;
+                        return bbId === patientSearchBloodBank;
+                      });
 
                     if (displayPatients.length === 0) {
                       return (
                         <div className="text-center py-4 text-gray-600 dark:text-gray-400">
                           <p className="text-lg">
-                            {patientSearchMRID 
+                            {patientSearchMRID
                               ? `📭 No patients found with MRID "${patientSearchMRID}"`
                               : '📭 No patients found in this blood bank'}
                           </p>
                           <p className="text-sm mt-2">
-                            {patientSearchMRID 
+                            {patientSearchMRID
                               ? 'Try a different MRID or check the blood bank selection.'
                               : 'This blood bank hasn\'t registered any patients yet.'}
                           </p>
@@ -2943,7 +2940,7 @@ export default function UserDashboard() {
                     return (
                       <>
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                          {patientSearchMRID 
+                          {patientSearchMRID
                             ? `🔍 Found ${displayPatients.length} patient${displayPatients.length !== 1 ? 's' : ''} matching "${patientSearchMRID}"`
                             : `📊 Found ${displayPatients.length} patient${displayPatients.length !== 1 ? 's' : ''}`
                           } - Click to select
@@ -2957,11 +2954,10 @@ export default function UserDashboard() {
                                 setSelectedPatient(patient._id);
                                 setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
                               }}
-                              className={`p-3 bg-white dark:bg-gray-800 rounded-lg border ${
-                                selectedPatient === patient._id 
-                                  ? 'border-green-500 dark:border-green-500 ring-2 ring-green-200 dark:ring-green-800' 
-                                  : 'border-blue-200 dark:border-blue-700 hover:border-blue-500 dark:hover:border-blue-500'
-                              } cursor-pointer transition-all hover:shadow-md group`}
+                              className={`p-3 bg-white dark:bg-gray-800 rounded-lg border ${selectedPatient === patient._id
+                                ? 'border-green-500 dark:border-green-500 ring-2 ring-green-200 dark:ring-green-800'
+                                : 'border-blue-200 dark:border-blue-700 hover:border-blue-500 dark:hover:border-blue-500'
+                                } cursor-pointer transition-all hover:shadow-md group`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
@@ -2999,7 +2995,7 @@ export default function UserDashboard() {
                   })()}
                 </div>
               )}
-              
+
               {/* Step 2: Enter MRID */}
               <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -3016,13 +3012,13 @@ export default function UserDashboard() {
                   💡 Leave empty to see all patients from selected blood bank
                 </p>
               </div>
-              
+
               {/* Step 3: Select Patient from Matching Results */}
               <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <span className="text-xl">👤</span> Step 3: Select Patient
                 </label>
-                
+
                 {!patientSearchBloodBank ? (
                   <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm">
                     ⚠️ Please select a blood bank first to see available patients
@@ -3049,33 +3045,33 @@ export default function UserDashboard() {
                       </option>
                       {(() => {
                         // Use searched patients if MRID is entered, otherwise filter from loaded patients
-                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0) 
-                          ? searchedPatients 
+                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0)
+                          ? searchedPatients
                           : patients.filter(p => {
-                              const bbId = p.bloodBankId?._id || p.bloodBankId;
-                              return bbId === patientSearchBloodBank;
-                            });
-                        
+                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            return bbId === patientSearchBloodBank;
+                          });
+
                         // If no results
                         if (filteredPatients.length === 0 && !searchingPatients) {
                           return <option value="" disabled>
-                            {patientSearchMRID 
+                            {patientSearchMRID
                               ? `No patients found with MRID "${patientSearchMRID}" in database`
                               : 'No patients found in selected blood bank'}
                           </option>;
                         }
-                        
+
                         // Display filtered patients with complete details
                         return filteredPatients.map(patient => (
                           <option key={patient._id} value={patient._id}>
-                            {patient.name || patient.patientName} - {patient.bloodGroup} 
+                            {patient.name || patient.patientName} - {patient.bloodGroup}
                             {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
                             {patient.bloodBankId?.name ? ` | ${patient.bloodBankId.name}` : ''}
                           </option>
                         ));
                       })()}
                     </select>
-                    
+
                     {/* Results Counter */}
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       {searchingPatients ? (
@@ -3084,20 +3080,20 @@ export default function UserDashboard() {
                         </span>
                       ) : (() => {
                         // Use searched patients if MRID is entered
-                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0) 
-                          ? searchedPatients 
+                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0)
+                          ? searchedPatients
                           : patients.filter(p => {
-                              const bbId = p.bloodBankId?._id || p.bloodBankId;
-                              return bbId === patientSearchBloodBank;
-                            });
-                        
+                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            return bbId === patientSearchBloodBank;
+                          });
+
                         const count = filteredPatients.length;
                         const selectedBB = bloodBanks.find(bb => bb._id === patientSearchBloodBank);
                         const isDbSearch = patientSearchMRID && searchedPatients.length > 0;
-                        
+
                         return (
                           <>
-                            {isDbSearch ? '🔍' : '📊'} Found {count} patient{count !== 1 ? 's' : ''} 
+                            {isDbSearch ? '🔍' : '📊'} Found {count} patient{count !== 1 ? 's' : ''}
                             {patientSearchMRID && ` with MRID "${patientSearchMRID}"`}
                             {selectedBB && ` in ${selectedBB.name}`}
                             {isDbSearch && <span className="ml-1 text-blue-600 dark:text-blue-400">(from database)</span>}
@@ -3113,7 +3109,7 @@ export default function UserDashboard() {
                   </>
                 )}
               </div>
-              
+
               {/* Clear Search Button */}
               {(patientSearchMRID || patientSearchBloodBank) && (
                 <button
@@ -3137,7 +3133,7 @@ export default function UserDashboard() {
                 const patient = allPatients.find(p => p._id === selectedPatient);
                 // Check if patient was auto-selected (blood bank + MRID both provided)
                 const wasAutoSelected = patientSearchBloodBank && patientSearchMRID && searchedPatients.length === 1;
-                
+
                 return patient ? (
                   <div className="mt-2 p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg border-2 border-blue-300 dark:border-blue-700 shadow-md">
                     <div className="flex items-center justify-between mb-2">

@@ -102,7 +102,20 @@ app.use('/api/bloodbank', require('./Route/bloodbankRoutes'));
 // Taxi booking feature removed
 app.use('/api/notifications', require('./Route/notificationRoutes'));
 
-// 404 fallback for unmatched routes
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  // Handle SPA fallback
+  app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+  });
+}
+
+// 404 fallback for unmatched routes (API)
 app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
 
 // Centralized error handler

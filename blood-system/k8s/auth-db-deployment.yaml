@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blood-auth-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blood-auth-db
+  template:
+    metadata:
+      labels:
+        app: blood-auth-db
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: auth-db-storage
+              mountPath: /data/db
+      volumes:
+        - name: auth-db-storage
+          persistentVolumeClaim:
+            claimName: auth-db-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blood-auth-db
+spec:
+  selector:
+    app: blood-auth-db
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auth-db-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

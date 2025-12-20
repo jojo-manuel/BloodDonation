@@ -4,8 +4,11 @@
 export const cleanupAuthState = () => {
   const accessToken = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
-  
+
   // If we have an access token but no refresh token, clear everything
+  // Check if we have an access token (Refresh token optional for now)
+  /* 
+  // Disable strict refresh token check until backend implements it fully
   if (accessToken && !refreshToken) {
     console.warn('⚠️ Found access token without refresh token - clearing auth state');
     localStorage.removeItem('accessToken');
@@ -14,7 +17,8 @@ export const cleanupAuthState = () => {
     localStorage.removeItem('username');
     return false;
   }
-  
+  */
+
   // Check if tokens are valid (not undefined, null, or "undefined" string)
   const invalidTokens = [
     accessToken === 'undefined',
@@ -22,13 +26,13 @@ export const cleanupAuthState = () => {
     refreshToken === 'undefined',
     refreshToken === 'null',
   ];
-  
+
   if (invalidTokens.some(invalid => invalid)) {
     console.warn('⚠️ Found invalid token values - clearing auth state');
     localStorage.clear();
     return false;
   }
-  
+
   return !!(accessToken && refreshToken);
 };
 
@@ -42,7 +46,7 @@ export const clearAuthState = () => {
 export const hasValidAuthTokens = () => {
   const accessToken = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
-  
+
   return (
     accessToken &&
     refreshToken &&

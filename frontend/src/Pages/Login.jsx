@@ -94,53 +94,53 @@ export default function Login() {
     handleRedirectResult();
   }, [navigate]);
 
-// Firebase sign-in with Google provider using popup (fallback for redirect issues)
-const handleFirebaseSignIn = async () => {
-  setFirebaseLoading(true);
-  try {
-    // Use popup sign-in instead of redirect to avoid sessionStorage issues
-    const result = await signInWithPopup(auth, provider);
-    if (result) {
-      const idToken = await result.user.getIdToken();
+  // Firebase sign-in with Google provider using popup (fallback for redirect issues)
+  const handleFirebaseSignIn = async () => {
+    setFirebaseLoading(true);
+    try {
+      // Use popup sign-in instead of redirect to avoid sessionStorage issues
+      const result = await signInWithPopup(auth, provider);
+      if (result) {
+        const idToken = await result.user.getIdToken();
 
-      // Send ID token to backend for verification and app token generation
-      const response = await api.post('/auth/firebase', { idToken });
+        // Send ID token to backend for verification and app token generation
+        const response = await api.post('/auth/firebase', { idToken });
 
-      if (response.data.success) {
-        const { user, accessToken, refreshToken } = response.data.data;
+        if (response.data.success) {
+          const { user, accessToken, refreshToken } = response.data.data;
 
-        // Store user data and tokens
-        if (user?.id) localStorage.setItem('userId', user.id);
-        if (user?.role) localStorage.setItem('role', user.role);
-        if (user?.username) localStorage.setItem('username', user.username);
-        if (accessToken) localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+          // Store user data and tokens
+          if (user?.id) localStorage.setItem('userId', user.id);
+          if (user?.role) localStorage.setItem('role', user.role);
+          if (user?.username) localStorage.setItem('username', user.username);
+          if (accessToken) localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-        // Redirect based on user role and suspension/block status
-        if (user?.isSuspended) {
-          alert('Your account is suspended. Some features may be restricted.');
-          navigate('/dashboard');
-        } else if (user?.isBlocked) {
-          alert('Your account is blocked. Please contact support.');
-          navigate('/login');
-        } else if (user?.role === 'admin') {
-          navigate('/admin-dashboard');
-        } else if (user?.role === 'bloodbank') {
-          navigate('/bloodbank/dashboard');
+          // Redirect based on user role and suspension/block status
+          if (user?.isSuspended) {
+            alert('Your account is suspended. Some features may be restricted.');
+            navigate('/dashboard');
+          } else if (user?.isBlocked) {
+            alert('Your account is blocked. Please contact support.');
+            navigate('/login');
+          } else if (user?.role === 'admin') {
+            navigate('/admin-dashboard');
+          } else if (user?.role === 'bloodbank') {
+            navigate('/bloodbank/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
         } else {
-          navigate('/dashboard');
+          alert('Authentication failed: ' + response.data.message);
         }
-      } else {
-        alert('Authentication failed: ' + response.data.message);
       }
+    } catch (error) {
+      console.error('Firebase popup sign-in error:', error);
+      alert('Failed to sign in with Google. Please try again.');
+    } finally {
+      setFirebaseLoading(false);
     }
-  } catch (error) {
-    console.error('Firebase popup sign-in error:', error);
-    alert('Failed to sign in with Google. Please try again.');
-  } finally {
-    setFirebaseLoading(false);
-  }
-};
+  };
 
   // Firebase forgot password
   const handleForgotPassword = async () => {
@@ -166,50 +166,93 @@ const handleFirebaseSignIn = async () => {
     const username = formData.email;
 
     const payload = { email: username, password: formData.password };
-    
+
     // Debug logging to see what's being sent
     console.log('🔍 Login Debug Info:');
     console.log('  Email:', formData.email);
     console.log('  Email length:', formData.email?.length);
     console.log('  Password length:', formData.password?.length);
     console.log('  Payload:', { email: payload.email, passwordLength: payload.password?.length });
-    
+
     api.post('/auth/login', payload)
       .then(({ data }) => {
-          if (data?.success && data?.data) {
-            const { user, accessToken, refreshToken } = data.data;
-            if (user?.id) localStorage.setItem('userId', user.id);
-            if (user?.role) localStorage.setItem('role', user.role);
-            if (user?.username) localStorage.setItem('username', user.username);
-            if (user?.isSuspended) localStorage.setItem('isSuspended', user.isSuspended);
-            if (user?.isBlocked) localStorage.setItem('isBlocked', user.isBlocked);
-            if (user?.warningMessage) localStorage.setItem('warningMessage', user.warningMessage);
-            if (accessToken) localStorage.setItem('accessToken', accessToken);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        if (data?.success && data?.data) {
+          const { user, token, refreshToken: backendRefreshToken } = data.data;
+          const accessToken = token;
+          // Use backend refresh token (if available) or fallback to access token to satisfy strict client-side checks
+          const refreshToken = backendRefreshToken || token;
+          if (user?.id) localStorage.setItem('userId', user.id);
+          if (user?.role) localStorage.setItem('role', user.role);
+          if (user?.username) localStorage.setItem('username', user.username);
+          if (user?.isSuspended) localStorage.setItem('isSuspended', user.isSuspended);
+          if (user?.isBlocked) localStorage.setItem('isBlocked', user.isBlocked);
+          if (user?.warningMessage) localStorage.setItem('warningMessage', user.warningMessage);
+          if (accessToken) localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-            if (user?.warningMessage) {
-              alert(`Warning: ${user.warningMessage}`);
-            }
-            if (user?.isSuspended) {
-              alert('Your account is suspended. Some features may be restricted.');
-            }
+          if (user?.warningMessage) {
+            alert(`Warning: ${user.warningMessage}`);
+          }
+          if (user?.isSuspended) {
+            alert('Your account is suspended. Some features may be restricted.');
+          }
 
-            if (user?.role === 'admin') {
+          if (user?.role === 'admin') {
+            // Super Admin -> Port 5175
+            if (window.location.port === '5175') {
               navigate('/admin-dashboard');
-            } else if (user?.role === 'bloodbank') {
+            } else {
+              const params = new URLSearchParams({
+                accessToken,
+                refreshToken,
+                role: user.role,
+                username: user.username,
+                userId: user.id
+              });
+              window.location.href = `http://localhost:5175/admin-dashboard?${params.toString()}`;
+            }
+          } else if (user?.role === 'bloodbank') {
+            // Blood Bank Admin -> Port 5174
+            if (window.location.port === '5174') {
               navigate('/bloodbank/dashboard');
+            } else {
+              const params = new URLSearchParams({
+                accessToken,
+                refreshToken,
+                role: user.role,
+                username: user.username,
+                userId: user.id
+              });
+              window.location.href = `http://localhost:5174/bloodbank/dashboard?${params.toString()}`;
+            }
+          } else if (user?.role === 'donor' || user?.role === 'user') {
+            // Users/Donors -> Port 5173 (Default)
+            // If they are on a specialized container, send them back to main
+            if (window.location.port !== '5173' && window.location.port !== '') {
+              const params = new URLSearchParams({
+                accessToken,
+                refreshToken,
+                role: user.role,
+                username: user.username,
+                userId: user.id
+              });
+              window.location.href = `http://localhost:5173/dashboard?${params.toString()}`;
             } else {
               navigate('/dashboard');
             }
           } else {
-            alert(data?.message || 'Login failed');
+            // Default fallback
+            navigate('/dashboard');
           }
+        } else {
+          alert(data?.message || 'Login failed');
+        }
       })
       .catch((err) => {
         console.error('❌ Login error:', err);
         console.error('❌ Error response:', err.response?.data);
         console.error('❌ Error status:', err.response?.status);
-        
+
         const msg = err?.response?.data?.message || 'Login failed';
         alert(`Login Failed: ${msg}\n\n💡 Tip: Make sure you're using your EMAIL ADDRESS (not username)\nExample: test@example.com`);
       });
@@ -271,10 +314,10 @@ const handleFirebaseSignIn = async () => {
                 ) : (
                   <>
                     <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     Continue with Firebase
                   </>

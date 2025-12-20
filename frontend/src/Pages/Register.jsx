@@ -57,8 +57,28 @@ export default function Register() {
       });
 
       if (response.data.success) {
-        alert("✅ Registration successful! Please login to continue.");
-        navigate("/login");
+        // Auto-login after registration
+        const { user, token } = response.data.data;
+
+        if (user?.id) localStorage.setItem('userId', user.id);
+        if (user?.role) localStorage.setItem('role', user.role);
+        if (user?.username) localStorage.setItem('username', user.username || user.email);
+        if (token) localStorage.setItem('accessToken', token);
+        // Assuming refreshToken might not be sent on register or we treat single token as enough for now.
+        // If refreshToken is needed, check backend response. The backend seems to return just 'token'.
+
+        alert("✅ Registration successful! Welcome to Hope Web.");
+
+        // Redirect based on role (similar to Login.jsx)
+        if (user?.role === 'admin') {
+          // Redirect to Admin Dashboard Container
+          window.location.href = 'http://localhost:5174/admin-dashboard';
+        } else if (user?.role === 'bloodbank') {
+          navigate('/bloodbank/dashboard');
+        } else {
+          // Default to user container/dashboard
+          navigate('/dashboard');
+        }
       } else {
         alert(response.data.message || "Registration failed");
       }
@@ -107,9 +127,8 @@ export default function Register() {
                   type="text"
                   name="firstName"
                   placeholder="Enter your first name"
-                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                    errors.firstName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${errors.firstName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                    } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
                   value={formData.firstName}
                   onChange={handleChange}
                   required
@@ -123,9 +142,8 @@ export default function Register() {
                   type="text"
                   name="lastName"
                   placeholder="Enter your last name"
-                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                    errors.lastName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${errors.lastName ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                    } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
                   value={formData.lastName}
                   onChange={handleChange}
                   required
@@ -139,9 +157,8 @@ export default function Register() {
                   type="email"
                   name="email"
                   placeholder="you@example.com"
-                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                    errors.email ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                    } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -155,9 +172,8 @@ export default function Register() {
                   type="password"
                   name="password"
                   placeholder="••••••••"
-                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                    errors.password ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                    } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
                   value={formData.password}
                   onChange={handleChange}
                   minLength={8}
@@ -172,9 +188,8 @@ export default function Register() {
                   type="password"
                   name="confirmPassword"
                   placeholder="••••••••"
-                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${
-                    errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
-                  } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
+                  className={`w-full rounded-2xl border px-4 py-3 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 ${errors.confirmPassword ? "border-red-500 focus:ring-red-500" : "border-white/30 focus:ring-pink-400/60"
+                    } bg-white/20 text-gray-900 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300`}
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   minLength={8}

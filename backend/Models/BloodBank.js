@@ -4,8 +4,11 @@ const BloodBankSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true,
-    unique: true
+    required: function() {
+      // userId is required only when status is approved
+      return this.status === 'approved';
+    }
+    // unique constraint is handled in index definition below with sparse: true
   },
   name: {
     type: String,
@@ -35,9 +38,30 @@ const BloodBankSchema = new mongoose.Schema({
     type: String,
     match: [/^[6-9]\d{9}$/, "Contact number must be a valid 10-digit Indian number"]
   },
+  hospitalName: {
+    type: String,
+    trim: true,
+    maxlength: [100, "Hospital name cannot exceed 100 characters"]
+  },
+  pincode: {
+    type: String,
+    trim: true,
+    match: [/^[0-9]{6}$/, "Pincode must be a valid 6-digit number"]
+  },
+  localBody: {
+    type: String,
+    trim: true,
+    maxlength: [100, "Local body cannot exceed 100 characters"]
+  },
   district: {
     type: String,
-    trim: true
+    trim: true,
+    maxlength: [100, "District cannot exceed 100 characters"]
+  },
+  state: {
+    type: String,
+    trim: true,
+    maxlength: [100, "State cannot exceed 100 characters"]
   },
   licenseNumber: {
     type: String,
@@ -71,7 +95,7 @@ const BloodBankSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Create indexes
-BloodBankSchema.index({ userId: 1 });
+BloodBankSchema.index({ userId: 1 }, { sparse: true, unique: true }); // Sparse unique index allows multiple nulls
 BloodBankSchema.index({ status: 1 });
 BloodBankSchema.index({ name: 1 });
 

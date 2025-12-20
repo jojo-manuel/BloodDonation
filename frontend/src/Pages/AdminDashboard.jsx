@@ -47,7 +47,18 @@ export default function AdminDashboard() {
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [requests, setRequests] = useState([]);
-  
+  const [selectedBloodBank, setSelectedBloodBank] = useState(null);
+  const [sectionUsers, setSectionUsers] = useState([]);
+  const [showSectionUserForm, setShowSectionUserForm] = useState(false);
+  const [sectionUserForm, setSectionUserForm] = useState({
+    section: '',
+    username: '',
+    password: '',
+    name: '',
+    email: '',
+    phone: ''
+  });
+
   // Activities state
   const [activities, setActivities] = useState([]);
   const [activityUsername, setActivityUsername] = useState("");
@@ -95,6 +106,7 @@ export default function AdminDashboard() {
     else if (activeTab === "patients") fetchPatients();
     else if (activeTab === "requests") fetchRequests();
     else if (activeTab === "activities") fetchActivities();
+    else if (activeTab === "bloodbankRegistration") fetchBloodbanks();
   }, [activeTab]);
 
   // Fetch activities when filters change
@@ -168,7 +180,10 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const { data } = await api.get("/admin/donors");
-      if (data.success) setDonors(data.data);
+      if (data.success) {
+        // api returns { data: { donors: [], pagination: {} } }
+        setDonors(data.data.donors || data.data);
+      }
     } catch (error) {
       alert("Error fetching donors: " + error.message);
     } finally {
@@ -233,13 +248,75 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchSectionUsers = async (bloodBankId) => {
+    try {
+      const { data } = await api.get(`/admin/bloodbanks/${bloodBankId}/section-users`);
+      if (data.success) {
+        setSectionUsers(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching section users:", error);
+      alert("Error fetching section users: " + error.message);
+    }
+  };
+
+  const handleCreateSectionUser = async (e) => {
+    e.preventDefault();
+    if (!selectedBloodBank) {
+      alert("Please select a blood bank first");
+      return;
+    }
+
+    try {
+      const { data } = await api.post(
+        `/admin/bloodbanks/${selectedBloodBank._id}/section-users`,
+        sectionUserForm
+      );
+      if (data.success) {
+        alert("Section user created successfully!");
+        setSectionUserForm({
+          section: '',
+          username: '',
+          password: '',
+          name: '',
+          email: '',
+          phone: ''
+        });
+        setShowSectionUserForm(false);
+        fetchSectionUsers(selectedBloodBank._id);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Error creating section user");
+    }
+  };
+
+  const handleDeleteSectionUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this section user?")) {
+      return;
+    }
+
+    try {
+      const { data } = await api.delete(
+        `/admin/bloodbanks/${selectedBloodBank._id}/section-users/${userId}`
+      );
+      if (data.success) {
+        alert("Section user deleted successfully!");
+        fetchSectionUsers(selectedBloodBank._id);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Error deleting section user");
+    }
+  };
+
   const fetchPatients = async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/admin/patients");
       if (data.success) {
-        setPatients(data.data);
-        setFilteredPatients(data.data);
+        // Handle both array and paginated response
+        const patientsData = data.data.patients || data.data;
+        setPatients(patientsData);
+        setFilteredPatients(patientsData);
       }
     } catch (error) {
       alert("Error fetching patients: " + error.message);
@@ -252,7 +329,10 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/donation-requests');
-      if (data.success) setRequests(data.data);
+      if (data.success) {
+        // api returns { data: { requests: [], pagination: {} } }
+        setRequests(data.data.requests || data.data);
+      }
     } catch (error) {
       alert('Error fetching requests: ' + error.message);
     } finally {
@@ -264,7 +344,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      
+
       if (activityUsername && activityUsername.trim()) {
         params.append('username', activityUsername.trim());
       }
@@ -354,72 +434,70 @@ export default function AdminDashboard() {
     <Layout>
       <Navbar onLogout={handleLogout} />
       <div className="flex justify-center mb-6">
-      <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
-        <button
-          onClick={() => setActiveTab("donors")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "donors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Donors
-        </button>
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "users" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Users
-        </button>
-        <button
-          onClick={() => setActiveTab("admins")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "admins" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Admins
-        </button>
-        <button
-          onClick={() => setActiveTab("bloodbanks")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "bloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          All Blood Banks
-        </button>
-        <button
-          onClick={() => setActiveTab("pendingBloodbanks")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "pendingBloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Pending Blood Banks
-        </button>
-        <button
-          onClick={() => setActiveTab("patients")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "patients" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Patients
-        </button>
-        <button
-          onClick={() => setActiveTab("requests")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "requests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          Requests
-        </button>
-        <button
-          onClick={() => setActiveTab("activities")}
-          className={`px-6 py-2 rounded-full font-semibold transition ${
-            activeTab === "activities" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-          }`}
-        >
-          📊 Activities
-        </button>
-      </div>
+        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
+          <button
+            onClick={() => setActiveTab("donors")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "donors" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Donors
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "users" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Users
+          </button>
+          <button
+            onClick={() => setActiveTab("admins")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "admins" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Admins
+          </button>
+          <button
+            onClick={() => setActiveTab("bloodbanks")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "bloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            All Blood Banks
+          </button>
+          <button
+            onClick={() => setActiveTab("pendingBloodbanks")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "pendingBloodbanks" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Pending Blood Banks
+          </button>
+          <button
+            onClick={() => setActiveTab("patients")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "patients" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Patients
+          </button>
+          <button
+            onClick={() => setActiveTab("requests")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "requests" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            Requests
+          </button>
+          <button
+            onClick={() => setActiveTab("activities")}
+            className={`px-6 py-2 rounded-full font-semibold transition ${activeTab === "activities" ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
+          >
+            📊 Activities
+          </button>
+          <button
+            onClick={() => window.location.href = "/bloodbank-admin-register"}
+            className="px-6 py-2 rounded-full font-semibold transition text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white"
+          >
+            🏥 Blood Bank Registration
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto w-full max-w-4xl overflow-auto max-h-[70vh]">
@@ -439,77 +517,77 @@ export default function AdminDashboard() {
             />
 
             <TableContainer component={Paper} sx={{ maxHeight: '70vh' }}>
-            <Table stickyHeader aria-label="donors table" sx={{ minWidth: 700 }}>
-              <TableHead>
-                <TableRow>
-                  <StyledTableCell>Donor Name</StyledTableCell>
-                  <StyledTableCell>Blood Group</StyledTableCell>
-                  <StyledTableCell>Contact</StyledTableCell>
-                  <StyledTableCell>Status</StyledTableCell>
-                  <StyledTableCell>Warning</StyledTableCell>
-                  <StyledTableCell align="center">Actions</StyledTableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <StyledTableRow>
-                    <StyledTableCell colSpan={6} align="center">
-                      Loading donors...
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ) : donors.length === 0 ? (
-                  <StyledTableRow>
-                    <StyledTableCell colSpan={6} align="center">
-                      No donors found.
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ) : (
-                  filteredDonors.map((donor) => (
-                    <StyledTableRow key={donor._id}>
-                      <StyledTableCell>{donor.userId?.name || "N/A"}</StyledTableCell>
-                      <StyledTableCell>{donor.bloodGroup}</StyledTableCell>
-                      <StyledTableCell>{donor.contactNumber}</StyledTableCell>
-                      <StyledTableCell>{donor.isBlocked ? 'Blocked' : donor.isSuspended ? 'Suspended' : 'Active'}</StyledTableCell>
-                      <StyledTableCell>{donor.warningMessage || 'None'}</StyledTableCell>
-                      <StyledTableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                        <button
-                          onClick={() => handleRequestDonation(donor._id)}
-                          style={{ backgroundColor: '#16a34a', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
-                          title="Request Donation"
-                        >
-                          📧
-                        </button>
-                        <button
-                          onClick={() => handleSetStatus('donors', donor._id, { isBlocked: !donor.isBlocked, isSuspended: donor.isSuspended, warningMessage: donor.warningMessage })}
-                          style={{ backgroundColor: donor.isBlocked ? '#dc2626' : '#ef4444', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
-                          title={donor.isBlocked ? 'Unblock' : 'Block'}
-                        >
-                          {donor.isBlocked ? 'Unblock' : 'Block'}
-                        </button>
-                        <button
-                          onClick={() => handleSetStatus('donors', donor._id, { isBlocked: donor.isBlocked, isSuspended: !donor.isSuspended, warningMessage: donor.warningMessage })}
-                          style={{ backgroundColor: donor.isSuspended ? '#f97316' : '#f59e0b', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
-                          title={donor.isSuspended ? 'Unsuspend' : 'Suspend'}
-                        >
-                          {donor.isSuspended ? 'Unsuspend' : 'Suspend'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            const message = prompt('Enter warning message:');
-                            if (message !== null) handleSetStatus('donors', donor._id, { isBlocked: donor.isBlocked, isSuspended: donor.isSuspended, warningMessage: message });
-                          }}
-                          style={{ backgroundColor: '#0ea5e9', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
-                          title="Warn"
-                        >
-                          Warn
-                        </button>
+              <Table stickyHeader aria-label="donors table" sx={{ minWidth: 700 }}>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell>Donor Name</StyledTableCell>
+                    <StyledTableCell>Blood Group</StyledTableCell>
+                    <StyledTableCell>Contact</StyledTableCell>
+                    <StyledTableCell>Status</StyledTableCell>
+                    <StyledTableCell>Warning</StyledTableCell>
+                    <StyledTableCell align="center">Actions</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {loading ? (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={6} align="center">
+                        Loading donors...
                       </StyledTableCell>
                     </StyledTableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  ) : donors.length === 0 ? (
+                    <StyledTableRow>
+                      <StyledTableCell colSpan={6} align="center">
+                        No donors found.
+                      </StyledTableCell>
+                    </StyledTableRow>
+                  ) : (
+                    filteredDonors.map((donor) => (
+                      <StyledTableRow key={donor._id}>
+                        <StyledTableCell>{donor.userId?.name || "N/A"}</StyledTableCell>
+                        <StyledTableCell>{donor.bloodGroup}</StyledTableCell>
+                        <StyledTableCell>{donor.contactNumber}</StyledTableCell>
+                        <StyledTableCell>{donor.isBlocked ? 'Blocked' : donor.isSuspended ? 'Suspended' : 'Active'}</StyledTableCell>
+                        <StyledTableCell>{donor.warningMessage || 'None'}</StyledTableCell>
+                        <StyledTableCell align="center" sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handleRequestDonation(donor._id)}
+                            style={{ backgroundColor: '#16a34a', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
+                            title="Request Donation"
+                          >
+                            📧
+                          </button>
+                          <button
+                            onClick={() => handleSetStatus('donors', donor._id, { isBlocked: !donor.isBlocked, isSuspended: donor.isSuspended, warningMessage: donor.warningMessage })}
+                            style={{ backgroundColor: donor.isBlocked ? '#dc2626' : '#ef4444', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
+                            title={donor.isBlocked ? 'Unblock' : 'Block'}
+                          >
+                            {donor.isBlocked ? 'Unblock' : 'Block'}
+                          </button>
+                          <button
+                            onClick={() => handleSetStatus('donors', donor._id, { isBlocked: donor.isBlocked, isSuspended: !donor.isSuspended, warningMessage: donor.warningMessage })}
+                            style={{ backgroundColor: donor.isSuspended ? '#f97316' : '#f59e0b', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
+                            title={donor.isSuspended ? 'Unsuspend' : 'Suspend'}
+                          >
+                            {donor.isSuspended ? 'Unsuspend' : 'Suspend'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              const message = prompt('Enter warning message:');
+                              if (message !== null) handleSetStatus('donors', donor._id, { isBlocked: donor.isBlocked, isSuspended: donor.isSuspended, warningMessage: message });
+                            }}
+                            style={{ backgroundColor: '#0ea5e9', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
+                            title="Warn"
+                          >
+                            Warn
+                          </button>
+                        </StyledTableCell>
+                      </StyledTableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </>
         )}
         {activeTab === "users" && (
@@ -963,12 +1041,11 @@ export default function AdminDashboard() {
                           )}
                         </StyledTableCell>
                         <StyledTableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            activity.role === 'admin' ? 'bg-red-100 text-red-800' :
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${activity.role === 'admin' ? 'bg-red-100 text-red-800' :
                             activity.role === 'bloodbank' ? 'bg-blue-100 text-blue-800' :
-                            activity.role === 'donor' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                              activity.role === 'donor' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                            }`}>
                             {activity.role}
                           </span>
                         </StyledTableCell>
@@ -1008,6 +1085,234 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "bloodbankRegistration" && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                🏥 Blood Bank Registration & Section User Management
+              </h2>
+
+              {/* Blood Bank Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Blood Bank
+                </label>
+                <select
+                  value={selectedBloodBank?._id || ''}
+                  onChange={(e) => {
+                    const bb = bloodbanks.find(b => b._id === e.target.value);
+                    setSelectedBloodBank(bb);
+                    if (bb) {
+                      fetchSectionUsers(bb._id);
+                    } else {
+                      setSectionUsers([]);
+                    }
+                  }}
+                  className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">-- Select a Blood Bank --</option>
+                  {bloodbanks.filter(bb => bb.status === 'approved').map(bb => (
+                    <option key={bb._id} value={bb._id}>
+                      {bb.name} ({bb.status})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedBloodBank && (
+                <>
+                  {/* Blood Bank Info */}
+                  <div className="mb-6 rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {selectedBloodBank.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>Address:</strong> {selectedBloodBank.address}
+                    </p>
+                    {selectedBloodBank.email && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <strong>Email:</strong> {selectedBloodBank.email}
+                      </p>
+                    )}
+                    {selectedBloodBank.phone && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <strong>Phone:</strong> {selectedBloodBank.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Section Users List */}
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        Section Users
+                      </h3>
+                      <button
+                        onClick={() => setShowSectionUserForm(!showSectionUserForm)}
+                        className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+                      >
+                        {showSectionUserForm ? 'Cancel' : '+ Add Section User'}
+                      </button>
+                    </div>
+
+                    {/* Section User Form */}
+                    {showSectionUserForm && (
+                      <form onSubmit={handleCreateSectionUser} className="mb-6 rounded-lg border border-gray-300 bg-white p-6 dark:border-gray-600 dark:bg-gray-800">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                          Create New Section User
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Section *
+                            </label>
+                            <select
+                              value={sectionUserForm.section}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, section: e.target.value })}
+                              required
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            >
+                              <option value="">Select Section</option>
+                              <option value="centrifuge">Centrifuge Unit</option>
+                              <option value="frontdesk">Front Desk</option>
+                              <option value="store">Store</option>
+                              <option value="bleeding">Bleeding Unit</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Username *
+                            </label>
+                            <input
+                              type="text"
+                              value={sectionUserForm.username}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, username: e.target.value })}
+                              required
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Password *
+                            </label>
+                            <input
+                              type="password"
+                              value={sectionUserForm.password}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, password: e.target.value })}
+                              required
+                              minLength={6}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={sectionUserForm.name}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, name: e.target.value })}
+                              required
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              value={sectionUserForm.email}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, email: e.target.value })}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Phone
+                            </label>
+                            <input
+                              type="tel"
+                              value={sectionUserForm.phone}
+                              onChange={(e) => setSectionUserForm({ ...sectionUserForm, phone: e.target.value })}
+                              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          className="mt-4 px-6 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+                        >
+                          Create Section User
+                        </button>
+                      </form>
+                    )}
+
+                    {/* Section Users Table */}
+                    <TableContainer component={Paper} sx={{ maxHeight: '50vh' }}>
+                      <Table stickyHeader aria-label="section users table">
+                        <TableHead>
+                          <TableRow>
+                            <StyledTableCell>Section</StyledTableCell>
+                            <StyledTableCell>Username</StyledTableCell>
+                            <StyledTableCell>Name</StyledTableCell>
+                            <StyledTableCell>Email</StyledTableCell>
+                            <StyledTableCell>Phone</StyledTableCell>
+                            <StyledTableCell>Status</StyledTableCell>
+                            <StyledTableCell>Actions</StyledTableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {sectionUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={7} align="center">
+                                No section users found. Create one to get started.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            sectionUsers.map((user) => (
+                              <StyledTableRow key={user._id}>
+                                <TableCell>
+                                  <span className="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    {user.section === 'centrifuge' ? '🔄 Centrifuge' :
+                                      user.section === 'frontdesk' ? '🖥️ Front Desk' :
+                                        user.section === 'store' ? '📦 Store' :
+                                          '🩸 Bleeding Unit'}
+                                  </span>
+                                </TableCell>
+                                <TableCell>{user.username}</TableCell>
+                                <TableCell>{user.name}</TableCell>
+                                <TableCell>{user.email || 'N/A'}</TableCell>
+                                <TableCell>{user.phone || 'N/A'}</TableCell>
+                                <TableCell>
+                                  <span className={`px-2 py-1 rounded text-xs font-semibold ${user.isActive && !user.isBlocked
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                    }`}>
+                                    {user.isActive && !user.isBlocked ? 'Active' : 'Inactive'}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <button
+                                    onClick={() => handleDeleteSectionUser(user._id)}
+                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                                  >
+                                    Delete
+                                  </button>
+                                </TableCell>
+                              </StyledTableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
         )}
       </div>
     </Layout>

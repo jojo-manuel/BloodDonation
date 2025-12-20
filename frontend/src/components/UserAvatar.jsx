@@ -9,14 +9,22 @@ export default function UserAvatar() {
 
   useEffect(() => {
     const fetchUser = async () => {
+      // Only fetch user if there's a token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        return; // No token, user is not logged in
+      }
+      
       try {
         const response = await api.get('/users/me');
         if (response.data.success) {
           setUser(response.data.data);
         }
       } catch (error) {
-        // User not logged in, that's okay
-        console.log('User not logged in');
+        // Silently handle 401 errors (user not logged in)
+        if (error.response?.status !== 401) {
+          console.error('Error fetching user data:', error);
+        }
       }
     };
     fetchUser();

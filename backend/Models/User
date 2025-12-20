@@ -2,7 +2,7 @@
   // User authentication model: username, password (hashed), role.
 
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 // Define the User Schema
 const userSchema = new mongoose.Schema({
@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
     trim: true, // Trim whitespace from email
     minlength: [3, "Username must be at least 3 characters long"],
     maxlength: [100, "Username cannot exceed 100 characters"],
-    match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Username must be a valid email format"],
+
   },
   name: {
     type: String,
@@ -40,8 +40,15 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "donor", "bloodbank", "admin"], // Restrict roles
+    enum: ["user", "donor", "bloodbank", "admin", "frontdesk", "doctor", "bleeding_staff", "store_staff", "store_manager", "centrifuge_staff", "other_staff"], // Extended roles for blood bank staff
     required: [true, "Role is required"],
+  },
+  // Reference to the Blood Bank this user belongs to (for staff members)
+  bloodBankId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "BloodBank",
+    default: null,
+    index: true,
   },
   // Fields for password reset flow
   resetPasswordToken: {

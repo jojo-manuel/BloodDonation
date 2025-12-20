@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blood-donor-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blood-donor-db
+  template:
+    metadata:
+      labels:
+        app: blood-donor-db
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: donor-db-storage
+              mountPath: /data/db
+      volumes:
+        - name: donor-db-storage
+          persistentVolumeClaim:
+            claimName: donor-db-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blood-donor-db
+spec:
+  selector:
+    app: blood-donor-db
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: donor-db-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blood-donor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blood-donor
+  template:
+    metadata:
+      labels:
+        app: blood-donor
+    spec:
+      containers:
+        - name: donor
+          image: blood-donor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: MONGODB_URI
+              value: "mongodb://blood-donor-db:27017/donor"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blood-donor
+spec:
+  selector:
+    app: blood-donor
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002

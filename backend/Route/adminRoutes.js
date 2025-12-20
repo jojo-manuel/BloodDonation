@@ -50,4 +50,10 @@ router.get("/donation-requests", adminController.getAllDonationRequests);
 // Get all activities with filters
 router.get("/activities", adminController.getAllActivities);
 
+// Section user management routes
+router.post("/bloodbanks/:bloodBankId/section-users", adminController.createSectionUser);
+router.get("/bloodbanks/:bloodBankId/section-users", adminController.getSectionUsers);
+router.put("/bloodbanks/:bloodBankId/section-users/:userId", adminController.updateSectionUser);
+router.delete("/bloodbanks/:bloodBankId/section-users/:userId", adminController.deleteSectionUser);
+
 module.exports = router;

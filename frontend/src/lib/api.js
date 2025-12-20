@@ -5,7 +5,7 @@ import axios from 'axios';
 
 // Get API URL from environment variables
 // Support both VITE_API_URL and VITE_API_BASE_URL for backward compatibility
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 
 // Always log configuration (including production) for debugging
@@ -30,10 +30,10 @@ api.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
-  
+
   // Log request in production for debugging
   console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-  
+
   return config;
 }, (error) => {
   console.error('❌ Request Error:', error);
@@ -63,12 +63,12 @@ api.interceptors.response.use(
     const fullUrl = error.config ? `${error.config.baseURL}${error.config.url}` : 'unknown';
     const status = error.response?.status;
     const errorMessage = error.response?.data?.message || error.message;
-    
+
     console.error(`❌ API Error: ${requestMethod} ${fullUrl}`);
     console.error(`   Status: ${status || 'Network Error'}`);
     console.error(`   Message: ${errorMessage}`);
     console.error(`   Response Data:`, error.response?.data);
-    
+
     // If it's a "Route not found" error, show more details
     if (errorMessage === 'Route not found' || status === 404) {
       console.error(`🚨 ROUTE NOT FOUND DETAILS:`);
@@ -78,18 +78,18 @@ api.interceptors.response.use(
       console.error(`   Check if this route exists in your backend API`);
     }
     const original = error.config;
-    
+
     // If we're already redirecting to login, don't process any more errors
     if (isRedirecting) {
       return Promise.reject(new Error('Redirecting to login'));
     }
-    
+
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
-      
+
       // Check if we have a refresh token
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       // If no refresh token, clear storage and redirect immediately
       if (!refreshToken) {
         if (!isRedirecting && !window.location.pathname.includes('/login')) {
@@ -100,20 +100,20 @@ api.interceptors.response.use(
         }
         return Promise.reject(new Error('No refresh token'));
       }
-      
+
       try {
         if (!isRefreshing) {
           isRefreshing = true;
           const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
           const newAccess = data?.data?.accessToken;
           const newRefresh = data?.data?.refreshToken;
-          
+
           if (newAccess) {
             localStorage.setItem('accessToken', newAccess);
             if (newRefresh) localStorage.setItem('refreshToken', newRefresh);
             isRefreshing = false;
             onRefreshed(newAccess);
-            
+
             // Retry with updated token
             original.headers.Authorization = `Bearer ${newAccess}`;
             return api(original);
@@ -136,29 +136,29 @@ api.interceptors.response.use(
       } catch (e) {
         isRefreshing = false;
         queue = []; // Clear queue
-        
+
         // Only show alert and redirect once
         if (!isRedirecting && !window.location.pathname.includes('/login')) {
           isRedirecting = true;
-          
+
           // Clear all auth data
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('userRole');
           localStorage.removeItem('username');
-          
+
           // Show user-friendly message
-          const reason = e.response?.status === 403 
-            ? 'Your account has been blocked or suspended.' 
+          const reason = e.response?.status === 403
+            ? 'Your account has been blocked or suspended.'
             : 'Your session has expired. Please log in again.';
-          
+
           // Redirect to login with message
           alert(`⚠️ ${reason}`);
           setTimeout(() => {
             window.location.href = '/login';
           }, 100);
         }
-        
+
         // Prevent further processing
         return Promise.reject(new Error('Session expired'));
       }

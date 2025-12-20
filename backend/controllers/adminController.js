@@ -4,6 +4,7 @@ const BloodBank = require("../Models/BloodBank");
 const Patient = require("../Models/Patient");
 const DonationRequest = require("../Models/DonationRequest");
 const Activity = require("../Models/Activity");
+const BloodBankSectionUser = require("../Models/BloodBankSectionUser");
 const { sendEmail } = require("../utils/email");
 const asyncHandler = require("../Middleware/asyncHandler");
 
@@ -300,5 +301,178 @@ exports.getAllActivities = asyncHandler(async (req, res) => {
     total,
     page: parseInt(page),
     totalPages: Math.ceil(total / parseInt(limit))
+  });
+});
+
+/**
+ * Create a section user for a blood bank
+ * POST /api/admin/bloodbanks/:bloodBankId/section-users
+ */
+exports.createSectionUser = asyncHandler(async (req, res) => {
+  const { bloodBankId } = req.params;
+  const { section, username, password, name, email, phone } = req.body;
+
+  // Validate required fields
+  if (!section || !username || !password || !name) {
+    return res.status(400).json({
+      success: false,
+      message: 'Section, username, password, and name are required'
+    });
+  }
+
+  // Validate section
+  const validSections = ['centrifuge', 'frontdesk', 'store', 'bleeding'];
+  if (!validSections.includes(section)) {
+    return res.status(400).json({
+      success: false,
+      message: `Section must be one of: ${validSections.join(', ')}`
+    });
+  }
+
+  // Check if blood bank exists
+  const bloodBank = await BloodBank.findById(bloodBankId);
+  if (!bloodBank) {
+    return res.status(404).json({
+      success: false,
+      message: 'Blood bank not found'
+    });
+  }
+
+  // Check if username already exists
+  const existingUser = await BloodBankSectionUser.findOne({ username });
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'Username already exists'
+    });
+  }
+
+  // Create section user
+  const sectionUser = await BloodBankSectionUser.create({
+    bloodBankId,
+    section,
+    username,
+    password,
+    name,
+    email,
+    phone,
+    createdBy: req.user.id
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Section user created successfully',
+    data: {
+      id: sectionUser._id,
+      username: sectionUser.username,
+      name: sectionUser.name,
+      section: sectionUser.section,
+      bloodBankId: sectionUser.bloodBankId
+    }
+  });
+});
+
+/**
+ * Get all section users for a blood bank
+ * GET /api/admin/bloodbanks/:bloodBankId/section-users
+ */
+exports.getSectionUsers = asyncHandler(async (req, res) => {
+  const { bloodBankId } = req.params;
+  const { section } = req.query;
+
+  // Check if blood bank exists
+  const bloodBank = await BloodBank.findById(bloodBankId);
+  if (!bloodBank) {
+    return res.status(404).json({
+      success: false,
+      message: 'Blood bank not found'
+    });
+  }
+
+  // Build query
+  const query = { bloodBankId };
+  if (section) {
+    query.section = section;
+  }
+
+  const sectionUsers = await BloodBankSectionUser.find(query)
+    .select('-password')
+    .populate('createdBy', 'name username')
+    .sort({ createdAt: -1 });
+
+  res.json({
+    success: true,
+    data: sectionUsers
+  });
+});
+
+/**
+ * Update a section user
+ * PUT /api/admin/bloodbanks/:bloodBankId/section-users/:userId
+ */
+exports.updateSectionUser = asyncHandler(async (req, res) => {
+  const { bloodBankId, userId } = req.params;
+  const { name, email, phone, password, isActive, isBlocked } = req.body;
+
+  // Check if section user exists and belongs to the blood bank
+  const sectionUser = await BloodBankSectionUser.findOne({
+    _id: userId,
+    bloodBankId
+  });
+
+  if (!sectionUser) {
+    return res.status(404).json({
+      success: false,
+      message: 'Section user not found'
+    });
+  }
+
+  // Update fields
+  if (name) sectionUser.name = name;
+  if (email) sectionUser.email = email;
+  if (phone) sectionUser.phone = phone;
+  if (password) sectionUser.password = password;
+  if (typeof isActive === 'boolean') sectionUser.isActive = isActive;
+  if (typeof isBlocked === 'boolean') sectionUser.isBlocked = isBlocked;
+
+  await sectionUser.save();
+
+  res.json({
+    success: true,
+    message: 'Section user updated successfully',
+    data: {
+      id: sectionUser._id,
+      username: sectionUser.username,
+      name: sectionUser.name,
+      section: sectionUser.section
+    }
+  });
+});
+
+/**
+ * Delete a section user
+ * DELETE /api/admin/bloodbanks/:bloodBankId/section-users/:userId
+ */
+exports.deleteSectionUser = asyncHandler(async (req, res) => {
+  const { bloodBankId, userId } = req.params;
+
+  // Check if section user exists and belongs to the blood bank
+  const sectionUser = await BloodBankSectionUser.findOne({
+    _id: userId,
+    bloodBankId
+  });
+
+  if (!sectionUser) {
+    return res.status(404).json({
+      success: false,
+      message: 'Section user not found'
+    });
+  }
+
+  await BloodBankSectionUser.findByIdAndDelete(userId);
+
+  res.json({
+    success: true,
+    message: 'Section user deleted successfully'
   });
 });
