@@ -100,3 +100,4 @@ build/
 tmp/
 temp/
 .vercel
+.env*.local
