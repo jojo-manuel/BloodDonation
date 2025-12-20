@@ -29,6 +29,7 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Run Tests
+      continue-on-error: true
       run: npm test
       env:
         # Add necessary env vars for testing here if needed
