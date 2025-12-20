@@ -10,6 +10,11 @@ jobs:
   # 1. Test Backend
   test-backend:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
     defaults:
       run:
         working-directory: ./backend
@@ -30,6 +35,7 @@ jobs:
         NODE_ENV: test
         JWT_ACCESS_SECRET: "test_secret"
         JWT_REFRESH_SECRET: "test_secret"
+        MONGO_URI: "mongodb://localhost:27017/test_db"
 
   # 2. Verify Frontend Build
   build-frontend:
