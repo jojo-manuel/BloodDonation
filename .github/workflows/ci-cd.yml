@@ -66,8 +66,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      - name: Debug - List Files
-        run: ls -la
+      - name: Debug - Check Secrets & Clean
+        run: |
+          echo "Org ID Length: ${#VERCEL_ORG_ID}"
+          echo "Project ID Length: ${#VERCEL_PROJECT_ID}"
+          rm -rf .vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       - name: Deploy to Vercel (Remote Build)
         run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --yes
         env:
