@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   # 1. Test Backend
@@ -29,16 +30,53 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Run Tests
-      continue-on-error: true
+      # continue-on-error: true # Uncomment if you want to proceed even if backend tests fail
       run: npm test
       env:
-        # Add necessary env vars for testing here if needed
         NODE_ENV: test
         JWT_ACCESS_SECRET: "test_secret"
         JWT_REFRESH_SECRET: "test_secret"
         MONGO_URI: "mongodb://localhost:27017/test_db"
 
-  # 2. Verify Frontend Build
+  # 2. Lint Frontend
+  lint-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+    - name: Run Lint
+      run: npm run lint
+
+  # 3. Test Frontend
+  test-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install dependencies
+      run: npm ci --legacy-peer-deps
+    - name: Run Tests
+      run: npm test
+
+  # 4. Verify Frontend Build
   build-frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -57,9 +95,9 @@ jobs:
     - name: Build Project
       run: npm run build
 
-  # 3. Deploy to Vercel (Optional - Requires Secrets)
+  # 5. Deploy to Vercel
   deploy:
-    needs: [test-backend, build-frontend]
+    needs: [test-backend, lint-frontend, test-frontend, build-frontend]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
@@ -79,4 +117,3 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-# Trigger new build

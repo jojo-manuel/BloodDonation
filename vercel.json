@@ -19,6 +19,18 @@
             "destination": "/backend/api/index.js"
         },
         {
+            "source": "/assets/(.*)",
+            "destination": "/frontend/assets/$1"
+        },
+        {
+            "source": "/vite.svg",
+            "destination": "/frontend/vite.svg"
+        },
+        {
+            "source": "/favicon.ico",
+            "destination": "/frontend/favicon.ico"
+        },
+        {
             "source": "/((?!api|assets|favicon.ico|.*\\.).*)",
             "destination": "/frontend/index.html"
         }
