@@ -1,0 +1,39 @@
+
+> frontend@0.0.0 lint
+> eslint . --quiet
+
+
+D:\BloodDonation\frontend\features\step_definitions\bloodbank_patient_registration_steps.cjs
+   91:9  error  Unexpected lexical declaration in case block  no-case-declarations
+   96:9  error  Unexpected lexical declaration in case block  no-case-declarations
+  100:9  error  Unexpected lexical declaration in case block  no-case-declarations
+  105:9  error  Unexpected lexical declaration in case block  no-case-declarations
+  110:9  error  Unexpected lexical declaration in case block  no-case-declarations
+  115:9  error  Unexpected lexical declaration in case block  no-case-declarations
+
+D:\BloodDonation\frontend\src\Pages\BloodBankDashboard.jsx
+   471:9   error  Unexpected lexical declaration in case block  no-case-declarations
+   578:9   error  Unexpected lexical declaration in case block  no-case-declarations
+  1509:41  error  Irregular whitespace not allowed              no-irregular-whitespace
+
+D:\BloodDonation\frontend\src\Pages\DonorRegister.jsx
+  23:47  error  Unnecessary escape character: \-  no-useless-escape
+
+D:\BloodDonation\frontend\src\Pages\UserDashboard.jsx
+   998:5   error  Unreachable code                                                           no-unreachable
+  1594:14  error  Unexpected constant truthiness on the left-hand side of a `&&` expression  no-constant-binary-expression
+  1594:14  error  Unexpected constant truthiness on the left-hand side of a `&&` expression  no-constant-binary-expression
+
+D:\BloodDonation\frontend\src\context\ThemeContext.jsx
+  3:14  error  Fast refresh only works when a file only exports components. Move your React context(s) to a separate file  react-refresh/only-export-components
+
+D:\BloodDonation\frontend\tests\playwright\donor-find.spec.js
+  60:95  error  Empty block statement  no-empty
+  61:13  error  Empty block statement  no-empty
+
+D:\BloodDonation\frontend\tests\playwright\donor-request.spec.js
+  65:17  error  Empty block statement  no-empty
+  67:13  error  Empty block statement  no-empty
+
+✖ 18 problems (18 errors, 0 warnings)
+

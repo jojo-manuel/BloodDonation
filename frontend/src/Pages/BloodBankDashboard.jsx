@@ -467,7 +467,7 @@ export default function BloodBankDashboard() {
         filteredBookings = allTokens.filter(b => b.status === 'completed');
         filename = 'completed_bookings';
         break;
-      case 'waiting_today':
+      case 'waiting_today': {
         const today = new Date().toISOString().split('T')[0];
         filteredBookings = allTokens.filter(b =>
           b.date === today &&
@@ -476,6 +476,7 @@ export default function BloodBankDashboard() {
         );
         filename = 'waiting_today';
         break;
+      }
       case 'not_completed':
         filteredBookings = allTokens.filter(b =>
           b.status !== 'completed' &&
@@ -574,7 +575,7 @@ export default function BloodBankDashboard() {
         filename = 'completed_bookings';
         reportTitle = 'Completed Donations Report';
         break;
-      case 'waiting_today':
+      case 'waiting_today': {
         const today = new Date().toISOString().split('T')[0];
         filteredBookings = allTokens.filter(b =>
           b.date === today &&
@@ -584,6 +585,7 @@ export default function BloodBankDashboard() {
         filename = 'waiting_today';
         reportTitle = 'Waiting Today Report';
         break;
+      }
       case 'not_completed':
         filteredBookings = allTokens.filter(b =>
           b.status !== 'completed' &&
@@ -1505,17 +1507,17 @@ export default function BloodBankDashboard() {
                               <div className="flex-1">
                                 <h4 className="font-bold text-lg text-gray-900 dark:text-white">{p.patientName || p.name}</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                  <p>ðŸ©¸ Blood Group: {p.bloodGroup}</p>
-                                  <p>ðŸ  Address: {formatAddress(p.address)}</p>
-                                  <p>ðŸ“‹ MRID: {p.mrid}</p>
-                                  <p>ðŸ“± Phone: {p.phoneNumber}</p>
-                                  <p>ðŸ©¸ Units Required: {p.requiredUnits || p.unitsRequired}</p>
-                                  <p>ðŸ“… Date Needed: {new Date(p.requiredDate || p.dateNeeded).toLocaleDateString()}</p>
+                                  <p>🩸 Blood Group: {p.bloodGroup}</p>
+                                  <p>🏠 Address: {formatAddress(p.address)}</p>
+                                  <p>📋 MRID: {p.mrid}</p>
+                                  <p>📱 Phone: {p.phoneNumber}</p>
+                                  <p>🩸 Units Required: {p.requiredUnits || p.unitsRequired}</p>
+                                  <p>📅 Date Needed: {new Date(p.requiredDate || p.dateNeeded).toLocaleDateString()}</p>
                                 </div>
                                 {/* Donation Requests Section */}
                                 {p.donationRequests && p.donationRequests.length > 0 && (
                                   <div className="mt-4">
-                                    <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">ðŸ©¸ Donation Requests:</h5>
+                                    <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">🩸 Donation Requests:</h5>
                                     <div className="space-y-2">
                                       {p.donationRequests.map((request) => (
                                         <div key={request._id} className="bg-white/20 rounded-lg p-2 text-xs">

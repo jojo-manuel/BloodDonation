@@ -62,9 +62,9 @@ test.describe('Donor Request Tests', () => {
         try {
           localStorage.clear();
           sessionStorage.clear();
-        } catch {}
+        } catch { /* ignore */ }
       });
-    } catch {}
+    } catch { /* ignore */ }
   });
 
   test('should display donors and show Request button', async ({ page }) => {

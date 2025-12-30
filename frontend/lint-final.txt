@@ -1,0 +1,10 @@
+
+> frontend@0.0.0 lint
+> eslint . --quiet
+
+
+D:\BloodDonation\frontend\src\Pages\UserDashboard.jsx
+  1594:14  error  Unexpected constant truthiness on the left-hand side of a `&&` expression  no-constant-binary-expression
+
+✖ 1 problem (1 error, 0 warnings)
+

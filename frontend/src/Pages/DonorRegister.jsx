@@ -20,7 +20,7 @@ const NAME_REGEX = /^[A-Za-z ]+$/;
 const PHONE_IN_REGEX = /^[6-9]\d{9}$/;
 const PINCODE_REGEX = /^\d{6}$/;
 const CITY_DISTRICT_REGEX = /^[A-Za-z ]+$/;
-const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9 ,.\-]+$/;
+const ALNUM_SPACE_ADDR_REGEX = /^[A-Za-z0-9 ,.-]+$/;
 
 function Navbar() {
   return (
@@ -449,7 +449,7 @@ export default function DonorRegister() {
   const handleChange = (e) => {
     const { name, value: inputValue } = e.target;
     let processedValue = inputValue;
-    
+
     // Validate pincode - only allow 6 digits
     if (name === "pincode") {
       // Remove all non-numeric characters
@@ -457,7 +457,7 @@ export default function DonorRegister() {
       // Limit to 6 digits
       processedValue = processedValue.slice(0, 6);
     }
-    
+
     if (name === "firstName" || name === "lastName") {
       processedValue = inputValue.replace(/[^a-zA-Z\s]/g, "");
       processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
@@ -501,17 +501,15 @@ export default function DonorRegister() {
         <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
           <button
             onClick={() => setIsDonor(true)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             {isAlreadyDonor ? "Edit Donor Details" : "Become a Donor"}
           </button>
           <button
             onClick={() => setIsDonor(false)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${
-              !isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-            }`}
+            className={`px-6 py-2 rounded-full font-semibold transition ${!isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
+              }`}
           >
             User Registration
           </button>
@@ -812,7 +810,7 @@ export default function DonorRegister() {
               const today = new Date();
               const age18Date = new Date(dobDate);
               age18Date.setFullYear(age18Date.getFullYear() + 18);
-              
+
               if (donationDate < age18Date) {
                 return <p className="mt-1 text-xs text-red-500">⚠️ Donation date must be after you turned 18</p>;
               }

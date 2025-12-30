@@ -57,8 +57,8 @@ test.describe('Donor Find/Search', () => {
   test.beforeEach(async ({ page }) => {
     try {
       await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 10000 });
-      await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch {} });
-    } catch {}
+      await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* ignore */ } });
+    } catch { /* ignore */ }
   });
 
   test('should list donors on the find page', async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe('Donor Find/Search', () => {
     // Attempt to trigger a search: click a visible Search/Find button if present
     const searchButton = page.locator('button:has-text("Search"), button:has-text("Find")').first();
     if (await searchButton.isVisible().catch(() => false)) {
-      await searchButton.click().catch(() => {});
+      await searchButton.click().catch(() => { });
     }
 
     await page.waitForTimeout(1500);
@@ -135,7 +135,7 @@ test.describe('Donor Find/Search', () => {
 
     const searchButton = page.locator('button:has-text("Search"), button:has-text("Find")').first();
     if (await searchButton.isVisible().catch(() => false)) {
-      await searchButton.click().catch(() => {});
+      await searchButton.click().catch(() => { });
     }
 
     await page.waitForTimeout(1500);
@@ -163,7 +163,7 @@ test.describe('Donor Find/Search', () => {
     if (await mridInput.isVisible().catch(() => false)) {
       await mridInput.fill('MR123');
       if (await searchBtn.isVisible().catch(() => false)) {
-        await searchBtn.click().catch(() => {});
+        await searchBtn.click().catch(() => { });
       }
     }
 
