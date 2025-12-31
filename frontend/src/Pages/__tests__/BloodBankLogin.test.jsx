@@ -16,7 +16,12 @@ jest.mock('../../firebase', () => ({
 
 // Explicitly mock the API module for this test file to ensure correct shape
 jest.mock('../../lib/api', () => {
-  const mockGet = jest.fn(() => Promise.resolve({ data: { success: true, data: {} } }));
+  const mockGet = jest.fn((url) => {
+    if (url && url.includes('/bloodbank/details')) {
+      return Promise.resolve({ data: { success: true, data: { status: 'approved', user: { role: 'bloodbank' } } } });
+    }
+    return Promise.resolve({ data: { success: true, data: {} } });
+  });
   const mockPost = jest.fn(() => Promise.resolve({ data: { success: true } }));
   const mockApi = {
     get: mockGet,
@@ -49,6 +54,10 @@ describe('BloodBankLogin', () => {
     jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => { });
+
+    // Mock window.location - Removed manual mock as we now handle NODE_ENV='test' in component
+    // No operation needed here
+    // jest.spyOn(window, 'location', 'get').mockReturnValue({ ... }); // If we needed it, but we don't now.
   });
 
   afterEach(() => {

@@ -1,0 +1,238 @@
+
+> frontend@0.0.0 test
+> jest --transformIgnorePatterns "node_modules/(?!@testing-library)"
+
+PASS src/Pages/__tests__/PatientRegister.test.jsx
+PASS src/Pages/__tests__/LandingPage.test.jsx
+PASS src/Pages/__tests__/DonorDashboard.test.jsx
+FAIL src/Pages/__tests__/BloodBankLogin.test.jsx
+  ● Console
+
+    console.error
+      Error: Not implemented: navigation (except hash changes)
+          at module.exports (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\browser\not-implemented.js:9:17)
+          at navigateFetch (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\window\navigation.js:77:3)
+          at exports.navigate (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\window\navigation.js:55:3)
+          at LocationImpl._locationObjectNavigate (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:30:5)
+          at LocationImpl._locationObjectSetterNavigate (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:24:17)
+          at LocationImpl.set href [as href] (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\window\Location-impl.js:46:10)
+          at Location.set href [as href] (D:\BloodDonation\frontend\node_modules\jsdom\lib\jsdom\living\generated\Location.js:125:37)
+          at D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:95:39
+          at Generator.call (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at Generator._invoke [as next] (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5) {
+        type: 'not implemented'
+      }
+
+    [0m [90m 93 |[39m                     userId[33m:[39m res[33m.[39mdata[33m.[39mdata[33m.[39muser[33m.[39mid
+     [90m 94 |[39m                   })[33m;[39m
+    [31m[1m>[22m[39m[90m 95 |[39m                   window[33m.[39mlocation[33m.[39mhref [33m=[39m [32m`http://localhost:5174/bloodbank/dashboard?${params.toString()}`[39m[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 96 |[39m                 }
+     [90m 97 |[39m               } [36melse[39m [36mif[39m (status [33m===[39m [32m'pending'[39m) {
+     [90m 98 |[39m                 navigate([32m"/bloodbank-pending-approval"[39m)[33m;[39m[0m
+
+      at VirtualConsole.<anonymous> (node_modules/@jest/environment-jsdom-abstract/build/index.js:78:23)
+      at module.exports (node_modules/jsdom/lib/jsdom/browser/not-implemented.js:12:26)
+      at navigateFetch (node_modules/jsdom/lib/jsdom/living/window/navigation.js:77:3)
+      at exports.navigate (node_modules/jsdom/lib/jsdom/living/window/navigation.js:55:3)
+      at LocationImpl._locationObjectNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:30:5)
+      at LocationImpl._locationObjectSetterNavigate (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:24:17)
+      at LocationImpl.set href [as href] (node_modules/jsdom/lib/jsdom/living/window/Location-impl.js:46:10)
+      at Location.set href [as href] (node_modules/jsdom/lib/jsdom/living/generated/Location.js:125:37)
+      at src/Pages/BloodBankLogin.jsx:95:39
+      at Generator.call (src/Pages/BloodBankLogin.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+
+    console.error
+      Google login error: { response: { data: { message: 'Google login failed on backend' } } }
+
+    [0m [90m 190 |[39m       }
+     [90m 191 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 192 |[39m       console[33m.[39merror([32m"Google login error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 193 |[39m       alert([32m"Google login failed: "[39m [33m+[39m (error[33m.[39mresponse[33m?[39m[33m.[39mdata[33m?[39m[33m.[39mmessage [33m||[39m error[33m.[39mmessage))[33m;[39m
+     [90m 194 |[39m     }
+     [90m 195 |[39m   }[33m;[39m[0m
+
+      at error (src/Pages/BloodBankLogin.jsx:192:15)
+      at Generator.call (src/Pages/BloodBankLogin.jsx:2:1)
+      at Generator._invoke [as throw] (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+
+  ● BloodBankLogin › handles regular login submission
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "/bloodbank/dashboard"
+
+    Number of calls: 0
+
+    [0m [90m 120 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'userId'[39m[33m,[39m [32m'user-id'[39m)[33m;[39m
+     [90m 121 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'role'[39m[33m,[39m [32m'bloodbank'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 122 |[39m     expect(mockNavigate)[33m.[39mtoHaveBeenCalledWith([32m'/bloodbank/dashboard'[39m)[33m;[39m
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 123 |[39m   })[33m;[39m
+     [90m 124 |[39m
+     [90m 125 |[39m   test([32m'handles Google login'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at toHaveBeenCalledWith (src/Pages/__tests__/BloodBankLogin.test.jsx:122:26)
+      at Generator.call (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+
+PASS src/Pages/__tests__/UserDashboard.test.jsx
+  ● Console
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      📊 Patients Response: { success: true, data: [] }
+
+      at log (src/Pages/UserDashboard.jsx:494:15)
+
+    console.log
+      ✅ Patients loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:498:17)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+          at Array.forEach (<anonymous>)
+
+
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       1 failed, 4 skipped, 21 passed, 26 total
+Snapshots:   0 total
+Time:        3.013 s
+Ran all test suites.

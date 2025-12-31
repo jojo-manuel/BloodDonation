@@ -75,6 +75,16 @@ describe('UserDashboard Component', () => {
         return Promise.resolve({ data: { success: true, data: mockRequests[0] } });
       }
 
+      if (url === '/requests') {
+        return Promise.resolve({ data: { success: true, data: [] } });
+      }
+
+      if (url === '/patients') {
+        return Promise.resolve({ data: { success: true, data: [] } });
+      }
+      if (url === '/bloodbanks') {
+        return Promise.resolve({ data: { success: true, data: [] } });
+      }
       console.warn(`Unhandled GET URL: ${url}`);
       return Promise.resolve({ data: { success: false, message: 'Not found' } });
     });
@@ -169,13 +179,13 @@ describe('UserDashboard Component', () => {
     fireEvent.click(searchByMRIDTab);
     expect(screen.getByText(/Search Patient by MRID/i)).toBeInTheDocument();
 
-    const myRequestsTab = screen.getByRole('button', { name: /My Requests/i });
+    const myRequestsTab = screen.getAllByRole('button', { name: /My Requests/i })[0];
     fireEvent.click(myRequestsTab);
-    expect(screen.getByText(/My Requests/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/My Requests/i)[0]).toBeInTheDocument();
 
     const leaveReviewsTab = screen.getByRole('button', { name: /Leave Reviews/i });
     fireEvent.click(leaveReviewsTab);
-    expect(screen.getByText(/Leave Reviews/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Leave Reviews/i })).toBeInTheDocument();
   });
 
   // Simplified booking test to ensure modal opens
@@ -192,11 +202,11 @@ describe('UserDashboard Component', () => {
     });
 
     // Find the first "Book Slot" button (there might be multiple)
-    const bookButtons = screen.getAllByRole('button', { name: /Book Slot/i });
+    const bookButtons = screen.getAllByRole('button', { name: /Request Donation/i });
     fireEvent.click(bookButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/Book Donation Slot Directly/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Send Donation Request/i })).toBeInTheDocument();
     });
   });
 });

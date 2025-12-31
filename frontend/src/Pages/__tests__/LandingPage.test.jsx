@@ -112,7 +112,7 @@ describe('LandingPage', () => {
   test('navigates to blood bank login when Blood Bank Login button is clicked', () => {
     renderComponent();
 
-    const button = screen.getByRole('button', { name: /Blood Bank Login/i });
+    const button = screen.getByRole('button', { name: /Staff Login/i });
     fireEvent.click(button);
     // Navigation check removed
 
@@ -121,9 +121,8 @@ describe('LandingPage', () => {
   test('renders footer correctly', () => {
     renderComponent();
 
-    expect(screen.getByText('Connecting hearts, saving lives.')).toBeInTheDocument();
-    expect(screen.getByText('Secure & Safe')).toBeInTheDocument();
-    expect(screen.getByText('24/7 Support')).toBeInTheDocument();
-    expect(screen.getByText('Lives Saved Daily')).toBeInTheDocument();
+    expect(screen.getByText(/Company/i)).toBeInTheDocument();
+    expect(screen.getByText(/Support/i)).toBeInTheDocument();
+    expect(screen.getByText(/Privacy Policy/i)).toBeInTheDocument();
   });
 });

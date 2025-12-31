@@ -1,0 +1,152 @@
+  console.log
+    🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+  console.log
+      Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+  console.log
+      MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+  console.log
+      Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+  console.log
+    ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+  console.log
+    🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+  console.log
+      Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+  console.log
+      MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+  console.log
+      Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+  console.log
+    ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+  console.log
+    🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+  console.log
+      Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+  console.log
+      MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+  console.log
+      Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+  console.log
+    ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+  console.log
+    🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+  console.log
+      Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+  console.log
+      MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+  console.log
+      Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+  console.log
+    ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+  console.log
+    📊 Patients Response: { success: true, data: [] }
+
+      at log (src/Pages/UserDashboard.jsx:494:15)
+
+  console.log
+    ✅ Patients loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:498:17)
+
+  console.log
+    🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+          at Array.forEach (<anonymous>)
+
+  console.log
+      Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+          at Array.forEach (<anonymous>)
+
+  console.log
+      MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+          at Array.forEach (<anonymous>)
+
+  console.log
+      Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+          at Array.forEach (<anonymous>)
+
+  console.log
+    ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+          at Array.forEach (<anonymous>)
+
+PASS src/Pages/__tests__/UserDashboard.test.jsx
+  UserDashboard Component
+    √ renders Find Donors tab by default (141 ms)
+    √ search donors by blood group and city (171 ms)
+    √ tab navigation (158 ms)
+    √ direct booking modal opens (174 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        3.917 s
+Ran all test suites matching src/Pages/__tests__/UserDashboard.test.jsx.

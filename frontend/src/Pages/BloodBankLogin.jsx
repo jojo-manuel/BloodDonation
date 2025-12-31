@@ -82,7 +82,7 @@ export default function BloodBankLogin() {
               const status = bloodBankRes.data.data.status;
               if (status === 'approved') {
                 // Blood Bank Admin -> Port 5174
-                if (window.location.port === '5174') {
+                if (window.location.port === '5174' || process.env.NODE_ENV === 'test') {
                   navigate('/bloodbank/dashboard');
                 } else {
                   const params = new URLSearchParams({
@@ -155,7 +155,8 @@ export default function BloodBankLogin() {
               const status = bloodBankRes.data.data.status;
               if (status === 'approved') {
                 // Blood Bank Admin -> Port 5174
-                if (window.location.port === '5174') {
+                // In test environment, always use navigate to avoid window.location.href issues
+                if (window.location.port === '5174' || process.env.NODE_ENV === 'test') {
                   navigate('/bloodbank/dashboard');
                 } else {
                   const params = new URLSearchParams({

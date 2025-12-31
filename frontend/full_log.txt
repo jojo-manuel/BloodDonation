@@ -1,0 +1,232 @@
+
+> frontend@0.0.0 test
+> jest --transformIgnorePatterns "node_modules/(?!@testing-library)"
+
+FAIL src/Pages/__tests__/BloodBankLogin.test.jsx
+  ● BloodBankLogin › renders login form correctly
+
+    TypeError: Cannot redefine property: location
+        at Object.defineProperty (<anonymous>)
+
+    [0m [90m 58 |[39m     [90m// Mock window.location[39m
+     [90m 59 |[39m     [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m     [33mObject[39m[33m.[39mdefineProperty(window[33m,[39m [32m'location'[39m[33m,[39m {
+     [90m    |[39m            [31m[1m^[22m[39m
+     [90m 61 |[39m       value[33m:[39m {
+     [90m 62 |[39m         port[33m:[39m [32m'5174'[39m[33m,[39m
+     [90m 63 |[39m         href[33m:[39m [32m''[39m[33m,[39m[0m
+
+      at Object.defineProperty (src/Pages/__tests__/BloodBankLogin.test.jsx:60:12)
+
+  ● BloodBankLogin › handles regular login submission
+
+    TypeError: Cannot redefine property: location
+        at Object.defineProperty (<anonymous>)
+
+    [0m [90m 58 |[39m     [90m// Mock window.location[39m
+     [90m 59 |[39m     [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m     [33mObject[39m[33m.[39mdefineProperty(window[33m,[39m [32m'location'[39m[33m,[39m {
+     [90m    |[39m            [31m[1m^[22m[39m
+     [90m 61 |[39m       value[33m:[39m {
+     [90m 62 |[39m         port[33m:[39m [32m'5174'[39m[33m,[39m
+     [90m 63 |[39m         href[33m:[39m [32m''[39m[33m,[39m[0m
+
+      at Object.defineProperty (src/Pages/__tests__/BloodBankLogin.test.jsx:60:12)
+
+  ● BloodBankLogin › handles Google login
+
+    TypeError: Cannot redefine property: location
+        at Object.defineProperty (<anonymous>)
+
+    [0m [90m 58 |[39m     [90m// Mock window.location[39m
+     [90m 59 |[39m     [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m     [33mObject[39m[33m.[39mdefineProperty(window[33m,[39m [32m'location'[39m[33m,[39m {
+     [90m    |[39m            [31m[1m^[22m[39m
+     [90m 61 |[39m       value[33m:[39m {
+     [90m 62 |[39m         port[33m:[39m [32m'5174'[39m[33m,[39m
+     [90m 63 |[39m         href[33m:[39m [32m''[39m[33m,[39m[0m
+
+      at Object.defineProperty (src/Pages/__tests__/BloodBankLogin.test.jsx:60:12)
+
+  ● BloodBankLogin › handles Google login error
+
+    TypeError: Cannot redefine property: location
+        at Object.defineProperty (<anonymous>)
+
+    [0m [90m 58 |[39m     [90m// Mock window.location[39m
+     [90m 59 |[39m     [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m     [33mObject[39m[33m.[39mdefineProperty(window[33m,[39m [32m'location'[39m[33m,[39m {
+     [90m    |[39m            [31m[1m^[22m[39m
+     [90m 61 |[39m       value[33m:[39m {
+     [90m 62 |[39m         port[33m:[39m [32m'5174'[39m[33m,[39m
+     [90m 63 |[39m         href[33m:[39m [32m''[39m[33m,[39m[0m
+
+      at Object.defineProperty (src/Pages/__tests__/BloodBankLogin.test.jsx:60:12)
+
+  ● BloodBankLogin › handles API error for Google login
+
+    TypeError: Cannot redefine property: location
+        at Object.defineProperty (<anonymous>)
+
+    [0m [90m 58 |[39m     [90m// Mock window.location[39m
+     [90m 59 |[39m     [36mdelete[39m window[33m.[39mlocation[33m;[39m
+    [31m[1m>[22m[39m[90m 60 |[39m     [33mObject[39m[33m.[39mdefineProperty(window[33m,[39m [32m'location'[39m[33m,[39m {
+     [90m    |[39m            [31m[1m^[22m[39m
+     [90m 61 |[39m       value[33m:[39m {
+     [90m 62 |[39m         port[33m:[39m [32m'5174'[39m[33m,[39m
+     [90m 63 |[39m         href[33m:[39m [32m''[39m[33m,[39m[0m
+
+      at Object.defineProperty (src/Pages/__tests__/BloodBankLogin.test.jsx:60:12)
+
+PASS src/Pages/__tests__/LandingPage.test.jsx
+PASS src/Pages/__tests__/DonorDashboard.test.jsx
+PASS src/Pages/__tests__/PatientRegister.test.jsx
+PASS src/Pages/__tests__/UserDashboard.test.jsx
+  ● Console
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+
+    console.log
+      📊 Patients Response: { success: true, data: [] }
+
+      at log (src/Pages/UserDashboard.jsx:494:15)
+
+    console.log
+      ✅ Patients loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:498:17)
+
+    console.log
+      🔍 Auto-selection check triggered:
+
+      at log (src/Pages/UserDashboard.jsx:762:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        Blood Bank Selected:
+
+      at log (src/Pages/UserDashboard.jsx:763:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        MRID Entered:
+
+      at log (src/Pages/UserDashboard.jsx:764:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+        Total Patients Loaded: 0
+
+      at log (src/Pages/UserDashboard.jsx:765:13)
+          at Array.forEach (<anonymous>)
+
+    console.log
+      ⏸️ Skipping auto-selection (missing criteria)
+
+      at log (src/Pages/UserDashboard.jsx:768:15)
+          at Array.forEach (<anonymous>)
+
+
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       5 failed, 4 skipped, 17 passed, 26 total
+Snapshots:   0 total
+Time:        3.183 s, estimated 4 s
+Ran all test suites.
