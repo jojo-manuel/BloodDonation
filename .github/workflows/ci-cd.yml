@@ -115,12 +115,13 @@ jobs:
       - name: Deploy to Vercel (Remote Build)
         working-directory: ./frontend
         run: |
+          # Sanitize secrets (remove trailing newlines/whitespace)
+          export VERCEL_ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '\n\r')
+          export VERCEL_PROJECT_ID=$(echo "${{ secrets.VERCEL_PROJECT_ID }}" | tr -d '\n\r')
+          
           # Clean potential conflicting Vercel configs
           rm -rf .vercel
           rm -rf ../.vercel
           
-          # Deploy with debug flag for more info
+          # Deploy with sanitized keys (env vars are now set correctly)
           vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes --debug
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
