@@ -115,8 +115,12 @@ jobs:
       - name: Deploy to Vercel (Remote Build)
         working-directory: ./frontend
         run: |
+          # Clean potential conflicting Vercel configs
           rm -rf .vercel
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} --yes
+          rm -rf ../.vercel
+          
+          # Deploy with debug flag for more info
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes --debug
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
