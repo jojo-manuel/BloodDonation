@@ -1,0 +1,114 @@
+
+> frontend@0.0.0 test
+> jest --transformIgnorePatterns "node_modules/(?!@testing-library)"
+
+FAIL src/Pages/__tests__/LandingPage.test.jsx
+  ● Test suite failed to run
+
+    ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\BloodDonation\frontend\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m module[33m.[39mexports [33m=[39m {
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 2 |[39m   presets[33m:[39m [
+     [90m 3 |[39m     [32m'@babel/preset-env'[39m[33m,[39m
+     [90m 4 |[39m     [32m'@babel/preset-react'[39m[0m
+
+      at file:/D:/BloodDonation/frontend/babel.config.js:1:1
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:55:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:74:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/index.js:195:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/index.js:231:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:402:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+
+FAIL src/Pages/__tests__/BloodBankLogin.test.jsx
+  ● Test suite failed to run
+
+    ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\BloodDonation\frontend\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m module[33m.[39mexports [33m=[39m {
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 2 |[39m   presets[33m:[39m [
+     [90m 3 |[39m     [32m'@babel/preset-env'[39m[33m,[39m
+     [90m 4 |[39m     [32m'@babel/preset-react'[39m[0m
+
+      at file:/D:/BloodDonation/frontend/babel.config.js:1:1
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:55:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:74:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/index.js:195:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/index.js:231:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:402:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+
+FAIL src/Pages/__tests__/DonorDashboard.test.jsx
+  ● Test suite failed to run
+
+    ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\BloodDonation\frontend\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m module[33m.[39mexports [33m=[39m {
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 2 |[39m   presets[33m:[39m [
+     [90m 3 |[39m     [32m'@babel/preset-env'[39m[33m,[39m
+     [90m 4 |[39m     [32m'@babel/preset-react'[39m[0m
+
+      at file:/D:/BloodDonation/frontend/babel.config.js:1:1
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:55:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:74:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/index.js:195:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/index.js:231:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:402:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+
+FAIL src/Pages/__tests__/UserDashboard.test.jsx
+  ● Test suite failed to run
+
+    ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\BloodDonation\frontend\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m module[33m.[39mexports [33m=[39m {
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 2 |[39m   presets[33m:[39m [
+     [90m 3 |[39m     [32m'@babel/preset-env'[39m[33m,[39m
+     [90m 4 |[39m     [32m'@babel/preset-react'[39m[0m
+
+      at file:/D:/BloodDonation/frontend/babel.config.js:1:1
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:55:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:74:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/index.js:195:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/index.js:231:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:402:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+
+FAIL src/Pages/__tests__/PatientRegister.test.jsx
+  ● Test suite failed to run
+
+    ReferenceError: module is not defined in ES module scope
+    This file is being treated as an ES module because it has a '.js' file extension and 'D:\BloodDonation\frontend\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+
+    [0m[31m[1m>[22m[39m[90m 1 |[39m module[33m.[39mexports [33m=[39m {
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 2 |[39m   presets[33m:[39m [
+     [90m 3 |[39m     [32m'@babel/preset-env'[39m[33m,[39m
+     [90m 4 |[39m     [32m'@babel/preset-react'[39m[0m
+
+      at file:/D:/BloodDonation/frontend/babel.config.js:1:1
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:55:60)
+      at loadPartialConfigSync (node_modules/@babel/core/src/config/index.ts:74:14)
+      at ScriptTransformer._getCacheKey (node_modules/@jest/transform/build/index.js:195:41)
+      at ScriptTransformer._getFileCachePath (node_modules/@jest/transform/build/index.js:231:27)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:402:32)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+
+Test Suites: 5 failed, 5 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.923 s, estimated 2 s
+Ran all test suites.
