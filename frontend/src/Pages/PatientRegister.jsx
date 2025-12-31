@@ -119,12 +119,13 @@ export default function PatientRegister() {
         <form onSubmit={handleSubmit} className="space-y-6 bg-white/10 backdrop-blur-md rounded-2xl p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="patientName">
                 Patient Name *
               </label>
               <input
                 type="text"
                 name="patientName"
+                id="patientName"
                 value={formData.patientName}
                 onChange={handleInputChange}
                 className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
@@ -153,12 +154,16 @@ export default function PatientRegister() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                htmlFor="mrid"
+              >
                 MRID *
               </label>
               <input
                 type="text"
                 name="mrid"
+                id="mrid"
                 value={formData.mrid}
                 onChange={handleInputChange}
                 className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
@@ -168,12 +173,16 @@ export default function PatientRegister() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                htmlFor="phoneNumber"
+              >
                 Phone Number *
               </label>
               <input
                 type="text"
                 name="phoneNumber"
+                id="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
@@ -183,12 +192,13 @@ export default function PatientRegister() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="requiredUnits">
                 Units Required *
               </label>
               <input
                 type="number"
                 name="requiredUnits"
+                id="requiredUnits"
                 value={formData.requiredUnits}
                 onChange={handleInputChange}
                 min="1"
@@ -199,12 +209,13 @@ export default function PatientRegister() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="requiredDate">
                 Date Needed *
               </label>
               <input
                 type="date"
                 name="requiredDate"
+                id="requiredDate"
                 value={formData.requiredDate}
                 onChange={handleInputChange}
                 className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
@@ -214,11 +225,12 @@ export default function PatientRegister() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="address">
               Address *
             </label>
             <textarea
               name="address"
+              id="address"
               value={formData.address}
               onChange={handleInputChange}
               rows="3"

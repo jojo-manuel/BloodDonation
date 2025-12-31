@@ -14,10 +14,24 @@ jest.mock('../../firebase', () => ({
   app: {},
 }));
 
-// Mock API
-jest.mock('../../lib/api', () => ({
-  post: jest.fn(),
-}));
+// Explicitly mock the API module for this test file to ensure correct shape
+jest.mock('../../lib/api', () => {
+  const mockGet = jest.fn(() => Promise.resolve({ data: { success: true, data: {} } }));
+  const mockPost = jest.fn(() => Promise.resolve({ data: { success: true } }));
+  const mockApi = {
+    get: mockGet,
+    post: mockPost,
+    defaults: { headers: { common: {} } },
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } }
+  };
+  return {
+    __esModule: true,
+    default: mockApi,
+    ...mockApi,
+    get: mockGet,
+    post: mockPost,
+  };
+});
 
 // Mock react-router-dom
 const mockNavigate = jest.fn();
@@ -31,10 +45,10 @@ const mockApi = require('../../lib/api');
 describe('BloodBankLogin', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {});
-    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {});
-    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {});
-    jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => {});
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { });
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { });
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { });
+    jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -152,7 +166,7 @@ describe('BloodBankLogin', () => {
 
   test('handles Google login error', async () => {
     const mockSignInWithPopup = require('firebase/auth').signInWithPopup;
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
     mockSignInWithPopup.mockRejectedValueOnce(new Error('Google login failed'));
 
@@ -188,7 +202,7 @@ describe('BloodBankLogin', () => {
       },
     });
 
-    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => { });
 
     renderComponent();
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import DonorDashboard from '../DonorDashboard';
 import api from '../../lib/api';
 
@@ -14,7 +15,11 @@ describe('DonorDashboard', () => {
     api.get.mockResolvedValueOnce({ data: { success: true, data: [] } });
     api.put.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<DonorDashboard />);
+    render(
+      <MemoryRouter>
+        <DonorDashboard />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(/Availability Status/i)).toBeInTheDocument();
     expect(screen.getByText(/You are currently available/i)).toBeInTheDocument();
@@ -45,10 +50,14 @@ describe('DonorDashboard', () => {
     ];
     api.get.mockResolvedValueOnce({ data: { success: true, data: mockRequests } });
 
-    render(<DonorDashboard />);
+    render(
+      <MemoryRouter>
+        <DonorDashboard />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/Donation Requests/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Donation Requests/i)[0]).toBeInTheDocument();
       expect(screen.getByText(/City General Hospital/i)).toBeInTheDocument();
       expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
       expect(screen.getByText(/O\+/i)).toBeInTheDocument();
@@ -73,7 +82,11 @@ describe('DonorDashboard', () => {
     api.post.mockResolvedValueOnce({ data: { success: true } });
     api.get.mockResolvedValueOnce({ data: { success: true, data: [] } }); // After accept, fetch empty list
 
-    render(<DonorDashboard />);
+    render(
+      <MemoryRouter>
+        <DonorDashboard />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/City General Hospital/i)).toBeInTheDocument();
@@ -105,7 +118,11 @@ describe('DonorDashboard', () => {
     api.post.mockResolvedValueOnce({ data: { success: true } });
     api.get.mockResolvedValueOnce({ data: { success: true, data: [] } }); // After decline, fetch empty list
 
-    render(<DonorDashboard />);
+    render(
+      <MemoryRouter>
+        <DonorDashboard />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/City General Hospital/i)).toBeInTheDocument();

@@ -5,6 +5,7 @@ export default {
   transformIgnorePatterns: [
     'node_modules/(?!(jest-)?@?testing-library)',
   ],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/'],
   moduleNameMapper: {
     '\\.css$': 'identity-obj-proxy'
   },

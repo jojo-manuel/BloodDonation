@@ -26,8 +26,8 @@ beforeAll(async () => {
     .send({
       name: 'Test User',
       email: 'testuser@example.com',
-      password: 'Password123',
-      confirmPassword: 'Password123',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
       role: 'user',
       provider: 'local',
     });
@@ -37,7 +37,7 @@ beforeAll(async () => {
     .post('/api/auth/login')
     .send({
       email: 'testuser@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     });
   expect(loginRes.statusCode).toBe(200);
   token = loginRes.body.data.accessToken;
@@ -61,9 +61,9 @@ describe('Donor Registration and Search', () => {
         dob: '1990-01-01',
         gender: 'Male',
         bloodGroup: 'A+',
-        contactNumber: '1234567890',
-        emergencyContactNumber: '0987654321',
-        phone: '1112223333',
+        contactNumber: '9876543210',
+        emergencyContactNumber: '9876543211',
+        phone: '9876543212',
         houseAddress: {
           houseName: 'Test House',
           houseAddress: '123 Test St',
@@ -74,7 +74,8 @@ describe('Donor Registration and Search', () => {
         },
         workAddress: 'Test Work Address',
         availability: true,
-        lastDonatedDate: '2023-01-01T00:00:00.000Z',
+        lastDonatedDate: '2023-01-01',
+        weight: 60,
         contactPreference: 'phone',
       });
     expect(res.statusCode).toBe(201);

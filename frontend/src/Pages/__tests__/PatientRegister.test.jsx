@@ -9,10 +9,11 @@ function renderWithRouter(ui) {
 
 describe('PatientRegister Phone Number Field Validation', () => {
   beforeEach(() => {
+    window.alert = jest.fn();
     renderWithRouter(<PatientRegister />);
   });
 
-  test('shows error alert when phone number is empty', () => {
+  test('shows error alert when phone number is empty', async () => {
     const phoneInput = screen.getByPlaceholderText(/10-digit phone number/i);
     const submitButton = screen.getByRole('button', { name: /register patient/i });
 
@@ -28,13 +29,15 @@ describe('PatientRegister Phone Number Field Validation', () => {
     fireEvent.change(screen.getByLabelText(/Date Needed/i), { target: { value: new Date().toISOString().split('T')[0] } });
 
     // Submit form
-    fireEvent.click(submitButton);
+    await React.act(async () => {
+      fireEvent.submit(submitButton.closest('form'));
+    });
 
     // Expect alert with phone number required error
     expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Phone number is required'));
   });
 
-  test('shows error alert when phone number is not exactly 10 digits', () => {
+  test('shows error alert when phone number is not exactly 10 digits', async () => {
     const phoneInput = screen.getByPlaceholderText(/10-digit phone number/i);
     const submitButton = screen.getByRole('button', { name: /register patient/i });
 
@@ -50,13 +53,15 @@ describe('PatientRegister Phone Number Field Validation', () => {
     fireEvent.change(screen.getByLabelText(/Date Needed/i), { target: { value: new Date().toISOString().split('T')[0] } });
 
     // Submit form
-    fireEvent.click(submitButton);
+    await React.act(async () => {
+      fireEvent.submit(submitButton.closest('form'));
+    });
 
     // Expect alert with phone number length error
     expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Phone number must be exactly 10 digits'));
   });
 
-  test('submits form successfully with valid phone number', () => {
+  test('submits form successfully with valid phone number', async () => {
     const phoneInput = screen.getByPlaceholderText(/10-digit phone number/i);
     const submitButton = screen.getByRole('button', { name: /register patient/i });
 
@@ -72,10 +77,12 @@ describe('PatientRegister Phone Number Field Validation', () => {
     fireEvent.change(screen.getByLabelText(/Date Needed/i), { target: { value: new Date().toISOString().split('T')[0] } });
 
     // Mock window alert to prevent actual alert popup
-    window.alert = jest.fn();
+    // window.alert = jest.fn(); // Already mocked in beforeEach
 
     // Submit form
-    fireEvent.click(submitButton);
+    await React.act(async () => {
+      fireEvent.submit(submitButton.closest('form'));
+    });
 
     // Since backend does not handle phone number, form submission will proceed
     // We expect no validation alert for phone number errors

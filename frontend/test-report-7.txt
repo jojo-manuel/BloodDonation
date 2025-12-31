@@ -1,0 +1,432 @@
+
+> frontend@0.0.0 test
+> jest --transformIgnorePatterns "node_modules/(?!@testing-library)"
+
+FAIL src/Pages/__tests__/PatientRegister.test.jsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: D:\BloodDonation\frontend\src\lib\__mocks__\api.js: Illegal export "__esModule".
+    [0m [90m 12 |[39m }[33m;[39m
+     [90m 13 |[39m
+    [31m[1m>[22m[39m[90m 14 |[39m [36mexport[39m [36mconst[39m __esModule [33m=[39m [36mtrue[39m[33m;[39m
+     [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+     [90m 15 |[39m [36mexport[39m [36mdefault[39m api[33m;[39m
+     [90m 16 |[39m
+     [90m 17 |[39m [36mexport[39m [36mconst[39m getAddressByPostalCode [33m=[39m jest[33m.[39mfn(() [33m=>[39m [33mPromise[39m[33m.[39mresolve({}))[33m;[39m[0m
+
+    [0m [90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState } [36mfrom[39m [32m'react'[39m[33m;[39m
+     [90m 2 |[39m [36mimport[39m { useNavigate } [36mfrom[39m [32m'react-router-dom'[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m api [36mfrom[39m [32m'../lib/api'[39m[33m;[39m
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 4 |[39m [36mimport[39m [33mLayout[39m [36mfrom[39m [32m'../components/Layout'[39m[33m;[39m
+     [90m 5 |[39m
+     [90m 6 |[39m [36mconst[39m [33mBLOOD_GROUPS[39m [33m=[39m [[32m'A+'[39m[33m,[39m [32m'A-'[39m[33m,[39m [32m'B+'[39m[33m,[39m [32m'B-'[39m[33m,[39m [32m'AB+'[39m[33m,[39m [32m'AB-'[39m[33m,[39m [32m'O+'[39m[33m,[39m [32m'O-'[39m][33m;[39m[0m
+
+      at File.buildCodeFrameError (node_modules/@babel/core/src/transformation/file/file.ts:257:12)
+      at NodePath.buildError [as buildCodeFrameError] (node_modules/@babel/traverse/src/path/index.ts:157:21)
+      at buildCodeFrameError (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:533:31)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:531:26)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:523:19)
+      at getLocalExportMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:246:21)
+      at getModuleMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:140:42)
+      at rewriteModuleStatementsAndPrepareHeader (node_modules/@babel/helper-module-transforms/src/index.ts:94:46)
+      at PluginPass.exit (node_modules/@babel/plugin-transform-modules-commonjs/src/index.ts:221:76)
+      at call (node_modules/@babel/traverse/src/visitors.ts:303:14)
+      at NodePath.call [as _call] (node_modules/@babel/traverse/src/path/context.ts:36:20)
+      at NodePath.call (node_modules/@babel/traverse/src/path/context.ts:21:18)
+      at NodePath.call [as visit] (node_modules/@babel/traverse/src/path/context.ts:115:8)
+      at TraversalContext.visit [as visitQueue] (node_modules/@babel/traverse/src/context.ts:148:16)
+      at TraversalContext.visitQueue [as visitSingle] (node_modules/@babel/traverse/src/context.ts:109:19)
+      at TraversalContext.visitSingle [as visit] (node_modules/@babel/traverse/src/context.ts:180:19)
+      at visit (node_modules/@babel/traverse/src/traverse-node.ts:208:17)
+      at traverse (node_modules/@babel/traverse/src/index.ts:84:15)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:119:15)
+          at transformFile.next (<anonymous>)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:49:12)
+          at run.next (<anonymous>)
+      at transform (node_modules/@babel/core/src/transform.ts:29:20)
+          at transform.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at transformSync (node_modules/@babel/core/src/transform.ts:66:52)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:422:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+      at Object.require (src/Pages/PatientRegister.jsx:3:1)
+      at Object.require (src/Pages/__tests__/PatientRegister.test.jsx:3:1)
+
+FAIL src/Pages/__tests__/LandingPage.test.jsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: D:\BloodDonation\frontend\src\lib\__mocks__\api.js: Illegal export "__esModule".
+    [0m [90m 12 |[39m }[33m;[39m
+     [90m 13 |[39m
+    [31m[1m>[22m[39m[90m 14 |[39m [36mexport[39m [36mconst[39m __esModule [33m=[39m [36mtrue[39m[33m;[39m
+     [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+     [90m 15 |[39m [36mexport[39m [36mdefault[39m api[33m;[39m
+     [90m 16 |[39m
+     [90m 17 |[39m [36mexport[39m [36mconst[39m getAddressByPostalCode [33m=[39m jest[33m.[39mfn(() [33m=>[39m [33mPromise[39m[33m.[39mresolve({}))[33m;[39m[0m
+
+    [0m [90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
+     [90m 2 |[39m [36mimport[39m { useNavigate } [36mfrom[39m [32m'react-router-dom'[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m api [36mfrom[39m [32m'../lib/api'[39m[33m;[39m
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 4 |[39m
+     [90m 5 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mUserAvatar[39m() {
+     [90m 6 |[39m   [36mconst[39m [user[33m,[39m setUser] [33m=[39m useState([36mnull[39m)[33m;[39m[0m
+
+      at File.buildCodeFrameError (node_modules/@babel/core/src/transformation/file/file.ts:257:12)
+      at NodePath.buildError [as buildCodeFrameError] (node_modules/@babel/traverse/src/path/index.ts:157:21)
+      at buildCodeFrameError (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:533:31)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:531:26)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:523:19)
+      at getLocalExportMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:246:21)
+      at getModuleMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:140:42)
+      at rewriteModuleStatementsAndPrepareHeader (node_modules/@babel/helper-module-transforms/src/index.ts:94:46)
+      at PluginPass.exit (node_modules/@babel/plugin-transform-modules-commonjs/src/index.ts:221:76)
+      at call (node_modules/@babel/traverse/src/visitors.ts:303:14)
+      at NodePath.call [as _call] (node_modules/@babel/traverse/src/path/context.ts:36:20)
+      at NodePath.call (node_modules/@babel/traverse/src/path/context.ts:21:18)
+      at NodePath.call [as visit] (node_modules/@babel/traverse/src/path/context.ts:115:8)
+      at TraversalContext.visit [as visitQueue] (node_modules/@babel/traverse/src/context.ts:148:16)
+      at TraversalContext.visitQueue [as visitSingle] (node_modules/@babel/traverse/src/context.ts:109:19)
+      at TraversalContext.visitSingle [as visit] (node_modules/@babel/traverse/src/context.ts:180:19)
+      at visit (node_modules/@babel/traverse/src/traverse-node.ts:208:17)
+      at traverse (node_modules/@babel/traverse/src/index.ts:84:15)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:119:15)
+          at transformFile.next (<anonymous>)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:49:12)
+          at run.next (<anonymous>)
+      at transform (node_modules/@babel/core/src/transform.ts:29:20)
+          at transform.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at transformSync (node_modules/@babel/core/src/transform.ts:66:52)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:422:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+      at Object.require (src/components/UserAvatar.jsx:3:1)
+      at Object.require (src/Pages/LandingPage.jsx:3:1)
+      at Object.require (src/Pages/__tests__/LandingPage.test.jsx:5:1)
+
+FAIL src/Pages/__tests__/DonorDashboard.test.jsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: D:\BloodDonation\frontend\src\lib\__mocks__\api.js: Illegal export "__esModule".
+    [0m [90m 12 |[39m }[33m;[39m
+     [90m 13 |[39m
+    [31m[1m>[22m[39m[90m 14 |[39m [36mexport[39m [36mconst[39m __esModule [33m=[39m [36mtrue[39m[33m;[39m
+     [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+     [90m 15 |[39m [36mexport[39m [36mdefault[39m api[33m;[39m
+     [90m 16 |[39m
+     [90m 17 |[39m [36mexport[39m [36mconst[39m getAddressByPostalCode [33m=[39m jest[33m.[39mfn(() [33m=>[39m [33mPromise[39m[33m.[39mresolve({}))[33m;[39m[0m
+
+    [0m [90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m api [36mfrom[39m [32m'../lib/api'[39m[33m;[39m
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 3 |[39m [36mimport[39m [33mLayout[39m [36mfrom[39m [32m'../components/Layout'[39m[33m;[39m
+     [90m 4 |[39m
+     [90m 5 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mDonorDashboard[39m() {[0m
+
+      at File.buildCodeFrameError (node_modules/@babel/core/src/transformation/file/file.ts:257:12)
+      at NodePath.buildError [as buildCodeFrameError] (node_modules/@babel/traverse/src/path/index.ts:157:21)
+      at buildCodeFrameError (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:533:31)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:531:26)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:523:19)
+      at getLocalExportMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:246:21)
+      at getModuleMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:140:42)
+      at rewriteModuleStatementsAndPrepareHeader (node_modules/@babel/helper-module-transforms/src/index.ts:94:46)
+      at PluginPass.exit (node_modules/@babel/plugin-transform-modules-commonjs/src/index.ts:221:76)
+      at call (node_modules/@babel/traverse/src/visitors.ts:303:14)
+      at NodePath.call [as _call] (node_modules/@babel/traverse/src/path/context.ts:36:20)
+      at NodePath.call (node_modules/@babel/traverse/src/path/context.ts:21:18)
+      at NodePath.call [as visit] (node_modules/@babel/traverse/src/path/context.ts:115:8)
+      at TraversalContext.visit [as visitQueue] (node_modules/@babel/traverse/src/context.ts:148:16)
+      at TraversalContext.visitQueue [as visitSingle] (node_modules/@babel/traverse/src/context.ts:109:19)
+      at TraversalContext.visitSingle [as visit] (node_modules/@babel/traverse/src/context.ts:180:19)
+      at visit (node_modules/@babel/traverse/src/traverse-node.ts:208:17)
+      at traverse (node_modules/@babel/traverse/src/index.ts:84:15)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:119:15)
+          at transformFile.next (<anonymous>)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:49:12)
+          at run.next (<anonymous>)
+      at transform (node_modules/@babel/core/src/transform.ts:29:20)
+          at transform.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at transformSync (node_modules/@babel/core/src/transform.ts:66:52)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:422:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+      at Object.require (src/Pages/DonorDashboard.jsx:2:1)
+      at Object.require (src/Pages/__tests__/DonorDashboard.test.jsx:4:1)
+
+FAIL src/Pages/__tests__/UserDashboard.test.jsx
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation, specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    SyntaxError: D:\BloodDonation\frontend\src\lib\__mocks__\api.js: Illegal export "__esModule".
+    [0m [90m 12 |[39m }[33m;[39m
+     [90m 13 |[39m
+    [31m[1m>[22m[39m[90m 14 |[39m [36mexport[39m [36mconst[39m __esModule [33m=[39m [36mtrue[39m[33m;[39m
+     [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+     [90m 15 |[39m [36mexport[39m [36mdefault[39m api[33m;[39m
+     [90m 16 |[39m
+     [90m 17 |[39m [36mexport[39m [36mconst[39m getAddressByPostalCode [33m=[39m jest[33m.[39mfn(() [33m=>[39m [33mPromise[39m[33m.[39mresolve({}))[33m;[39m[0m
+
+    [0m [90m 1 |[39m [36mimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect[33m,[39m useMemo } [36mfrom[39m [32m'react'[39m[33m;[39m
+     [90m 2 |[39m [36mimport[39m { [33mLink[39m[33m,[39m useNavigate } [36mfrom[39m [32m'react-router-dom'[39m[33m;[39m
+    [31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m api [36mfrom[39m [32m'../lib/api'[39m[33m;[39m
+     [90m   |[39m [31m[1m^[22m[39m
+     [90m 4 |[39m [36mimport[39m [33mLayout[39m [36mfrom[39m [32m'../components/Layout'[39m[33m;[39m
+     [90m 5 |[39m [36mimport[39m [33mReviewTab[39m [36mfrom[39m [32m'../components/ReviewTab'[39m[33m;[39m
+     [90m 6 |[39m [90m// TaxiBookingModal removed with taxi booking feature[39m[0m
+
+      at File.buildCodeFrameError (node_modules/@babel/core/src/transformation/file/file.ts:257:12)
+      at NodePath.buildError [as buildCodeFrameError] (node_modules/@babel/traverse/src/path/index.ts:157:21)
+      at buildCodeFrameError (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:533:31)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:531:26)
+          at Array.forEach (<anonymous>)
+      at forEach (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:523:19)
+      at getLocalExportMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:246:21)
+      at getModuleMetadata (node_modules/@babel/helper-module-transforms/src/normalize-and-load-metadata.ts:140:42)
+      at rewriteModuleStatementsAndPrepareHeader (node_modules/@babel/helper-module-transforms/src/index.ts:94:46)
+      at PluginPass.exit (node_modules/@babel/plugin-transform-modules-commonjs/src/index.ts:221:76)
+      at call (node_modules/@babel/traverse/src/visitors.ts:303:14)
+      at NodePath.call [as _call] (node_modules/@babel/traverse/src/path/context.ts:36:20)
+      at NodePath.call (node_modules/@babel/traverse/src/path/context.ts:21:18)
+      at NodePath.call [as visit] (node_modules/@babel/traverse/src/path/context.ts:115:8)
+      at TraversalContext.visit [as visitQueue] (node_modules/@babel/traverse/src/context.ts:148:16)
+      at TraversalContext.visitQueue [as visitSingle] (node_modules/@babel/traverse/src/context.ts:109:19)
+      at TraversalContext.visitSingle [as visit] (node_modules/@babel/traverse/src/context.ts:180:19)
+      at visit (node_modules/@babel/traverse/src/traverse-node.ts:208:17)
+      at traverse (node_modules/@babel/traverse/src/index.ts:84:15)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:119:15)
+          at transformFile.next (<anonymous>)
+      at transformFile (node_modules/@babel/core/src/transformation/index.ts:49:12)
+          at run.next (<anonymous>)
+      at transform (node_modules/@babel/core/src/transform.ts:29:20)
+          at transform.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at fn (node_modules/@babel/core/src/errors/rewrite-stack-trace.ts:99:14)
+      at transformSync (node_modules/@babel/core/src/transform.ts:66:52)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/index.js:422:31)
+      at ScriptTransformer._transformAndBuildScript (node_modules/@jest/transform/build/index.js:519:40)
+      at ScriptTransformer.transform (node_modules/@jest/transform/build/index.js:558:19)
+      at Object.require (src/Pages/UserDashboard.jsx:3:1)
+      at Object.require (src/Pages/__tests__/UserDashboard.test.jsx:4:1)
+
+FAIL src/Pages/__tests__/BloodBankLogin.test.jsx
+  ● Console
+
+    console.error
+      Failed to fetch blood bank details: TypeError: _api.default.get is not a function
+          at get (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:80:44)
+          at Generator.call (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at Generator._invoke [as next] (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+    [0m [90m 106 |[39m             }
+     [90m 107 |[39m           } [36mcatch[39m (bloodBankErr) {
+    [31m[1m>[22m[39m[90m 108 |[39m             console[33m.[39merror([32m"Failed to fetch blood bank details:"[39m[33m,[39m bloodBankErr)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 109 |[39m             navigate([32m"/bloodbank-register"[39m)[33m;[39m
+     [90m 110 |[39m           }
+     [90m 111 |[39m         } [36melse[39m {[0m
+
+      at error (src/Pages/BloodBankLogin.jsx:108:21)
+      at Generator.call (src/Pages/BloodBankLogin.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+
+    console.error
+      Failed to fetch blood bank details: TypeError: _api.default.get is not a function
+          at get (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:153:44)
+          at Generator.call (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at Generator._invoke [as next] (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+          at asyncGeneratorStep (D:\BloodDonation\frontend\src\Pages\BloodBankLogin.jsx:2:1)
+
+    [0m [90m 179 |[39m             }
+     [90m 180 |[39m           } [36mcatch[39m (bloodBankErr) {
+    [31m[1m>[22m[39m[90m 181 |[39m             console[33m.[39merror([32m"Failed to fetch blood bank details:"[39m[33m,[39m bloodBankErr)[33m;[39m
+     [90m     |[39m                     [31m[1m^[22m[39m
+     [90m 182 |[39m             navigate([32m"/bloodbank-register"[39m)[33m;[39m
+     [90m 183 |[39m           }
+     [90m 184 |[39m         } [36melse[39m {[0m
+
+      at error (src/Pages/BloodBankLogin.jsx:181:21)
+      at Generator.call (src/Pages/BloodBankLogin.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+
+    console.error
+      Google login error: { response: { data: { message: 'Google login failed on backend' } } }
+
+    [0m [90m 189 |[39m       }
+     [90m 190 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 191 |[39m       console[33m.[39merror([32m"Google login error:"[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 192 |[39m       alert([32m"Google login failed: "[39m [33m+[39m (error[33m.[39mresponse[33m?[39m[33m.[39mdata[33m?[39m[33m.[39mmessage [33m||[39m error[33m.[39mmessage))[33m;[39m
+     [90m 193 |[39m     }
+     [90m 194 |[39m   }[33m;[39m[0m
+
+      at error (src/Pages/BloodBankLogin.jsx:191:15)
+      at Generator.call (src/Pages/BloodBankLogin.jsx:2:1)
+      at Generator._invoke [as throw] (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/BloodBankLogin.jsx:2:1)
+
+  ● BloodBankLogin › handles regular login submission
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "/bloodbank/dashboard"
+    Received: "/bloodbank-register"
+
+    Number of calls: 1
+
+    [0m [90m  97 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'userId'[39m[33m,[39m [32m'user-id'[39m)[33m;[39m
+     [90m  98 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'role'[39m[33m,[39m [32m'bloodbank'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m  99 |[39m     expect(mockNavigate)[33m.[39mtoHaveBeenCalledWith([32m'/bloodbank/dashboard'[39m)[33m;[39m
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 100 |[39m   })[33m;[39m
+     [90m 101 |[39m
+     [90m 102 |[39m   test([32m'handles Google login'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at toHaveBeenCalledWith (src/Pages/__tests__/BloodBankLogin.test.jsx:99:26)
+      at Generator.call (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+
+  ● BloodBankLogin › handles Google login
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "/bloodbank/dashboard"
+    Received: "/bloodbank-register"
+
+    Number of calls: 1
+
+    [0m [90m 148 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'userId'[39m[33m,[39m [32m'google-user-id'[39m)[33m;[39m
+     [90m 149 |[39m     expect(localStorage[33m.[39msetItem)[33m.[39mtoHaveBeenCalledWith([32m'role'[39m[33m,[39m [32m'bloodbank'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 150 |[39m     expect(mockNavigate)[33m.[39mtoHaveBeenCalledWith([32m'/bloodbank/dashboard'[39m)[33m;[39m
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 151 |[39m   })[33m;[39m
+     [90m 152 |[39m
+     [90m 153 |[39m   test([32m'handles Google login error'[39m[33m,[39m [36masync[39m () [33m=>[39m {[0m
+
+      at toHaveBeenCalledWith (src/Pages/__tests__/BloodBankLogin.test.jsx:150:26)
+      at Generator.call (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at Generator._invoke [as next] (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+      at asyncGeneratorStep (src/Pages/__tests__/BloodBankLogin.test.jsx:2:1)
+
+Test Suites: 5 failed, 5 total
+Tests:       2 failed, 3 passed, 5 total
+Snapshots:   0 total
+Time:        2.029 s
+Ran all test suites.
