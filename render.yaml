@@ -31,6 +31,7 @@ services:
 staticSites:
   - name: blood-frontend
     rootDir: frontend
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
