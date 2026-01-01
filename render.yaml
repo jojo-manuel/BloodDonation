@@ -38,7 +38,7 @@ staticSites:
         fromService:
           type: web
           name: blood-backend
-          envVar: RenderExternalURL
+          property: url
     routes:
       - type: rewrite
         source: /*
