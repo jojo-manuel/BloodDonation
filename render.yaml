@@ -1,102 +1,46 @@
 services:
   # ==========================================
-  # API GATEWAY
+  # BACKEND MONOLITH SERVICE
   # ==========================================
   - type: web
-    name: blood-gateway
+    name: blood-backend
     env: docker
-    rootDir: blood-system/gateway-service
+    rootDir: blood-system/backend-monolith
     plan: free
     numInstances: 1
     envVars:
       - key: PORT
-        value: 10000
-      - key: JWT_SECRET
-        sync: false
+        value: 3000
       - key: NODE_ENV
         value: production
-      # Internal Service URLs (Render Internal DNS)
-      - key: AUTH_SERVICE_URL
-        value: http://blood-auth:10000
-      - key: DONOR_SERVICE_URL
-        value: http://blood-donor:10000
-      - key: INVENTORY_SERVICE_URL
-        value: http://blood-inventory:10000
-      - key: REQUEST_SERVICE_URL
-        value: http://blood-request:10000
-
-  # ==========================================
-  # AUTH SERVICE
-  # ==========================================
-  - type: web
-    name: blood-auth
-    env: docker
-    rootDir: blood-system/auth-service
-    plan: free
-    numInstances: 1
-    envVars:
-      - key: PORT
-        value: 10000
       - key: JWT_SECRET
         sync: false
       - key: MONGODB_URI
         sync: false
-      - key: NODE_ENV
-        value: production
+      # Mail config (Optional, can be added in Dashboard)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
 
   # ==========================================
-  # DONOR SERVICE
+  # FRONTEND STATIC SITE
   # ==========================================
-  - type: web
-    name: blood-donor
-    env: docker
-    rootDir: blood-system/donor-service
-    plan: free
-    numInstances: 1
+  - type: static
+    name: blood-frontend
+    rootDir: frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
     envVars:
-      - key: PORT
-        value: 10000
-      - key: JWT_SECRET
-        sync: false
-      - key: MONGODB_URI
-        sync: false
-      - key: NODE_ENV
-        value: production
-
-  # ==========================================
-  # INVENTORY SERVICE
-  # ==========================================
-  - type: web
-    name: blood-inventory
-    env: docker
-    rootDir: blood-system/inventory-service
-    plan: free
-    numInstances: 1
-    envVars:
-      - key: PORT
-        value: 10000
-      - key: JWT_SECRET
-        sync: false
-      - key: MONGODB_URI
-        sync: false
-      - key: NODE_ENV
-        value: production
-
-  # ==========================================
-  # REQUEST SERVICE
-  # ==========================================
-  - type: web
-    name: blood-request
-    env: docker
-    rootDir: blood-system/request-service
-    plan: free
-    numInstances: 1
-    envVars:
-      - key: PORT
-        value: 10000
-      - key: JWT_SECRET
-        sync: false
-      - key: MONGODB_URI
-        sync: false
-      - key: NODE_ENV
-        value: production
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: blood-backend
+          envVar: RenderExternalURL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
