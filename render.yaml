@@ -25,13 +25,12 @@ services:
       - key: SMTP_PASS
         sync: false
 
-  # ==========================================
-  # FRONTEND STATIC SITE
-  # ==========================================
-  - type: static
-    name: blood-frontend
+# ==========================================
+# FRONTEND STATIC SITE
+# ==========================================
+staticSites:
+  - name: blood-frontend
     rootDir: frontend
-    env: static
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
