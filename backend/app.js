@@ -31,11 +31,15 @@ app.use(
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: false,
-    // Disable additional isolation policies to fix lingering COEP issues
-    crossOriginOpenerPolicy: false,
-    originAgentCluster: false,
   })
 );
+
+// 🛡️ FORCE MANUAL HEADERS to override any defaults
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+  next();
+});
 
 // ✅ CORS configuration: include frontend dev ports and production URLs
 const allowedOrigins = [
@@ -122,11 +126,22 @@ app.use('/api/notifications', require('./Route/notificationRoutes'));
 if (process.env.NODE_ENV === 'production') {
   const staticPath = path.join(__dirname, 'public');
 
-  // 🔍 DEBUG: Log static file status
+  // 🔍 DEEP DEBUG: Recursive file listing
   console.log('📂 Static Assets Path:', staticPath);
+  console.log('📂 CWD:', process.cwd());
+
   try {
     if (fs.existsSync(staticPath)) {
-      console.log('✅ Static folder exists. Contents:', fs.readdirSync(staticPath));
+      const getFiles = (dir) => {
+        const subdirs = fs.readdirSync(dir, { withFileTypes: true });
+        const files = subdirs.map((dirent) => {
+          const res = path.resolve(dir, dirent.name);
+          return dirent.isDirectory() ? getFiles(res) : res;
+        });
+        return Array.prototype.concat(...files);
+      };
+      const allFiles = getFiles(staticPath);
+      console.log('✅ All Static Files:', allFiles);
     } else {
       console.error('❌ Static folder MISSING at:', staticPath);
     }
