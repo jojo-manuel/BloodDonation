@@ -28,98 +28,32 @@ app.use(
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: false,
+    // Disable additional isolation policies to fix lingering COEP issues
+    crossOriginOpenerPolicy: false,
+    originAgentCluster: false,
   })
 );
 
-// ✅ CORS configuration: include frontend dev ports and production URLs
-const allowedOrigins = [
-  'http://localhost:5173',   // Vite default
-  'http://127.0.0.1:5173',
-  'http://localhost:5174',   // Vite preview
-  'http://127.0.0.1:5174',
-  'http://localhost:5175',   // Other dev port
-  'http://127.0.0.1:5175',
-  'http://localhost:5176',   // Additional dev ports
-  'http://127.0.0.1:5176',
-  'http://localhost:3000',   // React default
-  'http://127.0.0.1:3000',
-  'http://localhost:8080',   // Common dev port
-  'http://127.0.0.1:8080',
-];
-
-// Add production origins from environment variable
-if (process.env.CORS_ORIGIN) {
-  const productionOrigins = process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
-  allowedOrigins.push(...productionOrigins);
-  console.log('🌐 Production CORS origins added:', productionOrigins);
-}
-
-const corsOptions = {
-  origin(origin, callback) {
-    // Allow non-browser tools (e.g., Postman) with no Origin
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-
-    console.warn(`❌ CORS blocked request from origin: ${origin}`);
-    console.warn(`✅ Allowed origins:`, allowedOrigins);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-app.use(cors(corsOptions));
-
-// Request logging (dev format)
-app.use(morgan('dev'));
-
-// JSON body parser with sane payload limit
-app.use(express.json({ limit: '1mb' }));
-
-// Cookie parser for signed/unsigned cookies
-app.use(cookieParser());
-
-// Serve static files from uploads directory
-const path = require('path');
-const fs = require('fs');
-
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('📁 Created uploads directory');
-}
-
-app.use('/uploads', express.static(uploadsDir));
-
-// Passport middleware
-app.use(passport.initialize());
-
-// Rate-limiter for auth endpoints to mitigate brute-force
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-
-// Health check endpoint
-app.get('/api/health', (req, res) =>
-  res.json({ status: 'ok', time: new Date().toISOString() })
-);
-
-// Mount routes (note: auth routes are behind rate limiter)
-app.use('/api/auth', authLimiter, require('./Route/authRoutes'));
-app.use('/api/users', require('./Route/userRoutes'));
-app.use('/api/settings', require('./Route/settingsRoutes'));
-app.use('/api/donors', require('./Route/donorRoutes'));
-app.use('/api/reviews', require('./Route/reviewRoutes'));
-app.use('/api/admin', require('./Route/adminRoutes'));
-app.use('/api/patients', require('./Route/PatientCURD'));
-app.use('/api/bloodbank', require('./Route/bloodbankRoutes'));
-// Taxi booking feature removed
-app.use('/api/notifications', require('./Route/notificationRoutes'));
+// ... (existing code) ...
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
+  const staticPath = path.join(__dirname, 'public');
+
+  // 🔍 DEBUG: Log static file status
+  console.log('📂 Static Assets Path:', staticPath);
+  try {
+    if (fs.existsSync(staticPath)) {
+      console.log('✅ Static folder exists. Contents:', fs.readdirSync(staticPath));
+    } else {
+      console.error('❌ Static folder MISSING at:', staticPath);
+    }
+  } catch (err) {
+    console.error('❌ Error reading static folder:', err);
+  }
+
   // Set static folder
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(staticPath));
 
   // Handle SPA fallback
   app.get('*', (req, res, next) => {
