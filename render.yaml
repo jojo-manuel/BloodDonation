@@ -39,16 +39,5 @@ services:
       - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
 
-staticSites:
-  - name: blood-frontend
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
+      - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
