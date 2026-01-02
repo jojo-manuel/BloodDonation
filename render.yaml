@@ -2,6 +2,7 @@ services:
   - type: web
     name: blood-backend
     env: docker
+    plan: free
     envVars:
       - key: PORT
         value: "3000"
@@ -40,6 +41,7 @@ services:
 
 staticSites:
   - name: blood-frontend
+    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
