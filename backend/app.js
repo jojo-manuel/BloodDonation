@@ -15,7 +15,21 @@ require('dotenv').config();
 const app = express();
 
 // Basic security headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://checkout.razorpay.com"],
+        frameSrc: ["'self'", "https://api.razorpay.com"],
+        imgSrc: ["'self'", "data:", "https://*.razorpay.com"],
+        connectSrc: ["'self'", "https://lumberjack.razorpay.com", "https://*.razorpay.com"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+  })
+);
 
 // ✅ CORS configuration: include frontend dev ports and production URLs
 const allowedOrigins = [
