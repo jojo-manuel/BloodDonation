@@ -51,9 +51,15 @@ services:
       - key: PORT
         value: "3001"
       - key: MONGODB_URI
-        sync: false
+        fromService:
+          type: web
+          name: blood-backend
+          envVarKey: MONGO_URI
       - key: JWT_SECRET
-        sync: false
+        fromService:
+          type: web
+          name: blood-backend
+          envVarKey: JWT_ACCESS_SECRET
 
   - type: web
     name: blood-donor
@@ -64,7 +70,10 @@ services:
       - key: PORT
         value: "3002"
       - key: MONGODB_URI
-        sync: false
+        fromService:
+            type: web
+            name: blood-backend
+            envVarKey: MONGO_URI
 
   - type: web
     name: blood-frontend
