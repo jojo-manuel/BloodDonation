@@ -44,6 +44,9 @@ To build and run the application locally using Docker:
 3.  **Access the Application:**
     Open [http://localhost:5000](http://localhost:5000) in your browser.
 
+Last Updated: 2026-01-05 (Deployment Refresh)
+Environment: Production (Render)
+
 ## 3. Environment Variables
 
 Ensure your production environment (Render) has the same environment variables defined as your local `.env`. See `render.yaml` for the list of expected variables.
