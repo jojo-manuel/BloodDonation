@@ -41,3 +41,36 @@ services:
 
       - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
+
+  - type: web
+    name: blood-auth
+    env: docker
+    plan: free
+    rootDir: blood-system/auth-service
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  - type: web
+    name: blood-donor
+    env: docker
+    plan: free
+    rootDir: blood-system/donor-service
+    envVars:
+      - key: PORT
+        value: "3002"
+      - key: MONGODB_URI
+        sync: false
+
+  - type: web
+    name: blood-frontend
+    env: docker
+    plan: free
+    rootDir: frontend
+    envVars:
+      - key: PORT
+        value: "80"
