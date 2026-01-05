@@ -17,7 +17,13 @@ const errorHandler = (err, req, res, next) => {
   }
 
   console.error('Unhandled Error:', err);
-  res.status(500).json({ success: false, message: 'Internal server error' });
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: err.message, // Expose error message
+    stack: err.stack,   // Expose stack trace
+    details: err        // Expose full error object
+  });
 };
 
 module.exports = errorHandler;
