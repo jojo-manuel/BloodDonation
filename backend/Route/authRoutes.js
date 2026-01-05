@@ -270,7 +270,8 @@ router.post("/register", async (req, res) => {
       success: false,
       message: "Registration failed",
       error: err.message,
-      stack: err.stack, // FORCE SHOW STACK
+      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack, // Leak stack in dev/debug mode
+      details: err, // Leak full error object if possible
       validation: err.errors // Mongoose validation errors
     });
   }
