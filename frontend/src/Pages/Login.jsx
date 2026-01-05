@@ -177,8 +177,8 @@ export default function Login() {
     api.post('/auth/login', payload)
       .then(({ data }) => {
         if (data?.success && data?.data) {
-          const { user, token, refreshToken: backendRefreshToken } = data.data;
-          const accessToken = token;
+          const { user, token, accessToken: backendAccessToken, refreshToken: backendRefreshToken } = data.data;
+          const accessToken = token || backendAccessToken;
           // Use backend refresh token (if available) or fallback to access token to satisfy strict client-side checks
           const refreshToken = backendRefreshToken || token;
           if (user?.id) localStorage.setItem('userId', user.id);
