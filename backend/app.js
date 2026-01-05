@@ -12,7 +12,7 @@ const errorHandler = require('./Middleware/errorhandle');
 const path = require('path');
 const fs = require('fs');
 
-// Load environment variables
+// Load environment variables for configuration
 require('dotenv').config();
 
 const app = express();
