@@ -119,11 +119,11 @@ router.post('/forgot-password', async (req, res) => {
           // Don't fail if email sending fails - user can still use the token
         }
       }
-      
+
       // Return success even if email fails (security - don't reveal user existence)
       // In development, you can return the token for testing
-      return res.json({ 
-        success: true, 
+      return res.json({
+        success: true,
         message: 'If the account exists, a reset link has been sent',
         ...(process.env.NODE_ENV === 'development' && { token }) // Only in dev mode
       });
@@ -270,6 +270,8 @@ router.post("/register", async (req, res) => {
       success: false,
       message: "Registration failed",
       error: err.message,
+      stack: err.stack, // FORCE SHOW STACK
+      validation: err.errors // Mongoose validation errors
     });
   }
 });
