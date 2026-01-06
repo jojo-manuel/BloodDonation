@@ -1,14 +1,19 @@
 services:
+  # Backend Monolith - Main API
   - type: web
     name: blood-backend
-    env: docker
+    runtime: docker
     plan: free
+    dockerfilePath: blood-system/backend-monolith/Dockerfile
+    dockerContext: blood-system/backend-monolith
     envVars:
       - key: PORT
         value: "3000"
       - key: NODE_ENV
         value: production
       - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
         sync: false
       - key: JWT_ACCESS_SECRET
         sync: false
@@ -39,47 +44,17 @@ services:
       - key: FIREBASE_CLIENT_X509_CERT_URL
         sync: false
 
-      - key: FIREBASE_CLIENT_X509_CERT_URL
-        sync: false
-
-  - type: web
-    name: blood-auth
-    env: docker
-    plan: free
-    rootDir: blood-system/auth-service
-    envVars:
-      - key: PORT
-        value: "3001"
-      - key: MONGODB_URI
-        fromService:
-          type: web
-          name: blood-backend
-          envVarKey: MONGO_URI
-      - key: JWT_SECRET
-        fromService:
-          type: web
-          name: blood-backend
-          envVarKey: JWT_ACCESS_SECRET
-
-  - type: web
-    name: blood-donor
-    env: docker
-    plan: free
-    rootDir: blood-system/donor-service
-    envVars:
-      - key: PORT
-        value: "3002"
-      - key: MONGODB_URI
-        fromService:
-            type: web
-            name: blood-backend
-            envVarKey: MONGO_URI
-
+  # Frontend - Static Site
   - type: web
     name: blood-frontend
-    env: docker
+    runtime: static
     plan: free
-    rootDir: frontend
+    buildCommand: cd frontend && npm ci --legacy-peer-deps && npm run build
+    staticPublishPath: frontend/dist
     envVars:
-      - key: PORT
-        value: "80"
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
