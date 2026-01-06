@@ -50,12 +50,19 @@ function App() {
             <Route path="/user-register" element={<RequireAuth><UserRegister /></RequireAuth>} />
             <Route path="/bloodbank-register" element={<BloodBankAdminRegister />} />
             <Route path="/bloodbank-admin-register" element={<BloodBankAdminRegister />} />
-            <Route path="/dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
-            <Route path="/user-dashboard" element={<RequireAuth><UserDashboard /></RequireAuth>} />
-            <Route path="/user-profile" element={<RequireAuth><UserProfile /></RequireAuth>} />
-            <Route path="/user-settings" element={<RequireAuth><UserSettings /></RequireAuth>} />
+
+            {/* User/Donor Dashboard - Restricted to users and donors */}
+            <Route path="/dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
+            <Route path="/user-dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
+            <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserProfile /></RequireRole>} />
+            <Route path="/user-settings" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserSettings /></RequireRole>} />
+
+            {/* Admin Dashboard - Restricted to admins */}
             <Route path="/admin-dashboard" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
+
+            {/* Blood Bank Dashboard - Restricted to blood bank staff */}
             <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
+
             <Route path="/bloodbank-login" element={<BloodBankLogin />} />
             <Route path="/staff-login" element={<StaffLogin />} />
             <Route path="/bloodbank-pending-approval" element={<BloodBankPendingApproval />} />

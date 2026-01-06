@@ -1,13 +1,64 @@
 ﻿import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import Layout from "../components/Layout";
 import DonorSearchForm from "../components/DonorSearchForm";
 import UserSearchForm from "../components/UserSearchForm";
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useToast } from "../context/ToastContext";
+import ConfirmationModal from "../components/ConfirmationModal";
+
+/*
+// Custom Confirmation Modal Component
+const ConfirmationModal_Removed = ({ isOpen, title, message, type = 'confirm', onConfirm, onCancel, inputPlaceholder }) => {
+  const [inputValue, setInputValue] = React.useState('');
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-200 dark:border-gray-700 transform transition-all scale-100">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{title}</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">{message}</p>
+
+        {(type === 'prompt_required' || type === 'prompt_optional') && (
+          <input
+            type="text"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white mb-6 focus:ring-2 focus:ring-rose-500 outline-none transition-all"
+            placeholder={inputPlaceholder || "Enter value..."}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            autoFocus
+          />
+        )}
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => { setInputValue(''); onCancel(); }}
+            className="px-5 py-2.5 rounded-xl font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (type === 'prompt_required' && !inputValue.trim()) return;
+              onConfirm(inputValue);
+              setInputValue('');
+            }}
+            className="px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:shadow-lg hover:shadow-red-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={type === 'prompt_required' && !inputValue.trim()}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}; */
 
 export default function BloodBankDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview'); // Default to overview
   const [patients, setPatients] = useState([]);
   const [users, setUsers] = useState([]);
@@ -37,6 +88,20 @@ export default function BloodBankDashboard() {
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
 
+  // Suggestion: Generic Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'confirm', // 'confirm', 'prompt_required', 'prompt_optional'
+    onConfirm: () => { },
+    inputPlaceholder: ''
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  };
+
   // Get user role
   const role = localStorage.getItem('role');
 
@@ -65,6 +130,8 @@ export default function BloodBankDashboard() {
     requiredDate: "",
   });
   const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false); // Loading state for users
+  const { showToast } = useToast();
 
   // Safely format address objects for display
   const formatAddress = (addr) => {
@@ -137,31 +204,35 @@ export default function BloodBankDashboard() {
       }
     } catch (err) {
       console.error("Failed to create staff", err);
-      alert(err.response?.data?.message || "Failed to create staff member");
+      showToast(err.response?.data?.message || "Failed to create staff member", 'error');
     } finally {
       setLoading(false);
     }
   };
 
   // Reset staff password
-  const handleResetPassword = async (staffId, staffName) => {
-    if (!window.confirm(`Are you sure you want to reset the password for ${staffName}? The old password will be invalid immediately.`)) {
-      return;
-    }
-
-    try {
-      const res = await api.post(`/bloodbank/staff/${staffId}/reset-password`);
-      if (res.data.success) {
-        setCreatedStaffCredentials({
-          username: res.data.data.username,
-          generatedPassword: res.data.data.newPassword
-        });
-        setShowCredentialsModal(true);
+  const handleResetPassword = (staffId, staffName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reset Password',
+      message: `Are you sure you want to reset the password for ${staffName}? The old password will be invalid immediately.`,
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.post(`/bloodbank/staff/${staffId}/reset-password`);
+          if (res.data.success) {
+            setCreatedStaffCredentials({
+              username: res.data.data.username,
+              generatedPassword: res.data.data.newPassword
+            });
+            setShowCredentialsModal(true);
+          }
+        } catch (err) {
+          console.error("Failed to reset password", err);
+          showToast(err.response?.data?.message || "Failed to reset password", 'error');
+        }
       }
-    } catch (err) {
-      console.error("Failed to reset password", err);
-      alert(err.response?.data?.message || "Failed to reset password");
-    }
+    });
   };
 
   // Fetch patients list on mount
@@ -209,6 +280,8 @@ export default function BloodBankDashboard() {
     if (activeTab === 'overview') {
       fetchAnalytics(); // Refresh analytics when overview tab is active
     } else if (activeTab === 'users') {
+      fetchUsers(); // Fetch users
+    } else if (activeTab === 'bookings') {
       fetchBookings(); // Fetch actual bookings
     } else if (activeTab === 'received') {
       fetchDonationRequests(); // Fetch received donation requests
@@ -222,18 +295,37 @@ export default function BloodBankDashboard() {
 
   // Refetch bookings when filters change
   useEffect(() => {
-    if (activeTab === 'users') {
+    if (activeTab === 'bookings') {
       fetchBookings();
     }
   }, [filterDate, filterBloodGroup, filterPatientName, filterPatientMRID, filterStatus]);
 
+  // Refetch users when filters change
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [searchUsername, searchUserEmail, searchUserRole, searchUserDate]);
+
   // Fetch users
   const fetchUsers = async () => {
+    setLoadingUsers(true);
     try {
-      const res = await api.get("/bloodbank/users");
+      const params = new URLSearchParams();
+      if (searchUsername) params.append('username', searchUsername);
+      if (searchUserEmail) params.append('email', searchUserEmail);
+      if (searchUserRole) params.append('role', searchUserRole);
+      if (searchUserDate) params.append('date', searchUserDate);
+
+      const queryString = params.toString();
+      const url = queryString ? `/bloodbank/users?${queryString}` : '/bloodbank/users';
+
+      const res = await api.get(url);
       if (res.data.success) setUsers(res.data.data);
     } catch (err) {
       console.error("Failed to fetch users", err);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -266,6 +358,61 @@ export default function BloodBankDashboard() {
     } catch (err) {
       console.error("Failed to fetch donation requests", err);
     }
+  };
+
+  // Handle accept donation request
+  const handleAcceptRequest = async (requestId) => {
+    try {
+      const res = await api.put(`/bloodbank/donation-requests/${requestId}/status`, { status: "accepted" });
+      if (res.data.success) {
+        showToast('Request accepted successfully', 'success');
+        fetchDonationRequests();
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to accept request', 'error');
+    }
+  };
+
+  // Handle reject donation request
+  const handleRejectRequest = (requestId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reject Request',
+      message: "Are you sure you want to reject this donation request?",
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/donation-requests/${requestId}/status`, { status: "rejected" });
+          if (res.data.success) {
+            showToast('Request rejected successfully', 'success');
+            fetchDonationRequests();
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to reject request', 'error');
+        }
+      }
+    });
+  };
+
+  // Handle delete review
+  const handleDeleteReview = (reviewId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Review',
+      message: "Are you sure you want to delete this review?",
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.delete(`/reviews/${reviewId}`);
+          if (res.data.success) {
+            showToast('Review deleted successfully', 'success');
+            fetchReviews();
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to delete review', 'error');
+        }
+      }
+    });
   };
 
   // Fetch donors - Always fetch ALL available donors
@@ -338,37 +485,50 @@ export default function BloodBankDashboard() {
   };
 
   // Handle confirm booking
-  const handleConfirmBooking = async (booking) => {
-    if (!confirm(`Confirm booking for ${booking.donorName}?`)) return;
-
-    try {
-      const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, { status: 'confirmed' });
-      if (res.data.success) {
-        alert('Booking confirmed successfully!');
-        fetchBookings(); // Refresh bookings list
+  const handleConfirmBooking = (booking) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirm Booking',
+      message: `Confirm booking for ${booking.donorName}?`,
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, { status: 'confirmed' });
+          if (res.data.success) {
+            showToast('Booking confirmed successfully!', 'success');
+            fetchBookings(); // Refresh bookings list
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to confirm booking', 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to confirm booking');
-    }
+    });
   };
 
   // Handle reject booking
-  const handleRejectBooking = async (booking) => {
-    const reason = prompt('Enter reason for rejection (optional):');
-    if (reason === null) return; // User clicked cancel
-
-    try {
-      const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, {
-        status: 'rejected',
-        rejectionReason: reason
-      });
-      if (res.data.success) {
-        alert('Booking rejected');
-        fetchBookings(); // Refresh bookings list
+  const handleRejectBooking = (booking) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reject Booking',
+      message: 'Please enter a reason for rejecting this booking:',
+      type: 'prompt_optional',
+      inputPlaceholder: "Reason (optional)",
+      onConfirm: async (reason) => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/bookings/${booking._id}/status`, {
+            status: 'rejected',
+            rejectionReason: reason
+          });
+          if (res.data.success) {
+            showToast('Booking rejected', 'success');
+            fetchBookings(); // Refresh bookings list
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to reject booking', 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject booking');
-    }
+    });
   };
 
   // Handle reschedule booking
@@ -383,12 +543,12 @@ export default function BloodBankDashboard() {
       });
 
       if (res.data.success) {
-        alert('Booking rescheduled successfully!');
+        showToast('Booking rescheduled successfully!', 'success');
         setRescheduleModal(null);
         fetchBookings(); // Refresh bookings list
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reschedule booking');
+      showToast(err.response?.data?.message || 'Failed to reschedule booking', 'error');
     } finally {
       setRescheduling(false);
     }
@@ -397,7 +557,7 @@ export default function BloodBankDashboard() {
   // Frontdesk: Search booking by token number
   const handleTokenSearch = async () => {
     if (!tokenSearch.trim()) {
-      alert('Please enter a token number');
+      showToast('Please enter a token number', 'warning');
       return;
     }
 
@@ -408,11 +568,11 @@ export default function BloodBankDashboard() {
       if (res.data.success) {
         setSearchedBooking(res.data.data);
       } else {
-        alert('Booking not found');
+        showToast('Booking not found', 'error');
         setSearchedBooking(null);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Booking not found');
+      showToast(err.response?.data?.message || 'Booking not found', 'error');
       setSearchedBooking(null);
     } finally {
       setSearchingToken(false);
@@ -495,7 +655,7 @@ export default function BloodBankDashboard() {
     }
 
     if (filteredBookings.length === 0) {
-      alert('No bookings found for the selected filter');
+      showToast('No bookings found for the selected filter', 'info');
       return;
     }
 
@@ -558,7 +718,7 @@ export default function BloodBankDashboard() {
     link.click();
     document.body.removeChild(link);
 
-    alert(`âœ… Downloaded ${filteredBookings.length} booking(s) successfully!`);
+    showToast(`✅ Downloaded ${filteredBookings.length} booking(s) successfully!`, 'success');
     setShowDownloadModal(false);
   };
 
@@ -607,7 +767,7 @@ export default function BloodBankDashboard() {
     }
 
     if (filteredBookings.length === 0) {
-      alert('No bookings found for the selected filter');
+      showToast('No bookings found for the selected filter', 'info');
       return;
     }
 
@@ -713,128 +873,175 @@ export default function BloodBankDashboard() {
     // Save PDF
     doc.save(filename);
 
-    alert(`âœ… Downloaded ${filteredBookings.length} booking(s) as PDF successfully!`);
+    showToast(`✅ Downloaded ${filteredBookings.length} booking(s) as PDF successfully!`, 'success');
     setShowDownloadModal(false);
   };
 
   // Frontdesk: Mark arrival
-  const handleMarkArrival = async () => {
+  const handleMarkArrival = () => {
     if (!searchedBooking) return;
 
-    if (!confirm(`Mark arrival for ${searchedBooking.donorName}?`)) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Mark Arrival',
+      message: `Mark arrival for ${searchedBooking.donorName}?`,
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+            status: 'confirmed',
+            arrived: true,
+            arrivalTime: new Date().toISOString()
+          });
 
-    try {
-      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
-        status: 'confirmed',
-        arrived: true,
-        arrivalTime: new Date().toISOString()
-      });
-
-      if (res.data.success) {
-        alert('Arrival marked successfully!');
-        setSearchedBooking(res.data.data);
-        // Refresh token list
-        fetchAllTokens();
+          if (res.data.success) {
+            showToast('Arrival marked successfully!', 'success');
+            setSearchedBooking(res.data.data);
+            // Refresh token list
+            fetchAllTokens();
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to mark arrival', 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to mark arrival');
-    }
+    });
   };
 
   // Frontdesk: Mark rejection
-  const handleMarkRejection = async () => {
+  const handleMarkRejection = () => {
     if (!searchedBooking) return;
 
-    const reason = prompt('Enter reason for rejection:');
-    if (reason === null) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Reject Token',
+      message: 'Please enter a reason for rejection:',
+      type: 'prompt_required',
+      inputPlaceholder: "Rejection reason",
+      onConfirm: async (reason) => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+            status: 'rejected',
+            rejectionReason: reason
+          });
 
-    try {
-      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
-        status: 'rejected',
-        rejectionReason: reason
-      });
-
-      if (res.data.success) {
-        alert('Booking rejected');
-        setSearchedBooking(null);
-        setTokenSearch('');
-        // Refresh token list
-        fetchAllTokens();
+          if (res.data.success) {
+            showToast('Booking rejected', 'success');
+            setSearchedBooking(null);
+            setTokenSearch('');
+            // Refresh token list
+            fetchAllTokens();
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to reject booking', 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject booking');
-    }
+    });
   };
 
   // Frontdesk: Mark completion
-  const handleMarkCompletion = async () => {
+  const handleMarkCompletion = () => {
     if (!searchedBooking) return;
 
-    if (!confirm(`Mark donation as completed for ${searchedBooking.donorName}?`)) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Complete Donation',
+      message: `Mark donation as completed for ${searchedBooking.donorName}?`,
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+            status: 'completed',
+            completedAt: new Date().toISOString()
+          });
 
-    try {
-      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
-        status: 'completed',
-        completedAt: new Date().toISOString()
-      });
-
-      if (res.data.success) {
-        alert('âœ… Donation completed! Thank you for saving lives! ðŸŽ‰');
-        setSearchedBooking(null);
-        setTokenSearch('');
-        // Refresh token list
-        fetchAllTokens();
+          if (res.data.success) {
+            showToast('✅ Donation completed! Thank you for saving lives! 🎉', 'success');
+            setSearchedBooking(null);
+            setTokenSearch('');
+            // Refresh token list
+            fetchAllTokens();
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || 'Failed to mark completion', 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to mark completion');
-    }
+    });
   };
 
   // Handle user status change
-  const handleUserStatusChange = async (userId, action, value) => {
-    let status = {};
-    if (action === 'block') {
-      status = { isBlocked: value };
-    } else if (action === 'suspend') {
-      status = { isSuspended: value };
-    } else if (action === 'warn') {
-      const message = prompt('Enter warning message:');
-      if (!message) return;
-      status = { warningMessage: message };
-    }
-
-    try {
-      const res = await api.put(`/bloodbank/users/${userId}/status`, status);
-      if (res.data.success) {
-        setUsers(users.map(u => u._id === userId ? res.data.data : u));
-        alert("User status updated successfully");
+  const handleUserStatusChange = (userId, action, value) => {
+    const performUpdate = async (message) => {
+      closeConfirmModal();
+      let status = {};
+      if (action === 'block') {
+        status = { isBlocked: value };
+      } else if (action === 'suspend') {
+        status = { isSuspended: value };
+      } else if (action === 'warn') {
+        status = { warningMessage: message };
       }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update user status");
+
+      try {
+        const res = await api.put(`/bloodbank/users/${userId}/status`, status);
+        if (res.data.success) {
+          setUsers(users.map(u => u._id === userId ? res.data.data : u));
+          showToast("User status updated successfully", 'success');
+        }
+      } catch (err) {
+        showToast(err.response?.data?.message || "Failed to update user status", 'error');
+      }
+    };
+
+    if (action === 'warn') {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Issue Warning',
+        message: 'Enter warning message for the user:',
+        type: 'prompt_required',
+        inputPlaceholder: "Warning message",
+        onConfirm: performUpdate
+      });
+    } else {
+      performUpdate();
     }
   };
 
   // Handle donor status change
-  const handleDonorStatusChange = async (donorId, action, value) => {
-    let status = {};
-    if (action === 'block') {
-      status = { isBlocked: value };
-    } else if (action === 'suspend') {
-      status = { isSuspended: value };
-    } else if (action === 'warn') {
-      const message = prompt('Enter warning message:');
-      if (!message) return;
-      status = { warningMessage: message };
-    }
-
-    try {
-      const res = await api.put(`/bloodbank/donors/${donorId}/status`, status);
-      if (res.data.success) {
-        setDonors(donors.map(d => d._id === donorId ? res.data.data : d));
-        alert("Donor status updated successfully");
+  const handleDonorStatusChange = (donorId, action, value) => {
+    const performUpdate = async (message) => {
+      closeConfirmModal();
+      let status = {};
+      if (action === 'block') {
+        status = { isBlocked: value };
+      } else if (action === 'suspend') {
+        status = { isSuspended: value };
+      } else if (action === 'warn') {
+        status = { warningMessage: message };
       }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update donor status");
+
+      try {
+        const res = await api.put(`/bloodbank/donors/${donorId}/status`, status);
+        if (res.data.success) {
+          setDonors(donors.map(d => d._id === donorId ? res.data.data : d));
+          showToast("Donor status updated successfully", 'success');
+        }
+      } catch (err) {
+        showToast(err.response?.data?.message || "Failed to update donor status", 'error');
+      }
+    };
+
+    if (action === 'warn') {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Issue Warning',
+        message: 'Enter warning message for the donor:',
+        type: 'prompt_required',
+        inputPlaceholder: "Warning message",
+        onConfirm: performUpdate
+      });
+    } else {
+      performUpdate();
     }
   };
 
@@ -872,10 +1079,10 @@ export default function BloodBankDashboard() {
           requiredDate: "",
         });
       } else {
-        alert(res.data.message || "Failed to add patient");
+        showToast(res.data.message || "Failed to add patient", 'error');
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add patient");
+      showToast(err.response?.data?.message || "Failed to add patient", 'error');
     }
     setLoading(false);
   };
@@ -917,27 +1124,35 @@ export default function BloodBankDashboard() {
           requiredDate: "",
         });
       } else {
-        alert(res.data.message || "Failed to update patient");
+        showToast(res.data.message || "Failed to update patient", 'error');
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update patient");
+      showToast(err.response?.data?.message || "Failed to update patient", 'error');
     }
     setLoading(false);
   };
 
   // Delete patient handler (soft delete)
-  const handleDeletePatient = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this patient?")) return;
-    try {
-      const res = await api.delete(`/patients/${id}`);
-      if (res.data.success) {
-        setPatients(patients.filter((p) => p._id !== id));
-      } else {
-        alert(res.data.message || "Failed to delete patient");
+  const handleDeletePatient = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Patient',
+      message: "Are you sure you want to delete this patient?",
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const res = await api.delete(`/patients/${id}`);
+          if (res.data.success) {
+            setPatients(patients.filter((p) => p._id !== id));
+            showToast('Patient deleted successfully', 'success');
+          } else {
+            showToast(res.data.message || "Failed to delete patient", 'error');
+          }
+        } catch (err) {
+          showToast(err.response?.data?.message || "Failed to delete patient", 'error');
+        }
       }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete patient");
-    }
+    });
   };
 
   // Restore patient handler
@@ -948,10 +1163,10 @@ export default function BloodBankDashboard() {
         // Refresh patients list after restore
         fetchPatients();
       } else {
-        alert(res.data.message || "Failed to restore patient");
+        showToast(res.data.message || "Failed to restore patient", 'error');
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to restore patient");
+      showToast(err.response?.data?.message || "Failed to restore patient", 'error');
     }
   };
 
@@ -1005,7 +1220,7 @@ export default function BloodBankDashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/bloodbank-login";
+    navigate("/bloodbank-login");
   };
 
   const isSuspended = localStorage.getItem('isSuspended') === 'true';
@@ -1835,6 +2050,211 @@ export default function BloodBankDashboard() {
                 </div>
               )}
 
+              {activeTab === 'donors' && (
+                <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+                  <div className="mb-6 text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                      🩸 Manage Donors
+                    </h2>
+                    <div className="flex justify-center gap-4 mt-4">
+                      <button
+                        onClick={() => setShowVisitHistory(false)}
+                        className={`px-4 py-2 rounded-lg font-semibold transition ${!showVisitHistory ? 'bg-pink-600 text-white shadow-lg' : 'bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                      >
+                        All Donors
+                      </button>
+                      <button
+                        onClick={() => setShowVisitHistory(true)}
+                        className={`px-4 py-2 rounded-lg font-semibold transition ${showVisitHistory ? 'bg-pink-600 text-white shadow-lg' : 'bg-white/20 text-gray-600 hover:bg-white/40'}`}
+                      >
+                        Visit History
+                      </button>
+                    </div>
+                  </div>
+
+                  {!showVisitHistory ? (
+                    <>
+                      <div className="mb-6">
+                        <DonorSearchForm
+                          searchBloodGroup={searchBloodGroup}
+                          setSearchBloodGroup={setSearchBloodGroup}
+                          searchPlace={searchPlace}
+                          setSearchPlace={setSearchPlace}
+                          searchEmail={searchDonorEmail}
+                          setSearchEmail={setSearchDonorEmail}
+                          showDropdown={showDropdown}
+                          setShowDropdown={setShowDropdown}
+                          onClear={() => {
+                            setSearchBloodGroup("");
+                            setSearchPlace("");
+                            setSearchDonorEmail("");
+                          }}
+                        />
+                      </div>
+
+                      {donors.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-600 dark:text-gray-400">No donors found.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {filteredDonors.map((donor) => (
+                            <div key={donor._id} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 relative">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div className="h-12 w-12 rounded-full bg-pink-500 flex items-center justify-center text-white font-bold text-xl">
+                                  {donor.bloodGroup}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-gray-900 dark:text-white">{donor.name || 'Unknown Donor'}</h4>
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">{donor.email}</div>
+                                </div>
+                              </div>
+                              <div className="text-sm space-y-1 mb-4">
+                                <p><strong>Address:</strong> {formatAddress(donor.address)}</p>
+                                <p><strong>Last Donation:</strong> {donor.lastDonationDate ? new Date(donor.lastDonationDate).toLocaleDateString() : 'Never'}</p>
+                                {donor.isBlocked && <p className="text-red-500 font-bold">🚫 BLOCKED</p>}
+                                {donor.isSuspended && <p className="text-yellow-500 font-bold">⚠️ SUSPENDED</p>}
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => handleDonorStatusChange(donor._id, 'block', !donor.isBlocked)}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold text-white ${donor.isBlocked ? 'bg-green-600' : 'bg-red-600'}`}
+                                >
+                                  {donor.isBlocked ? 'Unblock' : 'Block'}
+                                </button>
+                                <button
+                                  onClick={() => handleDonorStatusChange(donor._id, 'suspend', !donor.isSuspended)}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold text-white ${donor.isSuspended ? 'bg-green-600' : 'bg-yellow-600'}`}
+                                >
+                                  {donor.isSuspended ? 'Unsuspend' : 'Suspend'}
+                                </button>
+                                <button
+                                  onClick={() => handleDonorStatusChange(donor._id, 'warn', true)}
+                                  className="px-3 py-1 rounded-lg text-xs font-bold text-white bg-orange-500"
+                                >
+                                  Warn
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      {visitedDonors.length === 0 ? (
+                        <p className="text-center text-gray-600 dark:text-gray-400">No visit history available.</p>
+                      ) : (
+                        visitedDonors.map((record) => (
+                          <div key={record._id} className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+                            <div
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => setExpandedDonor(expandedDonor === record._id ? null : record._id)}
+                            >
+                              <div>
+                                <h4 className="font-bold text-gray-900 dark:text-white">{record.donorDetails?.name || 'Unknown'} ({record.donorDetails?.bloodGroup})</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Visits: {record.visitCount}</p>
+                              </div>
+                              <button className="text-pink-600 font-bold">
+                                {expandedDonor === record._id ? 'Collapse' : 'Expand'}
+                              </button>
+                            </div>
+
+                            {expandedDonor === record._id && (
+                              <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <h5 className="font-semibold mb-2">Visit History:</h5>
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                  {record.history.map((visit, index) => (
+                                    <div key={index} className="flex justify-between text-sm bg-white/5 p-2 rounded">
+                                      <span>{new Date(visit.date).toLocaleDateString()}</span>
+                                      <span className={visit.status === 'completed' ? 'text-green-500' : 'text-yellow-500'}>
+                                        {visit.status}
+                                      </span>
+                                      {visit.patientName && <span className="text-gray-500">For: {visit.patientName}</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'received' && (
+                <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+                  <div className="mb-6 text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                      📥 Received Donation Requests
+                    </h2>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Manage requests from donors who want to donate here
+                    </p>
+                  </div>
+
+                  {donationRequests.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">📥</div>
+                      <p className="text-gray-600 dark:text-gray-400">No pending donation requests.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {donationRequests.map((req) => (
+                        <div key={req._id} className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-bold text-lg text-gray-900 dark:text-white">{req.donorName}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{req.email}</p>
+                            </div>
+                            <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
+                              {req.bloodGroup}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 mb-4 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Requested Date:</span>
+                              <span className="font-medium text-gray-800 dark:text-gray-200">{new Date(req.requestedDate).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Requested Time:</span>
+                              <span className="font-medium text-gray-800 dark:text-gray-200">{req.requestedTime}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Status:</span>
+                              <span className={`font-bold ${req.status === 'pending' ? 'text-yellow-500' :
+                                req.status === 'accepted' ? 'text-green-500' :
+                                  'text-red-500'
+                                }`}>{req.status.toUpperCase()}</span>
+                            </div>
+                          </div>
+
+                          {req.status === 'pending' && (
+                            <div className="flex gap-2 mt-4">
+                              <button
+                                onClick={() => handleAcceptRequest(req._id)}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                              >
+                                Accept
+                              </button>
+                              <button
+                                onClick={() => handleRejectRequest(req._id)}
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === 'staff' && (
                 <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -2072,10 +2492,36 @@ export default function BloodBankDashboard() {
                     </p>
                   </div>
 
-                  {users.length === 0 ? (
+                  {/* User Search Form */}
+                  <div className="mb-4">
+                    <UserSearchForm
+                      searchRole={searchUserRole}
+                      setSearchRole={setSearchUserRole}
+                      searchUsername={searchUsername}
+                      setSearchUsername={setSearchUsername}
+                      searchUserDate={searchUserDate}
+                      setSearchUserDate={setSearchUserDate}
+                      searchEmail={searchUserEmail}
+                      setSearchEmail={setSearchUserEmail}
+                      onClear={() => {
+                        setSearchUserRole("");
+                        setSearchUsername("");
+                        setSearchUserDate("");
+                        setSearchUserEmail("");
+                      }}
+                    />
+                  </div>
+
+                  {loadingUsers ? (
                     <div className="text-center py-8">
                       <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
                       <p className="mt-2 text-gray-600 dark:text-gray-400">Loading users...</p>
+                    </div>
+                  ) : users.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-4">👥</div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Users Found</h3>
+                      <p className="text-gray-500 dark:text-gray-400">Try adjusting your search filters</p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm">
@@ -3108,7 +3554,7 @@ export default function BloodBankDashboard() {
                       {reviews.map((review) => (
                         <div
                           key={review._id}
-                          className="bg-white/50 dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
+                          className="bg-white/50 dark:bg-white/5 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition group"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div>
@@ -3136,18 +3582,27 @@ export default function BloodBankDashboard() {
                           </p>
 
                           {/* Star Rating Display */}
-                          <div className="flex mt-3">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span
-                                key={star}
-                                className={`text-xl ${star <= review.rating
-                                  ? 'text-yellow-500'
-                                  : 'text-gray-300 dark:text-gray-600'
-                                  }`}
-                              >
-                                ★
-                              </span>
-                            ))}
+                          <div className="flex mt-3 justify-between items-center">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <span
+                                  key={star}
+                                  className={`text-xl ${star <= review.rating
+                                    ? 'text-yellow-500'
+                                    : 'text-gray-300 dark:text-gray-600'
+                                    }`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => handleDeleteReview(review._id)}
+                              className="text-red-500 hover:text-red-700 text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition opacity-0 group-hover:opacity-100"
+                              title="Delete this review"
+                            >
+                              🗑️ Delete
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -3224,7 +3679,7 @@ export default function BloodBankDashboard() {
                         const newDate = document.getElementById('reschedule-date').value;
                         const newTime = document.getElementById('reschedule-time').value;
                         if (!newDate || !newTime) {
-                          alert('Please select both date and time');
+                          showToast('Please select both date and time', 'warning');
                           return;
                         }
                         handleRescheduleBooking(newDate, newTime);
@@ -3254,7 +3709,16 @@ export default function BloodBankDashboard() {
 
           </div>
         </main>
-      </div>
-    </Layout>
+      </div >
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        inputPlaceholder={confirmModal.inputPlaceholder}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirmModal}
+      />
+    </Layout >
   );
 }

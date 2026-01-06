@@ -5,10 +5,14 @@ import './styles/glassmorphism.css'
 import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext'
 
+import { ToastProvider } from './context/ToastContext'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </ThemeProvider>
   </StrictMode>,
 )

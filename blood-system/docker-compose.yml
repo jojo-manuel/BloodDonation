@@ -1,52 +1,14 @@
 services:
   # ==========================================
-  # FRONTEND SERVICES (Publicly Accessible)
+  # BACKEND API SERVICE (Port 5000)
   # ==========================================
-  frontend:
-    build: ../frontend
-    container_name: blood-frontend
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
-    networks:
-      - frontend-net
-
-  admin-frontend:
+  blood-backend-api:
     build:
-      context: ../frontend
-    container_name: blood-admin-frontend
+      context: ../
+      dockerfile: blood-system/backend-monolith/Dockerfile
+    container_name: blood-backend-api
     ports:
-      - "5174:80"
-    volumes:
-      - ../frontend/nginx-admin.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
-    networks:
-      - frontend-net
-
-  sys-admin-frontend:
-    build:
-      context: ../frontend
-    container_name: blood-sys-admin-frontend
-    ports:
-      - "5175:80"
-    volumes:
-      - ../frontend/nginx-sysadmin.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
-    networks:
-      - frontend-net
-
-  # ==========================================
-  # BACKEND MONOLITH SERVICE
-  # ==========================================
-  backend:
-    build:
-      context: ./backend-monolith
-    container_name: blood-backend
-    ports:
-      - "3000:3000" # Expose Gateway port (Monolith acts as Gateway now)
+      - "5000:3000" # Host Port 5000 -> Container Port 3000 (API)
     environment:
       - PORT=3000
       - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
@@ -59,29 +21,85 @@ services:
     depends_on:
       - blood-db
     networks:
-      - frontend-net
-      - backend-net
+      - app-net
 
+  # ==========================================
+  # FRONTEND SERVICES (Separated by Role)
+  # ==========================================
+
+  # Login / Main App Container (Port 3000)
+  web-login:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: blood-frontend-login
+    ports:
+      - "3000:80"
+    volumes:
+      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - blood-backend-api
+    networks:
+      - app-net
+
+  # Admin Dashboard Container (Port 3001)
+  web-admin:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: blood-frontend-admin
+    ports:
+      - "3001:80"
+    volumes:
+      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - blood-backend-api
+    networks:
+      - app-net
+
+  # Donor Dashboard Container (Port 3002)
+  web-donor:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: blood-frontend-donor
+    ports:
+      - "3002:80"
+    volumes:
+      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - blood-backend-api
+    networks:
+      - app-net
+
+  # Blood Bank Dashboard Container (Port 3003)
+  web-bloodbank:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: blood-frontend-bloodbank
+    ports:
+      - "3003:80"
+    volumes:
+      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - blood-backend-api
+    networks:
+      - app-net
+
+  # ==========================================
+  # DATABASE
+  # ==========================================
   blood-db:
     image: mongo:6
     container_name: blood-db
     volumes:
       - blood-data:/data/db
     networks:
-      - backend-net
-  # ==========================================
-  # OPTIONAL SERVICES (IoT, Ledger - kept separate for now or remove?)
-  # Keeping them disabled/commented as they were optional profiles
-  # ==========================================
+      - app-net
 
-
-  # ==========================================
-  # NETWORKS
-  # ==========================================
 networks:
-  frontend-net:
-    driver: bridge
-  backend-net:
+  app-net:
     driver: bridge
 
 volumes:

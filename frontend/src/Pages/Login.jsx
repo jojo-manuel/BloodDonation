@@ -116,19 +116,22 @@ export default function Login() {
           if (accessToken) localStorage.setItem('accessToken', accessToken);
           if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
 
-          // Redirect based on user role and suspension/block status
-          if (user?.isSuspended) {
-            alert('Your account is suspended. Some features may be restricted.');
-            navigate('/dashboard');
-          } else if (user?.isBlocked) {
-            alert('Your account is blocked. Please contact support.');
-            navigate('/login');
-          } else if (user?.role === 'admin') {
-            navigate('/admin-dashboard');
-          } else if (user?.role === 'bloodbank') {
-            navigate('/bloodbank/dashboard');
+          // Construct auth params for cross-port redirection
+          const authParams = new URLSearchParams({
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            userId: user.id || user._id,
+            role: user.role,
+            username: user.username
+          }).toString();
+
+          if (user?.role.toLowerCase() === 'admin') {
+            window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
+          } else if (user?.role.toLowerCase() === 'bloodbank') {
+            window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
           } else {
-            navigate('/dashboard');
+            // Default user/donor
+            window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
           }
         } else {
           alert('Authentication failed: ' + response.data.message);
@@ -184,6 +187,8 @@ export default function Login() {
           if (user?.id) localStorage.setItem('userId', user.id);
           if (user?.role) localStorage.setItem('role', user.role);
           if (user?.username) localStorage.setItem('username', user.username);
+          else if (user?.email) localStorage.setItem('username', user.email);
+          else if (user?.name) localStorage.setItem('username', user.name);
           if (user?.isSuspended) localStorage.setItem('isSuspended', user.isSuspended);
           if (user?.isBlocked) localStorage.setItem('isBlocked', user.isBlocked);
           if (user?.warningMessage) localStorage.setItem('warningMessage', user.warningMessage);
@@ -197,52 +202,22 @@ export default function Login() {
             alert('Your account is suspended. Some features may be restricted.');
           }
 
-          if (user?.role === 'admin') {
-            // Super Admin -> Port 5175
-            if (window.location.port === '5175') {
-              navigate('/admin-dashboard');
-            } else {
-              const params = new URLSearchParams({
-                accessToken,
-                refreshToken,
-                role: user.role,
-                username: user.username,
-                userId: user.id
-              });
-              window.location.href = `http://localhost:5175/admin-dashboard?${params.toString()}`;
-            }
-          } else if (user?.role === 'bloodbank') {
-            // Blood Bank Admin -> Port 5174
-            if (window.location.port === '5174') {
-              navigate('/bloodbank/dashboard');
-            } else {
-              const params = new URLSearchParams({
-                accessToken,
-                refreshToken,
-                role: user.role,
-                username: user.username,
-                userId: user.id
-              });
-              window.location.href = `http://localhost:5174/bloodbank/dashboard?${params.toString()}`;
-            }
-          } else if (user?.role === 'donor' || user?.role === 'user') {
-            // Users/Donors -> Port 5173 (Default)
-            // If they are on a specialized container, send them back to main
-            if (window.location.port !== '5173' && window.location.port !== '') {
-              const params = new URLSearchParams({
-                accessToken,
-                refreshToken,
-                role: user.role,
-                username: user.username,
-                userId: user.id
-              });
-              window.location.href = `http://localhost:5173/dashboard?${params.toString()}`;
-            } else {
-              navigate('/dashboard');
-            }
+          // Construct auth params for cross-port redirection
+          const authParams = new URLSearchParams({
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            userId: user.id || user._id,
+            role: user.role,
+            username: user.username
+          }).toString();
+
+          if (user?.role.toLowerCase() === 'admin') {
+            window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
+          } else if (user?.role.toLowerCase() === 'bloodbank') {
+            window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
           } else {
-            // Default fallback
-            navigate('/dashboard');
+            // Default user/donor - Redirect to Port 3002
+            window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
           }
         } else {
           alert(data?.message || 'Login failed');

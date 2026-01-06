@@ -56,7 +56,7 @@ export default function UserProfile() {
         name: editData.name,
         phone: editData.phone
       });
-      
+
       if (response.data.success) {
         alert('Profile updated successfully!');
         setEditMode(false);
@@ -79,13 +79,13 @@ export default function UserProfile() {
     }
 
     const newAvailability = !profileData.donorInfo.availability;
-    
+
     try {
       setUpdatingAvailability(true);
       const response = await api.patch('/users/me/availability', {
         availability: newAvailability
       });
-      
+
       if (response.data.success) {
         alert(`Availability updated to ${newAvailability ? 'Available' : 'Not Available'}`);
         fetchUserProfile();
@@ -102,7 +102,7 @@ export default function UserProfile() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   const handleDeleteAccount = async () => {
@@ -155,9 +155,9 @@ export default function UserProfile() {
       rejected: { color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200', icon: '❌' },
       cancelled: { color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200', icon: '🚫' }
     };
-    
+
     const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800', icon: '❓' };
-    
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
         <span className="mr-1">{config.icon}</span>
@@ -205,7 +205,7 @@ export default function UserProfile() {
     <Layout onLogout={handleLogout}>
       {/* Glassmorphic background gradient */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-rose-100 via-pink-50 to-purple-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
-      
+
       <div className="mx-auto w-full max-w-7xl px-4">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -227,7 +227,7 @@ export default function UserProfile() {
                   {user?.username ? user.username.charAt(0).toUpperCase() : user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              
+
               {isDonor && (
                 <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-100/80 to-pink-100/80 backdrop-blur-md border border-red-300/50 dark:bg-red-900/30 dark:border-red-800 text-red-800 dark:text-red-200 rounded-full font-bold text-lg shadow-lg mb-3 hover:scale-105 transition-transform">
                   🩸 {donorInfo?.bloodGroup || 'N/A'}
@@ -251,16 +251,16 @@ export default function UserProfile() {
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
                 {user?.name || 'User'}
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
                   <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">📧 Email</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg break-all">{user?.email || user?.username || 'Not provided'}</p>
-                  </div>
+                </div>
                 <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
                   <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">📱 Phone</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg">{user?.phone || 'Not provided'}</p>
-                  </div>
+                </div>
                 <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
                   <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">👤 Role</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg capitalize">{user?.role || 'User'}</p>
@@ -268,10 +268,10 @@ export default function UserProfile() {
                 <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
                   <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">📅 Member Since</label>
                   <p className="text-gray-900 dark:text-white font-medium text-lg">{formatDate(user?.createdAt)}</p>
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {/* Action Buttons */}
+              {/* Action Buttons */}
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={() => setEditMode(!editMode)}
@@ -285,11 +285,10 @@ export default function UserProfile() {
                   <button
                     onClick={handleToggleAvailability}
                     disabled={updatingAvailability}
-                    className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] ${
-                      donorInfo?.availability 
-                        ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                    className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] ${donorInfo?.availability
+                        ? 'bg-gradient-to-r from-green-500 to-green-600'
                         : 'bg-gradient-to-r from-gray-500 to-gray-600'
-                    } ${updatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${updatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="mr-2">{donorInfo?.availability ? '✅' : '⏸️'}</span>
                     {updatingAvailability ? 'Updating...' : (donorInfo?.availability ? 'Available' : 'Not Available')}
@@ -337,13 +336,13 @@ export default function UserProfile() {
               </div>
             </div>
             <div className="mt-6 flex gap-3">
-                <button
+              <button
                 onClick={handleUpdateProfile}
                 disabled={updating}
                 className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+              >
                 {updating ? 'Updating...' : '💾 Save Changes'}
-                </button>
+              </button>
             </div>
           </div>
         )}
@@ -357,19 +356,19 @@ export default function UserProfile() {
                 <div className="text-5xl font-bold bg-gradient-to-br from-red-600 to-pink-600 bg-clip-text text-transparent dark:from-red-400 dark:to-pink-400 mb-2 group-hover:scale-110 transition-transform">{totalDonations}</div>
                 <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Total Donations</div>
               </div>
-              
+
               <div className="rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-100/60 to-cyan-100/60 backdrop-blur-lg dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
                 <div className="text-5xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400 mb-2 group-hover:scale-110 transition-transform">{patientsHelped.length}</div>
                 <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Patients Helped</div>
               </div>
-              
+
               <div className="rounded-3xl border border-purple-200/60 bg-gradient-to-br from-purple-100/60 to-indigo-100/60 backdrop-blur-lg dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
                 <div className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400 mb-2 group-hover:scale-110 transition-transform">
                   {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
                 </div>
                 <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Last Donation</div>
               </div>
-              
+
               <div className="rounded-3xl border border-green-200/60 bg-gradient-to-br from-green-100/60 to-emerald-100/60 backdrop-blur-lg dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
                 <div className="text-2xl font-bold bg-gradient-to-br from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400 mb-2 group-hover:scale-110 transition-transform">
                   {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}

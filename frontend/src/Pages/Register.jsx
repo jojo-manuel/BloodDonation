@@ -72,7 +72,7 @@ export default function Register() {
         // Redirect based on role (similar to Login.jsx)
         if (user?.role === 'admin') {
           // Redirect to Admin Dashboard Container
-          window.location.href = 'http://localhost:5174/admin-dashboard';
+          navigate('/admin-dashboard');
         } else if (user?.role === 'bloodbank') {
           navigate('/bloodbank/dashboard');
         } else {

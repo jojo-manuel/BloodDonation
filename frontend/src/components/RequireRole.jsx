@@ -52,16 +52,25 @@ export default function RequireRole({ children, allowedRoles = [] }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  // Case-insensitive role check
+  const normalizedRole = role ? role.toLowerCase() : null;
+  const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+
   // If role is required but doesn't match, redirect based on role
-  if (allowedRoles.length > 0 && (!role || !allowedRoles.includes(role))) {
-    console.log('RequireRole: Role mismatch, redirecting based on role');
+  if (allowedRoles.length > 0 && (!normalizedRole || !normalizedAllowedRoles.includes(normalizedRole))) {
+    console.log('RequireRole: Role mismatch, redirecting based on role', { role, normalizedRole, allowedRoles });
 
     // Redirect to appropriate dashboard based on user's actual role
-    if (role === 'admin') {
+    if (normalizedRole === 'admin') {
       return <Navigate to="/admin-dashboard" replace />;
-    } else if (role === 'bloodbank') {
+    } else if (normalizedRole === 'bloodbank' || normalizedRole === 'bloodbank_admin') {
       return <Navigate to="/bloodbank/dashboard" replace />;
     } else {
+      // If we are already at /dashboard, don't redirect to avoid loop
+      if (location.pathname === '/dashboard' || location.pathname === '/user-dashboard') {
+        console.warn('RequireRole: Role mismatch but already at dashboard. Allowing rendering to prevent loop.');
+        return children;
+      }
       return <Navigate to="/dashboard" replace />;
     }
   }

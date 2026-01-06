@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,7 +13,10 @@ import Layout from "../components/Layout";
 import DonorSearchForm from "../components/DonorSearchForm";
 import UserSearchForm from "../components/UserSearchForm";
 import PatientSearchForm from "../components/PatientSearchForm";
+
 import Navbar from "../components/Navbar";
+import { useToast } from "../context/ToastContext";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -35,6 +39,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("donors");
   const [donors, setDonors] = useState([]);
   const [filteredDonors, setFilteredDonors] = useState([]);
@@ -58,6 +63,20 @@ export default function AdminDashboard() {
     email: '',
     phone: ''
   });
+
+  const { showToast } = useToast();
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'confirm',
+    onConfirm: () => { },
+    inputPlaceholder: ''
+  });
+
+  const closeConfirmModal = () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Activities state
   const [activities, setActivities] = useState([]);
@@ -185,7 +204,7 @@ export default function AdminDashboard() {
         setDonors(data.data.donors || data.data);
       }
     } catch (error) {
-      alert("Error fetching donors: " + error.message);
+      showToast("Error fetching donors: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -200,7 +219,7 @@ export default function AdminDashboard() {
         setFilteredUsers(data.data);
       }
     } catch (error) {
-      alert("Error fetching users: " + error.message);
+      showToast("Error fetching users: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -212,7 +231,7 @@ export default function AdminDashboard() {
       const { data } = await api.get("/admin/admins");
       if (data.success) setAdmins(data.data);
     } catch (error) {
-      alert("Error fetching admins: " + error.message);
+      showToast("Error fetching admins: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -224,7 +243,7 @@ export default function AdminDashboard() {
       const { data } = await api.get("/admin/bloodbanks");
       if (data.success) setBloodbanks(data.data);
     } catch (error) {
-      alert("Error fetching bloodbanks: " + error.message);
+      showToast("Error fetching bloodbanks: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -242,7 +261,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.log("Error fetching pending bloodbanks:", error);
-      alert("Error fetching pending bloodbanks: " + error.message);
+      showToast("Error fetching pending bloodbanks: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -256,14 +275,14 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error fetching section users:", error);
-      alert("Error fetching section users: " + error.message);
+      showToast("Error fetching section users: " + error.message, 'error');
     }
   };
 
   const handleCreateSectionUser = async (e) => {
     e.preventDefault();
     if (!selectedBloodBank) {
-      alert("Please select a blood bank first");
+      showToast("Please select a blood bank first", 'warning');
       return;
     }
 
@@ -273,7 +292,7 @@ export default function AdminDashboard() {
         sectionUserForm
       );
       if (data.success) {
-        alert("Section user created successfully!");
+        showToast("Section user created successfully!", 'success');
         setSectionUserForm({
           section: '',
           username: '',
@@ -286,26 +305,30 @@ export default function AdminDashboard() {
         fetchSectionUsers(selectedBloodBank._id);
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Error creating section user");
+      showToast(error.response?.data?.message || "Error creating section user", 'error');
     }
   };
 
-  const handleDeleteSectionUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this section user?")) {
-      return;
-    }
-
-    try {
-      const { data } = await api.delete(
-        `/admin/bloodbanks/${selectedBloodBank._id}/section-users/${userId}`
-      );
-      if (data.success) {
-        alert("Section user deleted successfully!");
-        fetchSectionUsers(selectedBloodBank._id);
+  const handleDeleteSectionUser = (userId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Section User',
+      message: "Are you sure you want to delete this section user?",
+      onConfirm: async () => {
+        closeConfirmModal();
+        try {
+          const { data } = await api.delete(
+            `/admin/bloodbanks/${selectedBloodBank._id}/section-users/${userId}`
+          );
+          if (data.success) {
+            showToast("Section user deleted successfully!", 'success');
+            fetchSectionUsers(selectedBloodBank._id);
+          }
+        } catch (error) {
+          showToast(error.response?.data?.message || "Error deleting section user", 'error');
+        }
       }
-    } catch (error) {
-      alert(error.response?.data?.message || "Error deleting section user");
-    }
+    });
   };
 
   const fetchPatients = async () => {
@@ -319,7 +342,7 @@ export default function AdminDashboard() {
         setFilteredPatients(patientsData);
       }
     } catch (error) {
-      alert("Error fetching patients: " + error.message);
+      showToast("Error fetching patients: " + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -334,7 +357,7 @@ export default function AdminDashboard() {
         setRequests(data.data.requests || data.data);
       }
     } catch (error) {
-      alert('Error fetching requests: ' + error.message);
+      showToast('Error fetching requests: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -368,7 +391,7 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error fetching activities:', error);
-      alert('Error fetching activities: ' + (error.response?.data?.message || error.message));
+      showToast('Error fetching activities: ' + (error.response?.data?.message || error.message), 'error');
     } finally {
       setLoading(false);
     }
@@ -377,22 +400,22 @@ export default function AdminDashboard() {
   const handleApprove = async (id) => {
     try {
       await api.put(`/admin/bloodbanks/${id}/approve`);
-      alert("Bloodbank approved");
+      showToast("Bloodbank approved", 'success');
       fetchBloodbanks();
       if (activeTab === "pendingBloodbanks") fetchPendingBloodbanks();
     } catch (error) {
-      alert("Error approving: " + error.message);
+      showToast("Error approving: " + error.message, 'error');
     }
   };
 
   const handleReject = async (id) => {
     try {
       await api.put(`/admin/bloodbanks/${id}/reject`);
-      alert("Bloodbank rejected");
+      showToast("Bloodbank rejected", 'success');
       fetchBloodbanks();
       if (activeTab === "pendingBloodbanks") fetchPendingBloodbanks();
     } catch (error) {
-      alert("Error rejecting: " + error.message);
+      showToast("Error rejecting: " + error.message, 'error');
     }
   };
 
@@ -400,34 +423,59 @@ export default function AdminDashboard() {
     const { isBlocked, isSuspended, warningMessage } = status;
     try {
       await api.put(`/admin/${type}/${id}/status`, { isBlocked, isSuspended, warningMessage });
-      alert(`${type} status updated`);
+      showToast(`${type} status updated`, 'success');
       if (type === "donors") fetchDonors();
       else if (type === "users") fetchUsers();
       else if (type === "bloodbanks") fetchBloodbanks();
     } catch (error) {
-      alert("Error updating status: " + error.message);
+      showToast("Error updating status: " + error.message, 'error');
     }
   };
 
-  const handleRequestDonation = async (donorId) => {
-    const message = prompt("Enter a custom message for the donation request (optional):");
-    if (message === null) return; // User cancelled
-
-    try {
-      const { data } = await api.post(`/admin/donors/${donorId}/request-donation`, { message });
-      if (data.success) {
-        alert("Donation request sent successfully!");
-      } else {
-        alert("Failed to send donation request: " + (data.message || "Unknown error"));
+  const handleRequestDonation = (donorId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Request Donation',
+      message: "Enter a custom message for the donation request (optional):",
+      type: 'prompt_optional',
+      inputPlaceholder: "Custom message",
+      onConfirm: async (message) => {
+        closeConfirmModal();
+        try {
+          const { data } = await api.post(`/admin/donors/${donorId}/request-donation`, { message });
+          if (data.success) {
+            showToast("Donation request sent successfully!", 'success');
+          } else {
+            showToast("Failed to send donation request: " + (data.message || "Unknown error"), 'error');
+          }
+        } catch (error) {
+          showToast("Error sending donation request: " + (error.response?.data?.message || error.message), 'error');
+        }
       }
-    } catch (error) {
-      alert("Error sending donation request: " + (error.response?.data?.message || error.message));
-    }
+    });
+  };
+
+  const handleWarnDonor = (donor) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Issue Warning',
+      message: 'Enter warning message:',
+      type: 'prompt_required',
+      inputPlaceholder: "Warning message",
+      onConfirm: (message) => {
+        closeConfirmModal();
+        handleSetStatus('donors', donor._id, {
+          isBlocked: donor.isBlocked,
+          isSuspended: donor.isSuspended,
+          warningMessage: message
+        });
+      }
+    });
   };
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   return (
@@ -492,7 +540,7 @@ export default function AdminDashboard() {
             📊 Activities
           </button>
           <button
-            onClick={() => window.location.href = "/bloodbank-admin-register"}
+            onClick={() => navigate("/bloodbank-admin-register")}
             className="px-6 py-2 rounded-full font-semibold transition text-gray-700 dark:text-gray-300 hover:bg-pink-600 hover:text-white"
           >
             🏥 Blood Bank Registration
@@ -572,10 +620,7 @@ export default function AdminDashboard() {
                             {donor.isSuspended ? 'Unsuspend' : 'Suspend'}
                           </button>
                           <button
-                            onClick={() => {
-                              const message = prompt('Enter warning message:');
-                              if (message !== null) handleSetStatus('donors', donor._id, { isBlocked: donor.isBlocked, isSuspended: donor.isSuspended, warningMessage: message });
-                            }}
+                            onClick={() => handleWarnDonor(donor)}
                             style={{ backgroundColor: '#0ea5e9', color: 'white', borderRadius: 12, padding: '6px 12px', border: 'none', cursor: 'pointer' }}
                             title="Warn"
                           >
@@ -1315,6 +1360,15 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        inputPlaceholder={confirmModal.inputPlaceholder}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirmModal}
+      />
     </Layout>
   );
 }

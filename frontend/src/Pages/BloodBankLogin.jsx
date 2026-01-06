@@ -75,25 +75,20 @@ export default function BloodBankLogin() {
         }
 
         // Redirect based on role and approval status
-        if (res.data.data.user.role === "bloodbank") {
+        if (res.data.data.user.role.toLowerCase() === "bloodbank") {
           try {
             const bloodBankRes = await api.get(`/bloodbank/details?userId=${res.data.data.user.id}`);
             if (bloodBankRes.data.success) {
               const status = bloodBankRes.data.data.status;
               if (status === 'approved') {
-                // Blood Bank Admin -> Port 5174
-                if (window.location.port === '5174' || process.env.NODE_ENV === 'test') {
-                  navigate('/bloodbank/dashboard');
-                } else {
-                  const params = new URLSearchParams({
-                    accessToken: res.data.data.accessToken,
-                    refreshToken: res.data.data.refreshToken,
-                    role: res.data.data.user.role,
-                    username: res.data.data.user.username,
-                    userId: res.data.data.user.id
-                  });
-                  window.location.href = `http://localhost:5174/bloodbank/dashboard?${params.toString()}`;
-                }
+                const authParams = new URLSearchParams({
+                  accessToken: res.data.data.accessToken,
+                  refreshToken: res.data.data.refreshToken,
+                  userId: res.data.data.user.id,
+                  role: res.data.data.user.role,
+                  username: res.data.data.user.username
+                }).toString();
+                window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
               } else if (status === 'pending') {
                 navigate("/bloodbank-pending-approval");
               } else if (status === 'rejected') {
@@ -148,26 +143,20 @@ export default function BloodBankLogin() {
         }
 
         // Redirect based on role and approval status
-        if (res.data.data.user.role === "bloodbank") {
+        if (res.data.data.user.role.toLowerCase() === "bloodbank") {
           try {
             const bloodBankRes = await api.get(`/bloodbank/details?userId=${res.data.data.user.id}`);
             if (bloodBankRes.data.success) {
               const status = bloodBankRes.data.data.status;
               if (status === 'approved') {
-                // Blood Bank Admin -> Port 5174
-                // In test environment, always use navigate to avoid window.location.href issues
-                if (window.location.port === '5174' || process.env.NODE_ENV === 'test') {
-                  navigate('/bloodbank/dashboard');
-                } else {
-                  const params = new URLSearchParams({
-                    accessToken: res.data.data.accessToken,
-                    refreshToken: res.data.data.refreshToken,
-                    role: res.data.data.user.role,
-                    username: res.data.data.user.username,
-                    userId: res.data.data.user.id
-                  });
-                  window.location.href = `http://localhost:5174/bloodbank/dashboard?${params.toString()}`;
-                }
+                const authParams = new URLSearchParams({
+                  accessToken: res.data.data.accessToken,
+                  refreshToken: res.data.data.refreshToken,
+                  userId: res.data.data.user.id,
+                  role: res.data.data.user.role,
+                  username: res.data.data.user.username
+                }).toString();
+                window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
               } else if (status === 'pending') {
                 navigate("/bloodbank-pending-approval");
               } else if (status === 'rejected') {

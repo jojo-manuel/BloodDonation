@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import api from "../lib/api";
 
 function Navbar({ onLogout }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -14,7 +15,7 @@ function Navbar({ onLogout }) {
       if (!token) {
         return; // No token, user is not logged in
       }
-      
+
       try {
         const response = await api.get('/users/me');
         if (response.data.success) {
@@ -36,20 +37,20 @@ function Navbar({ onLogout }) {
     } else {
       // Default logout behavior
       localStorage.clear();
-      window.location.href = "/login";
+      navigate("/login");
     }
     setShowDropdown(false);
   };
 
   const handleProfileClick = () => {
     // Navigate to user profile page
-    window.location.href = "/user-profile";
+    navigate("/user-profile");
     setShowDropdown(false);
   };
 
   const handleSettingsClick = () => {
     // Navigate to user settings page
-    window.location.href = "/user-settings";
+    navigate("/user-settings");
     setShowDropdown(false);
   };
 

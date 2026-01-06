@@ -7,14 +7,17 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.urlencoded({ extended: true }));
+
 
 // CORS Configuration
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003'
 ];
 
 app.use(cors({
@@ -31,8 +34,8 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 
-// Basic Route
-app.get('/', (req, res) => {
+// Health Check
+app.get('/health', (req, res) => {
     res.json({ message: 'Blood Bank Monolith Backend API', status: 'running' });
 });
 
@@ -53,10 +56,26 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/bloodbank', bloodbankRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Users Routes
+const userRoutes = require('./modules/users/routes/users');
+app.use('/api/users', userRoutes);
+
 // Error Handling
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ success: false, message: 'Server Error', error: err.message });
+});
+
+// Serve Manifests and Static Assets
+// We explicitly serve manifest.json if it exists at the root of public
+// This is redundant with express.static but harmless.
+// The critical part is express.static serving the 'public' folder.
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Catch-all route for SPA (must be LAST)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
 module.exports = app;

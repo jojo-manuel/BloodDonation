@@ -10,8 +10,7 @@ import RescheduleNotificationModal from '../components/RescheduleNotificationMod
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 
-// Stubbed TaxiBookingModal to safely remove taxi booking feature without breaking JSX
-const TaxiBookingModal = () => null;
+
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
@@ -66,8 +65,7 @@ export default function UserDashboard() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null); // For request details modal
   const [notifications, setNotifications] = useState([]); // For notifications
-  const [taxiBookingModal, setTaxiBookingModal] = useState(null); // For taxi booking modal
-  const [taxiBookings, setTaxiBookings] = useState({}); // Map of requestId -> taxi booking data
+
   const [rescheduleNotifications, setRescheduleNotifications] = useState([]); // Reschedule notifications
   const [showRescheduleModal, setShowRescheduleModal] = useState(false); // Show reschedule modal
   const [settingsData, setSettingsData] = useState({
@@ -218,57 +216,7 @@ export default function UserDashboard() {
     }
   };
 
-  // Check taxi booking status for multiple requests
-  const checkTaxiBookings = async (requests) => {
-    const bookingsMap = {};
 
-    for (const request of requests) {
-      if (request.status === 'booked' || request.status === 'accepted') {
-        try {
-          const res = await api.get(`/taxi/check/${request._id}`);
-          if (res.data.success && res.data.hasBooking) {
-            bookingsMap[request._id] = res.data.data;
-          }
-        } catch (err) {
-          // Silently fail for individual requests
-          console.error(`Failed to check taxi for request ${request._id}:`, err);
-        }
-      }
-    }
-
-    setTaxiBookings(bookingsMap);
-  };
-
-  // Cancel taxi booking
-  const handleCancelTaxi = async (bookingId, requestId) => {
-    if (!window.confirm('Are you sure you want to cancel this taxi booking?')) {
-      return;
-    }
-
-    try {
-      const res = await api.put(`/taxi/${bookingId}/cancel`, {
-        cancellationReason: 'Cancelled by user'
-      });
-
-      if (res.data.success) {
-        alert('✅ Taxi booking cancelled successfully!');
-
-        // Remove from taxi bookings map
-        setTaxiBookings(prev => {
-          const updated = { ...prev };
-          delete updated[requestId];
-          return updated;
-        });
-
-        // Refresh requests
-        fetchRequests();
-        fetchReceivedRequests();
-      }
-    } catch (err) {
-      console.error('Cancel taxi error:', err);
-      alert('Failed to cancel taxi booking: ' + (err.response?.data?.message || 'Unknown error'));
-    }
-  };
 
   // Fetch unread reschedule notifications
   const fetchRescheduleNotifications = async () => {
@@ -463,18 +411,7 @@ export default function UserDashboard() {
     // Profile and Settings tabs have been removed
   }, [activeTab]);
 
-  // Check taxi bookings when requests are loaded
-  useEffect(() => {
-    if (sentRequests.length > 0) {
-      checkTaxiBookings(sentRequests);
-    }
-  }, [sentRequests]);
 
-  useEffect(() => {
-    if (receivedRequests.length > 0) {
-      checkTaxiBookings(receivedRequests);
-    }
-  }, [receivedRequests]);
 
   // Polling to keep My Requests up-to-date in near real-time
   useEffect(() => {
@@ -1270,7 +1207,7 @@ export default function UserDashboard() {
 
                   <button
                     onClick={() => {
-                      window.location.href = "/user-settings";
+                      navigate("/user-settings");
                       setShowAvatarDropdown(false);
                     }}
                     className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-gray-700 dark:text-gray-300"
@@ -1812,25 +1749,7 @@ export default function UserDashboard() {
 
                                     {request.status === 'accepted' && (
                                       <div className="flex flex-col gap-1">
-                                        {taxiBookings[request._id] ? (
-                                          <button
-                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
-                                            title="Cancel taxi booking"
-                                          >
-                                            <span>🚫</span>
-                                            Cancel Taxi
-                                          </button>
-                                        ) : (
-                                          <button
-                                            onClick={() => setTaxiBookingModal(request)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                            title="Book taxi for donation appointment"
-                                          >
-                                            <span>🚖</span>
-                                            Book Taxi
-                                          </button>
-                                        )}
+
                                         <button
                                           onClick={() => handleCancelRequest(request._id)}
                                           disabled={updatingId === request._id}
@@ -1851,25 +1770,7 @@ export default function UserDashboard() {
                                         >
                                           📋 View Details
                                         </button>
-                                        {taxiBookings[request._id] ? (
-                                          <button
-                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
-                                            title="Cancel taxi booking"
-                                          >
-                                            <span>🚫</span>
-                                            Cancel Taxi
-                                          </button>
-                                        ) : (
-                                          <button
-                                            onClick={() => setTaxiBookingModal(request)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                            title="Book taxi for donation appointment"
-                                          >
-                                            <span>🚖</span>
-                                            Book Taxi
-                                          </button>
-                                        )}
+
                                       </div>
                                     )}
 
@@ -1989,25 +1890,7 @@ export default function UserDashboard() {
                                         >
                                           📋 View Details
                                         </button>
-                                        {taxiBookings[request._id] ? (
-                                          <button
-                                            onClick={() => handleCancelTaxi(taxiBookings[request._id].bookingId, request._id)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-orange-600 to-red-600 text-white rounded hover:from-orange-700 hover:to-red-700 font-semibold flex items-center justify-center gap-1"
-                                            title="Cancel taxi booking"
-                                          >
-                                            <span>🚫</span>
-                                            Cancel Taxi
-                                          </button>
-                                        ) : (
-                                          <button
-                                            onClick={() => setTaxiBookingModal(request)}
-                                            className="w-full px-2 py-1 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded hover:from-yellow-600 hover:to-orange-600 font-semibold flex items-center justify-center gap-1"
-                                            title="Book taxi for donation appointment"
-                                          >
-                                            <span>🚖</span>
-                                            Book Taxi
-                                          </button>
-                                        )}
+
                                       </div>
                                     )}
 
@@ -3108,20 +2991,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Taxi Booking Modal */}
-      {taxiBookingModal && (
-        <TaxiBookingModal
-          donationRequest={taxiBookingModal}
-          onClose={() => setTaxiBookingModal(null)}
-          onSuccess={(booking) => {
-            console.log('Taxi booked:', booking);
-            setTaxiBookingModal(null);
-            // Refresh requests to show updated status
-            fetchRequests();
-            fetchReceivedRequests();
-          }}
-        />
-      )}
+
 
       {/* Reschedule Notification Modal */}
       {showRescheduleModal && rescheduleNotifications.length > 0 && (
