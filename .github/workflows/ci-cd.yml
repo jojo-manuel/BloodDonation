@@ -130,7 +130,6 @@ jobs:
       - name: Deploy Backend to Vercel
         working-directory: ./backend
         run: |
-        run: |
           # Sanitize secrets (remove trailing newlines/whitespace)
           export VERCEL_ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '\n\r')
           # Use the dedicated BACKEND Project ID
@@ -142,3 +141,4 @@ jobs:
           
           # Deploy with sanitized keys
           vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes --debug
+
