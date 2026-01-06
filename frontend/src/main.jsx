@@ -6,13 +6,17 @@ import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext'
 
 import { ToastProvider } from './context/ToastContext'
+import { ChatProvider } from './context/ChatContext'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
       <ToastProvider>
-        <App />
+        <ChatProvider>
+          <App />
+        </ChatProvider>
       </ToastProvider>
     </ThemeProvider>
   </StrictMode>,
 )
+

@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useToast } from "../context/ToastContext";
 import ConfirmationModal from "../components/ConfirmationModal";
+import { useChat } from "../context/ChatContext";
 
 /*
 // Custom Confirmation Modal Component
@@ -132,6 +133,18 @@ export default function BloodBankDashboard() {
   const [loading, setLoading] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false); // Loading state for users
   const { showToast } = useToast();
+  const { startConversation } = useChat();
+
+  // Handle starting a chat with a user
+  const handleStartChat = async (userId) => {
+    try {
+      await startConversation(userId);
+      showToast('Chat started!', 'success');
+    } catch (error) {
+      console.error('Failed to start chat:', error);
+      showToast('Failed to start chat', 'error');
+    }
+  };
 
   // Safely format address objects for display
   const formatAddress = (addr) => {
@@ -2588,6 +2601,15 @@ export default function BloodBankDashboard() {
                                     Unsuspend
                                   </button>
                                 )}
+
+                                {/* Chat Button */}
+                                <button
+                                  onClick={() => handleStartChat(user._id)}
+                                  className="px-3 py-1 bg-rose-600 text-white rounded-lg text-xs hover:bg-rose-700 transition flex items-center gap-1"
+                                  title="Chat with user"
+                                >
+                                  💬 Chat
+                                </button>
                               </td>
                             </tr>
                           ))}

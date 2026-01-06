@@ -47,6 +47,7 @@ const requestRoutes = require('./modules/request/routes/routes');
 const notificationRoutes = require('./modules/notification/routes/routes');
 const bloodbankRoutes = require('./modules/bloodbank/routes/index');
 const adminRoutes = require('./modules/admin/routes/admin');
+const chatRoutes = require('./modules/chat/routes/chat');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/donors', donorRoutes);
@@ -55,6 +56,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/bloodbank', bloodbankRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Users Routes
 const userRoutes = require('./modules/users/routes/users');
