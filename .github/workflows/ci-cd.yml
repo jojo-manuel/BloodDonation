@@ -30,7 +30,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Run Tests
-      # continue-on-error: true # Uncomment if you want to proceed even if backend tests fail
       run: npm test
       env:
         NODE_ENV: test
@@ -95,50 +94,5 @@ jobs:
     - name: Build Project
       run: npm run build
 
-  # 5. Deploy to Vercel
-  deploy:
-    needs: [test-backend, lint-frontend, test-frontend, build-frontend]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      - name: Deploy Frontend to Vercel
-        working-directory: ./frontend
-        run: |
-          # Sanitize secrets (remove trailing newlines/whitespace)
-          export VERCEL_ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '\n\r')
-          export VERCEL_PROJECT_ID=$(echo "${{ secrets.VERCEL_PROJECT_ID }}" | tr -d '\n\r')
-          
-          # Clean potential conflicting Vercel configs
-          rm -rf .vercel
-          rm -rf ../.vercel
-          
-          # Deploy with sanitized keys (env vars are now set correctly)
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes --debug
-
-  # 6. Deploy Backend to Vercel
-  deploy-backend:
-    needs: [test-backend]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      - name: Deploy Backend to Vercel
-        working-directory: ./backend
-        run: |
-          # Sanitize secrets (remove trailing newlines/whitespace)
-          export VERCEL_ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '\n\r')
-          # Use the dedicated BACKEND Project ID
-          export VERCEL_PROJECT_ID=$(echo "${{ secrets.VERCEL_PROJECT_ID_BACKEND }}" | tr -d '\n\r')
-          
-          # Clean potential conflicting Vercel configs
-          rm -rf .vercel
-          rm -rf ../.vercel
-          
-          # Deploy with sanitized keys
-          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes --debug
-
+  # Note: Deployment is handled by Render via render.yaml
+  # Render automatically deploys when changes are pushed to main
