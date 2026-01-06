@@ -48,6 +48,8 @@ jest.mock('react-router-dom', () => ({
 const mockApi = require('../../lib/api');
 
 describe('BloodBankLogin', () => {
+  const originalLocation = window.location;
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { });
@@ -55,13 +57,14 @@ describe('BloodBankLogin', () => {
     jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => { });
 
-    // Mock window.location - Removed manual mock as we now handle NODE_ENV='test' in component
-    // No operation needed here
-    // jest.spyOn(window, 'location', 'get').mockReturnValue({ ... }); // If we needed it, but we don't now.
+    // Mock window.location for cross-port navigation tests
+    delete window.location;
+    window.location = { href: '', assign: jest.fn(), replace: jest.fn() };
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    window.location = originalLocation;
   });
 
   const renderComponent = () => {
@@ -119,7 +122,10 @@ describe('BloodBankLogin', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('refreshToken', 'mock-refresh-token');
     expect(localStorage.setItem).toHaveBeenCalledWith('userId', 'user-id');
     expect(localStorage.setItem).toHaveBeenCalledWith('role', 'bloodbank');
-    expect(mockNavigate).toHaveBeenCalledWith('/bloodbank/dashboard');
+    // Now uses window.location.href for cross-port navigation
+    await waitFor(() => {
+      expect(window.location.href).toContain('http://localhost:3003/auth/callback');
+    });
   });
 
   test('handles Google login', async () => {
@@ -170,7 +176,10 @@ describe('BloodBankLogin', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('refreshToken', 'google-refresh-token');
     expect(localStorage.setItem).toHaveBeenCalledWith('userId', 'google-user-id');
     expect(localStorage.setItem).toHaveBeenCalledWith('role', 'bloodbank');
-    expect(mockNavigate).toHaveBeenCalledWith('/bloodbank/dashboard');
+    // Now uses window.location.href for cross-port navigation
+    await waitFor(() => {
+      expect(window.location.href).toContain('http://localhost:3003/auth/callback');
+    });
   });
 
   test('handles Google login error', async () => {
