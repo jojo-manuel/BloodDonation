@@ -57,28 +57,11 @@ export default function Register() {
       });
 
       if (response.data.success) {
-        // Auto-login after registration
-        const { user, token } = response.data.data;
+        // Auto-login removed as per request
+        // const { user, token } = response.data.data;
 
-        if (user?.id) localStorage.setItem('userId', user.id);
-        if (user?.role) localStorage.setItem('role', user.role);
-        if (user?.username) localStorage.setItem('username', user.username || user.email);
-        if (token) localStorage.setItem('accessToken', token);
-        // Assuming refreshToken might not be sent on register or we treat single token as enough for now.
-        // If refreshToken is needed, check backend response. The backend seems to return just 'token'.
-
-        alert("✅ Registration successful! Welcome to Hope Web.");
-
-        // Redirect based on role (similar to Login.jsx)
-        if (user?.role === 'admin') {
-          // Redirect to Admin Dashboard Container
-          navigate('/admin-dashboard');
-        } else if (user?.role === 'bloodbank') {
-          navigate('/bloodbank/dashboard');
-        } else {
-          // Default to user container/dashboard
-          navigate('/dashboard');
-        }
+        alert("✅ Registration successful! Please login to continue.");
+        navigate('/login');
       } else {
         alert(response.data.message || "Registration failed");
       }

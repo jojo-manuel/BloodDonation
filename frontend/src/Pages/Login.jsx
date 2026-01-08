@@ -347,7 +347,10 @@ export default function Login() {
 
           <div className="mt-8 text-center space-y-2">
             <p className="text-sm text-gray-300">
-              Don't have an account? Contact admin for registration.
+              Don't have an account?{' '}
+              <Link to="/register" className="text-pink-400 font-semibold underline-offset-4 hover:underline dark:text-pink-300">
+                Register here
+              </Link>
             </p>
             <p className="text-sm">
               <button

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import UserAvatar from "../components/UserAvatar";
-import api, { getAddressByPostalCode, getAddressFromPincodeAPI } from "../lib/api";
+import api from "../lib/api";
 
 // Allowed values and regex patterns for client-side validation
 const BLOOD_GROUPS = [
@@ -41,11 +41,17 @@ function Navbar() {
 
 export default function DonorRegister() {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [isDonor, setIsDonor] = useState(true);
   const [isAlreadyDonor, setIsAlreadyDonor] = useState(false);
   const [loading, setLoading] = useState(false);
   const [addressLoading, setAddressLoading] = useState(false);
   const [errors, setErrors] = useState([]);
+
+  // State for pincode-based address options
+  const [postOfficeOptions, setPostOfficeOptions] = useState([]);
+  const [localBodyOptions, setLocalBodyOptions] = useState([]);
+  const [cityOptions, setCityOptions] = useState([]);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -98,16 +104,12 @@ export default function DonorRegister() {
           }
         } catch (userError) {
           console.error("Error fetching user data:", userError);
+          // Only show error if 401/403 or 500
           if (userError.response?.status === 401) {
             setErrors(["Authentication failed. Please log in again."]);
-          } else if (userError.response?.status === 403) {
-            setErrors(["Access denied. You do not have permission to access this resource."]);
           } else if (userError.response?.status >= 500) {
-            setErrors(["Server error occurred while fetching user data. Please try again later."]);
-          } else {
-            setErrors(["Failed to load user profile. Please refresh the page and try again."]);
+            setErrors(["Server error occurred while fetching user data."]);
           }
-          return;
         }
 
         // Fetch existing donor data if available
@@ -134,6 +136,7 @@ export default function DonorRegister() {
                 localBody: donor.houseAddress?.localBody || prev.localBody,
                 city: donor.houseAddress?.city || prev.city,
                 district: donor.houseAddress?.district || prev.district,
+                state: donor.houseAddress?.state || prev.state,
                 pincode: donor.houseAddress?.pincode || prev.pincode,
                 workAddress: donor.workAddress || prev.workAddress,
                 weight: donor.weight || prev.weight,
@@ -142,138 +145,98 @@ export default function DonorRegister() {
                 contactPreference: donor.contactPreference || prev.contactPreference,
               };
             });
-          } else {
-            throw new Error("Failed to fetch donor profile data");
+            // Auto populate address options for existing pincode using Backend Proxy
+            if (donorData.data.houseAddress?.pincode) {
+              const pin = donorData.data.houseAddress.pincode;
+              api.get(`/donors/address/${pin}`).then(({ data: response }) => {
+                if (response && response.length > 0 && response[0].Status === 'Success') {
+                  const postOffices = response[0].PostOffice;
+                  if (postOffices) {
+                    setPostOfficeOptions(postOffices);
+                    setCityOptions([...new Set(postOffices.map(po => po.Name).filter(Boolean))]);
+                    setLocalBodyOptions([...new Set(postOffices.map(po => po.Block || po.Region).filter(Boolean))]);
+                  }
+                }
+              }).catch(console.error);
+            }
           }
         } catch (donorError) {
+          // 404 is expected for new donors
           if (donorError.response?.status !== 404) {
             console.error("Error fetching donor data:", donorError);
-            if (donorError.response?.status === 401) {
-              setErrors(["Authentication failed while fetching donor data. Please log in again."]);
-            } else if (donorError.response?.status === 403) {
-              setErrors(["Access denied. You do not have permission to access this resource."]);
-            } else if (donorError.response?.status >= 500) {
-              setErrors(["Server error occurred while fetching donor data. Please try again later."]);
-            } else {
-              setErrors(["Failed to load donor profile. Please refresh the page and try again."]);
-            }
           }
           setIsAlreadyDonor(false);
         }
       } catch (error) {
         console.error("Unexpected error in fetchUserAndDonorData:", error);
-        setErrors(["An unexpected error occurred while loading your data. Please refresh the page and try again."]);
       }
     };
     fetchUserAndDonorData();
   }, []);
 
-  const validateForm = () => {
-    const errors = [];
+  const validateStep1 = () => {
+    const stepErrors = [];
 
-    if (!BLOOD_GROUPS.includes(formData.bloodGroup)) {
-      errors.push("Invalid blood group. Allowed: " + BLOOD_GROUPS.join(", "));
-    }
+    if (!NAME_REGEX.test((formData.firstName || "").trim())) stepErrors.push("First name must contain only letters and spaces");
+    if (!NAME_REGEX.test((formData.lastName || "").trim())) stepErrors.push("Last name must contain only letters and spaces");
+    if (!PHONE_IN_REGEX.test(formData.contactNumber)) stepErrors.push("Contact number must be a valid 10-digit Indian number");
+    if (!PHONE_IN_REGEX.test(formData.emergencyContactNumber)) stepErrors.push("Emergency contact must be a valid 10-digit Indian number");
+    if (formData.contactNumber === formData.emergencyContactNumber) stepErrors.push("Emergency contact cannot be the same as contact number");
+    if (!PINCODE_REGEX.test(formData.pincode)) stepErrors.push("Pincode must be exactly 6 digits");
+    if (!BLOOD_GROUPS.includes(formData.bloodGroup)) stepErrors.push("Invalid blood group");
 
-    if (!NAME_REGEX.test((formData.firstName || "").trim())) {
-      errors.push("First name must contain only letters and spaces");
-    }
-    if (!NAME_REGEX.test((formData.lastName || "").trim())) {
-      errors.push("Last name must contain only letters and spaces");
-    }
-
-    if (!PHONE_IN_REGEX.test(formData.contactNumber)) {
-      errors.push("Contact number must be a valid Indian number (10 digits, starts with 6-9)");
-    }
-    if (!PHONE_IN_REGEX.test(formData.emergencyContactNumber)) {
-      errors.push("Emergency contact must be a valid Indian number (10 digits, starts with 6-9)");
-    }
-    if (formData.contactNumber === formData.emergencyContactNumber) {
-      errors.push("Emergency contact cannot be the same as contact number");
-    }
-
-
-    if (!PINCODE_REGEX.test(formData.pincode)) {
-      errors.push("Pincode must be exactly 6 digits");
-    }
-
-    if (!CITY_DISTRICT_REGEX.test((formData.city || "").trim())) {
-      errors.push("City must contain only letters and spaces");
-    }
-    if (!CITY_DISTRICT_REGEX.test((formData.district || "").trim())) {
-      errors.push("District must contain only letters and spaces");
-    }
-
-    if (!ALNUM_SPACE_ADDR_REGEX.test((formData.houseName || "").trim())) {
-      errors.push("House name must contain only letters, numbers, spaces or , . -");
-    }
-    if (!ALNUM_SPACE_ADDR_REGEX.test((formData.workAddress || "").trim())) {
-      errors.push("Work address must contain only letters, numbers, spaces or , . -");
-    }
-
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "dob",
-      "gender",
-      "bloodGroup",
-      "contactNumber",
-      "emergencyContactNumber",
-      "houseName",
-      "pincode",
-      "workAddress",
-      "weight",
-    ];
+    const requiredFields = ["firstName", "lastName", "dob", "gender", "bloodGroup", "contactNumber", "emergencyContactNumber", "pincode"];
     requiredFields.forEach((field) => {
       if (!formData[field] || formData[field].toString().trim() === "") {
-        errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
-      }
-    });
-
-    // Skip validation for optional fields
-    const optionalFields = ["lastDonationDate", "houseAddress", "localBody", "state"];
-    Object.entries(formData).forEach(([key, value]) => {
-      if (typeof value === "string" && value.trim() === "" && !optionalFields.includes(key)) {
-        errors.push(`${key.charAt(0).toUpperCase() + key.slice(1)} cannot be empty or only spaces`);
+        stepErrors.push(`${field.replace(/([A-Z])/g, ' $1').trim()} is required`);
       }
     });
 
     if (formData.dob) {
       const dobDate = new Date(formData.dob);
       const today = new Date();
-      if (dobDate > today) {
-        errors.push("Date of birth cannot be in the future");
-      }
+      if (dobDate > today) stepErrors.push("Date of birth cannot be in the future");
       let age = today.getFullYear() - dobDate.getFullYear();
       const m = today.getMonth() - dobDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
-        age--;
+      if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) age--;
+      if (age < 18) stepErrors.push("Donor must be at least 18 years old");
+    }
+
+    return stepErrors;
+  };
+
+  const validateForm = () => {
+    const errors = validateStep1();
+
+    // Step 2 Validation
+    const requiredStep2 = ["houseName", "houseAddress", "localBody", "city", "district", "state", "workAddress", "weight"];
+    requiredStep2.forEach(field => {
+      if (!formData[field] || formData[field].toString().trim() === "") {
+        errors.push(`${field.replace(/([A-Z])/g, ' $1').trim()} is required`);
       }
-      if (age < 18) {
-        errors.push("Donor must be at least 18 years old");
+    });
+
+    if (!CITY_DISTRICT_REGEX.test((formData.city || "").trim())) errors.push("City must contain only letters and spaces");
+    if (!CITY_DISTRICT_REGEX.test((formData.district || "").trim())) errors.push("District must contain only letters and spaces");
+    if (!ALNUM_SPACE_ADDR_REGEX.test((formData.houseName || "").trim())) errors.push("House name must valid characters");
+    if (!ALNUM_SPACE_ADDR_REGEX.test((formData.workAddress || "").trim())) errors.push("Work address must valid characters");
+
+    if (formData.weight) {
+      const weightNum = Number(formData.weight);
+      if (isNaN(weightNum) || weightNum <= 55 || weightNum >= 140) {
+        errors.push("Weight must be between 56kg and 139kg");
       }
     }
 
     if (formData.lastDonationDate) {
       const lastDate = new Date(formData.lastDonationDate);
       const today = new Date();
-      if (lastDate > today) {
-        errors.push("Last donation date cannot be in the future");
-      }
+      if (lastDate > today) errors.push("Last donation date cannot be in the future");
       if (formData.dob) {
         const dobDate = new Date(formData.dob);
         const eighteenthBirthday = new Date(dobDate);
         eighteenthBirthday.setFullYear(dobDate.getFullYear() + 18);
-        if (lastDate < eighteenthBirthday) {
-          errors.push("Last donation date cannot be before your 18th birthday");
-        }
-      }
-    }
-
-    if (formData.weight) {
-      const weightNum = Number(formData.weight);
-      if (isNaN(weightNum) || weightNum <= 55 || weightNum >= 140) {
-        errors.push("Weight must be between 56kg and 139kg");
+        if (lastDate < eighteenthBirthday) errors.push("Last donation date cannot be before your 18th birthday");
       }
     }
 
@@ -287,63 +250,33 @@ export default function DonorRegister() {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const config = {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      };
-
+      const config = { headers: { Authorization: token ? `Bearer ${token}` : "" } };
       const res = await api.delete("/donors/delete", config);
 
       if (res?.data?.success) {
         alert("✅ Donor profile deleted successfully");
         setIsAlreadyDonor(false);
         setFormData({
-          firstName: "",
-          lastName: "",
-          dob: "",
-          gender: "",
-          bloodGroup: "",
-          contactNumber: "",
-          emergencyContactNumber: "",
-          houseName: "",
-          houseAddress: "",
-          localBody: "",
-          city: "",
-          district: "",
-          pincode: "",
-          workAddress: "",
-          weight: "",
-          availability: "available",
-          lastDonationDate: "",
-          contactPreference: "phone",
+          firstName: "", lastName: "", dob: "", gender: "", bloodGroup: "", contactNumber: "", emergencyContactNumber: "",
+          houseName: "", houseAddress: "", localBody: "", city: "", district: "", state: "", pincode: "",
+          workAddress: "", weight: "", availability: "available", lastDonationDate: "", contactPreference: "phone",
         });
         navigate("/dashboard");
       } else {
         alert("❌ " + (res?.data?.message || "Failed to delete donor profile"));
       }
     } catch (err) {
-      let msg = err?.response?.data?.message || "Failed to delete donor profile";
-      if (err?.response?.data?.errors && Array.isArray(err.response.data.errors)) {
-        msg = err.response.data.errors.map((e) => e.message).join("\n");
-      }
-      alert("❌ " + msg);
+      alert("❌ " + (err?.response?.data?.message || "Failed to delete donor profile"));
     }
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return dateStr;
     if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
-    if (dateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      const [dd, mm, yyyy] = dateStr.split("-");
-      return `${yyyy}-${mm}-${dd}`.replace(/\n/g, "");
-    }
-    return dateStr.replace(/\n/g, "");
+    return dateStr;
   };
 
-  const getFullName = () => {
-    return `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
-  };
+  const getFullName = () => `${formData.firstName.trim()} ${formData.lastName.trim()}`.trim();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -354,94 +287,57 @@ export default function DonorRegister() {
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       setLoading(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    let attempt = 0;
-    const maxAttempts = 3;
-    while (attempt < maxAttempts) {
-      try {
-        try {
-          const token = localStorage.getItem("accessToken");
-          const config = {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : "",
-            },
-          };
-          const payload = {
-            name: getFullName(),
-            dob: formatDate(formData.dob),
-            gender: formData.gender,
-            bloodGroup: formData.bloodGroup,
-            contactNumber: formData.contactNumber,
-            emergencyContactNumber: formData.emergencyContactNumber,
-            houseAddress: {
-              houseName: formData.houseName,
-              houseAddress: formData.houseAddress,
-              localBody: formData.localBody,
-              city: formData.city,
-              district: formData.district,
-              pincode: formData.pincode,
-            },
-            workAddress: formData.workAddress,
-            weight: parseFloat(formData.weight),
-            availability: formData.availability === "available",
-            contactPreference: formData.contactPreference,
-            ...(formData.lastDonationDate && { lastDonatedDate: formatDate(formData.lastDonationDate) }),
-          };
+    try {
+      const token = localStorage.getItem("accessToken");
+      const config = { headers: { Authorization: token ? `Bearer ${token}` : "" } };
+      const payload = {
+        name: getFullName(),
+        dob: formatDate(formData.dob),
+        gender: formData.gender,
+        bloodGroup: formData.bloodGroup,
+        contactNumber: formData.contactNumber,
+        emergencyContactNumber: formData.emergencyContactNumber,
+        houseAddress: {
+          houseName: formData.houseName,
+          houseAddress: formData.houseAddress,
+          localBody: formData.localBody,
+          city: formData.city,
+          district: formData.district,
+          state: formData.state,
+          pincode: formData.pincode,
+        },
+        workAddress: formData.workAddress,
+        weight: parseFloat(formData.weight),
+        availability: formData.availability === "available",
+        contactPreference: formData.contactPreference,
+        ...(formData.lastDonationDate && { lastDonatedDate: formatDate(formData.lastDonationDate) }),
+      };
 
-          let res;
-          if (isAlreadyDonor) {
-            res = await api.put("/donors/update", payload, config);
-          } else {
-            res = await api.post("/donors/register", payload, config);
-          }
-
-          const successMsg = isAlreadyDonor ? "✅ Donor details updated" : "✅ Donor details saved";
-          const errorMsg = isAlreadyDonor ? "Failed to update donor details" : "Failed to save donor details";
-
-          if (res?.data?.success) {
-            alert(successMsg);
-            navigate("/donor-crud");
-            break;
-          } else {
-            setErrors([res?.data?.message || errorMsg]);
-            break;
-          }
-        } catch (err) {
-          attempt++;
-          if (attempt >= maxAttempts) {
-            let errorMessages = [];
-            if (err?.response?.status === 400) {
-              if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
-                errorMessages = err.response.data.errors.map((e) => e.message || e);
-              } else {
-                errorMessages = [err.response.data.message || "Invalid data provided. Please check your input."];
-              }
-            } else if (err?.response?.status === 401) {
-              errorMessages = ["Authentication failed. Please log in again."];
-            } else if (err?.response?.status === 403) {
-              errorMessages = ["Access denied. You do not have permission to perform this action."];
-            } else if (err?.response?.status === 409) {
-              errorMessages = ["A donor profile already exists for this user."];
-            } else if (err?.response?.status === 422) {
-              errorMessages = ["Data validation failed. Please check all required fields."];
-            } else if (err?.response?.status >= 500) {
-              errorMessages = ["Server error occurred. Please try again later."];
-            } else if (!err?.response) {
-              errorMessages = ["Network error. Please check your internet connection and try again."];
-            } else {
-              const errorMsg = isAlreadyDonor ? "Failed to update donor details" : "Failed to save donor details";
-              errorMessages = [err?.response?.data?.message || errorMsg];
-            }
-            setErrors(errorMessages);
-            break;
-          }
-        }
-      } catch (outerErr) {
-        setErrors(["Unexpected error occurred: " + outerErr.message]);
-        break;
+      let res;
+      if (isAlreadyDonor) {
+        res = await api.put("/donors/update", payload, config);
+      } else {
+        res = await api.post("/donors/register", payload, config);
       }
+
+      if (res?.data?.success) {
+        alert(isAlreadyDonor ? "✅ Donor details updated" : "✅ Donor details saved");
+
+        if (window.location.port === '3000') {
+          window.location.href = "http://localhost:3002/dashboard";
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        setErrors([res?.data?.message || "Failed to save donor details"]);
+      }
+    } catch (err) {
+      console.error(err);
+      setErrors([err?.response?.data?.message || "An error occurred while saving."]);
     }
     setLoading(false);
   };
@@ -450,72 +346,79 @@ export default function DonorRegister() {
     const { name, value: inputValue } = e.target;
     let processedValue = inputValue;
 
-    // Validate pincode - only allow 6 digits
     if (name === "pincode") {
-      // Remove all non-numeric characters
-      processedValue = inputValue.replace(/[^0-9]/g, "");
-      // Limit to 6 digits
-      processedValue = processedValue.slice(0, 6);
+      processedValue = inputValue.replace(/[^0-9]/g, "").slice(0, 6);
+      if (processedValue !== formData.pincode) {
+        setPostOfficeOptions([]);
+        setLocalBodyOptions([]);
+        setCityOptions([]);
+      }
     }
-
     if (name === "firstName" || name === "lastName") {
       processedValue = inputValue.replace(/[^a-zA-Z\s]/g, "");
-      processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
     }
-    if (name === "district" || name === "city" || name === "state") {
-      processedValue = processedValue.charAt(0).toUpperCase() + processedValue.slice(1).toLowerCase();
-    }
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: processedValue,
-    }));
+
+    setFormData((prevFormData) => ({ ...prevFormData, [name]: processedValue }));
   };
 
   const handlePincodeBlur = async () => {
     const pincode = formData.pincode;
     if (pincode && pincode.length === 6 && /^\d{6}$/.test(pincode)) {
       setAddressLoading(true);
+      setPostOfficeOptions([]);
+      setLocalBodyOptions([]);
+      setCityOptions([]);
       try {
-        const response = await getAddressFromPincodeAPI(pincode);
-        if (response && response.length > 0 && response[0].PostOffice && response[0].PostOffice.length > 0) {
-          const postOffice = response[0].PostOffice[0];
-          setFormData((prev) => ({
-            ...prev,
-            city: postOffice.Name || prev.city,
-            district: postOffice.District || prev.district,
-            state: postOffice.StateName || prev.state,
-          }));
+        // Use Backend Proxy instead of direct external call for reliability
+        const { data: response } = await api.get(`/donors/address/${pincode}`);
+        if (response && response.length > 0 && response[0].Status === 'Success') {
+          const postOffices = response[0].PostOffice;
+          if (postOffices) {
+            setPostOfficeOptions(postOffices);
+            const uniqueCities = [...new Set(postOffices.map(po => po.Name).filter(Boolean))];
+            const uniqueLocalBodies = [...new Set(postOffices.map(po => po.Block || po.Region).filter(Boolean))];
+            setCityOptions(uniqueCities);
+            setLocalBodyOptions(uniqueLocalBodies);
+            const district = postOffices[0].District || "";
+            const state = postOffices[0].State || postOffices[0].StateName || "";
+
+            setFormData((prev) => ({
+              ...prev,
+              district: district,
+              state: state,
+            }));
+          }
+        } else {
+          console.error("Invalid pincode or API error (Backend Proxy)");
         }
       } catch (error) {
-        console.error("Error fetching address:", error);
+        console.error("Error fetching address via proxy:", error);
       } finally {
         setAddressLoading(false);
       }
     }
   };
 
+  const handleNext = () => {
+    const stepErrors = validateStep1();
+    if (stepErrors.length > 0) {
+      setErrors(stepErrors);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setErrors([]);
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBack = () => {
+    setErrors([]);
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <Layout>
-      <div className="flex justify-center mb-6">
-        <div className="flex bg-white/20 rounded-full p-1 backdrop-blur-md">
-          <button
-            onClick={() => setIsDonor(true)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-              }`}
-          >
-            {isAlreadyDonor ? "Edit Donor Details" : "Become a Donor"}
-          </button>
-          <button
-            onClick={() => setIsDonor(false)}
-            className={`px-6 py-2 rounded-full font-semibold transition ${!isDonor ? "bg-pink-600 text-white" : "text-gray-700 dark:text-gray-300"
-              }`}
-          >
-            User Registration
-          </button>
-        </div>
-      </div>
-
       <form
         onSubmit={handleSubmit}
         className="mx-auto w-full max-w-3xl rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-10 overflow-y-auto max-h-[90vh] scrollbar-thin scrollbar-thumb-pink-400 scrollbar-track-transparent"
@@ -524,8 +427,16 @@ export default function DonorRegister() {
           <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-4xl">
             {isDonor ? "🩸 Become a Blood Donor" : "🏥 User Registration"}
           </h2>
-          <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base">
+          <p className="text-sm text-gray-700 dark:text-gray-300 md:text-base mb-4">
             {isDonor ? "Join our heroes saving lives every day" : "Register to request blood when needed"}
+          </p>
+
+          <div className="flex justify-center items-center gap-2 mb-2">
+            <div className={`h-2 w-1/3 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gray-200/20'}`} />
+            <div className={`h-2 w-1/3 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-gradient-to-r from-rose-500 to-pink-500' : 'bg-gray-200/20'}`} />
+          </div>
+          <p className="text-xs font-semibold text-rose-300 uppercase tracking-widest">
+            {step === 1 ? "Step 1: Personal Details" : "Step 2: Address & Info"}
           </p>
         </div>
 
@@ -543,327 +454,129 @@ export default function DonorRegister() {
           </div>
         )}
 
-        <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">First Name</label>
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              title="Only letters and spaces allowed"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Name</label>
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Date of Birth</label>
-            <input
-              type="date"
-              name="dob"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.dob}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Gender</label>
-            <select
-              name="gender"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-              value={formData.gender}
-              onChange={handleChange}
-              required
-            >
-              <option value="" className="text-gray-800">Select Gender</option>
-              <option value="Male" className="text-gray-800">Male</option>
-              <option value="Female" className="text-gray-800">Female</option>
-              <option value="Other" className="text-gray-800">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood group</label>
-            <select
-              name="bloodGroup"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-              value={formData.bloodGroup}
-              onChange={handleChange}
-              required
-            >
-              <option value="" className="text-gray-800">Select Blood Group</option>
-              <option value="A+" className="text-gray-800">A+</option>
-              <option value="A-" className="text-gray-800">A-</option>
-              <option value="B+" className="text-gray-800">B+</option>
-              <option value="B-" className="text-gray-800">B-</option>
-              <option value="AB+" className="text-gray-800">AB+</option>
-              <option value="AB-" className="text-gray-800">AB-</option>
-              <option value="O+" className="text-gray-800">O+</option>
-              <option value="O-" className="text-gray-800">O-</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Contact Number</label>
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                name="contactNumber"
-                placeholder="Contact Number"
-                className="flex-1 rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                required
-              />
+        <div className={step === 1 ? "block animate-fadeIn" : "hidden"}>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">First Name</label>
+              <input type="text" name="firstName" placeholder="First Name" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.firstName} onChange={handleChange} required />
             </div>
-          </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Emergency Contact Number</label>
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                name="emergencyContactNumber"
-                placeholder="Emergency Contact Number"
-                className="flex-1 rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                value={formData.emergencyContactNumber}
-                onChange={handleChange}
-                required
-              />
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Name</label>
+              <input type="text" name="lastName" placeholder="Last Name" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.lastName} onChange={handleChange} required />
             </div>
-          </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">House Name</label>
-            <input
-              type="text"
-              name="houseName"
-              placeholder="House Name"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.houseName}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Date of Birth</label>
+              <input type="date" name="dob" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.dob} onChange={handleChange} required />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">House Address</label>
-            <input
-              type="text"
-              name="houseAddress"
-              placeholder="House Address"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.houseAddress}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Gender</label>
+              <select name="gender" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white" value={formData.gender} onChange={handleChange} required>
+                <option value="" className="text-gray-800">Select Gender</option>
+                <option value="Male" className="text-gray-800">Male</option>
+                <option value="Female" className="text-gray-800">Female</option>
+                <option value="Other" className="text-gray-800">Other</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Local Body</label>
-            <input
-              type="text"
-              name="localBody"
-              placeholder="Local Body"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.localBody}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood group</label>
+              <select name="bloodGroup" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white" value={formData.bloodGroup} onChange={handleChange} required>
+                <option value="" className="text-gray-800">Select Blood Group</option>
+                {BLOOD_GROUPS.map(bg => <option key={bg} value={bg} className="text-gray-800">{bg}</option>)}
+              </select>
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">City</label>
-            <input
-              type="text"
-              name="city"
-              placeholder="City"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.city}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Contact Number</label>
+              <input type="tel" name="contactNumber" placeholder="10-digit Mobile Number" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.contactNumber} onChange={handleChange} required />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">District</label>
-            <input
-              type="text"
-              name="district"
-              placeholder="District"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.district}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Emergency Contact</label>
+              <input type="tel" name="emergencyContactNumber" placeholder="Emergency Mobile Number" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.emergencyContactNumber} onChange={handleChange} required />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">State</label>
-            <input
-              type="text"
-              name="state"
-              placeholder="State"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.state}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Pincode</label>
-            <input
-              type="text"
-              name="pincode"
-              placeholder="Pincode (6 digits)"
-              pattern="[0-9]{6}"
-              maxLength="6"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.pincode}
-              onChange={handleChange}
-              onBlur={handlePincodeBlur}
-              required
-              title="Pincode must be exactly 6 digits"
-            />
-            {formData.pincode && !/^[0-9]{6}$/.test(formData.pincode) && (
-              <p className="mt-1 text-xs text-red-500">⚠️ Pincode must be exactly 6 digits</p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Work Address</label>
-            <input
-              type="text"
-              name="workAddress"
-              placeholder="Work Address"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.workAddress}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Weight (in kg)</label>
-            <input
-              type="number"
-              name="weight"
-              placeholder="Weight"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.weight}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Availability</label>
-            <select
-              name="availability"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-              value={formData.availability}
-              onChange={handleChange}
-              required
-            >
-              <option value="available" className="text-gray-800">Available</option>
-              <option value="unavailable" className="text-gray-800">Unavailable</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Last Donation Date (Optional)</label>
-            <input
-              type="date"
-              name="lastDonationDate"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-              value={formData.lastDonationDate}
-              onChange={handleChange}
-              min={formData.dob ? (() => {
-                const dobDate = new Date(formData.dob);
-                dobDate.setFullYear(dobDate.getFullYear() + 18);
-                return dobDate.toISOString().split('T')[0];
-              })() : ''}
-              max={new Date().toISOString().split('T')[0]}
-              title={formData.dob ? "Select a date between when you turned 18 and today" : "Please select date of birth first"}
-            />
-            {formData.lastDonationDate && formData.dob && (() => {
-              const donationDate = new Date(formData.lastDonationDate);
-              const dobDate = new Date(formData.dob);
-              const today = new Date();
-              const age18Date = new Date(dobDate);
-              age18Date.setFullYear(age18Date.getFullYear() + 18);
-
-              if (donationDate < age18Date) {
-                return <p className="mt-1 text-xs text-red-500">⚠️ Donation date must be after you turned 18</p>;
-              }
-              if (donationDate > today) {
-                return <p className="mt-1 text-xs text-red-500">⚠️ Donation date cannot be in the future</p>;
-              }
-              return null;
-            })()}
-            {formData.lastDonationDate && !formData.dob && (
-              <p className="mt-1 text-xs text-yellow-500">⚠️ Please select your date of birth first</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {formData.dob ? `You turned 18 on ${(() => {
-                const dobDate = new Date(formData.dob);
-                dobDate.setFullYear(dobDate.getFullYear() + 18);
-                return dobDate.toLocaleDateString();
-              })()}` : 'Enter date of birth to see when you turned 18'}
-            </p>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Contact Preference</label>
-            <select
-              name="contactPreference"
-              className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-              value={formData.contactPreference}
-              onChange={handleChange}
-              required
-            >
-              <option value="phone" className="text-gray-800">Phone</option>
-              <option value="email" className="text-gray-800">Email</option>
-            </select>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">
+                Pincode <span className="text-xs text-rose-300">(Auto-fills Address)</span>
+                {addressLoading && <span className="ml-2 text-xs text-rose-400 animate-pulse">Checking...</span>}
+              </label>
+              <input type="text" name="pincode" placeholder="Enter 6-digit Pincode" maxLength="6" className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300" value={formData.pincode} onChange={handleChange} onBlur={handlePincodeBlur} required />
+              {postOfficeOptions.length > 0 && (
+                <p className="mt-1 text-xs text-green-400">✅ Found {postOfficeOptions.length} area(s). Address will appear in Step 2.</p>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 flex justify-between">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl disabled:opacity-50"
-          >
-            {loading ? "Submitting..." : (isAlreadyDonor ? "Update Profile" : "Register as Donor")}
-          </button>
-          {isAlreadyDonor && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="ml-4 rounded-2xl bg-red-800 px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
-            >
-              Delete Profile
-            </button>
+        <div className={step === 2 ? "block animate-fadeIn" : "hidden"}>
+          <div className="mb-6 rounded-2xl bg-white/5 border border-white/10 p-5">
+            <h4 className="mb-4 text-lg font-bold text-gray-100 border-b border-white/10 pb-2">📍 Address Details</h4>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">House Name</label>
+                <input type="text" name="houseName" value={formData.houseName} onChange={handleChange} required className="w-full rounded-xl bg-white/10 px-4 py-3 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-rose-500" placeholder="House Name / Number" />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">House Address</label>
+                <input type="text" name="houseAddress" value={formData.houseAddress} onChange={handleChange} required className="w-full rounded-xl bg-white/10 px-4 py-3 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-rose-500" placeholder="Street / Road" />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">Local Body</label>
+                {localBodyOptions.length > 1 ? (
+                  <select name="localBody" value={formData.localBody} onChange={handleChange} className="w-full rounded-xl bg-white/10 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-rose-500"><option value="">Select Local Body</option>{localBodyOptions.map(l => <option key={l} value={l} className="text-gray-800">{l}</option>)}</select>
+                ) : (
+                  <input type="text" name="localBody" value={formData.localBody} onChange={handleChange} className="w-full rounded-xl bg-white/10 px-4 py-3 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-rose-500" />
+                )}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">City / Area</label>
+                {cityOptions.length > 1 ? (
+                  <select name="city" value={formData.city} onChange={handleChange} required className="w-full rounded-xl bg-white/10 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-rose-500"><option value="">Select City/Area</option>{cityOptions.map(c => <option key={c} value={c} className="text-gray-800">{c}</option>)}</select>
+                ) : (
+                  <input type="text" name="city" value={formData.city} onChange={handleChange} required className="w-full rounded-xl bg-white/10 px-4 py-3 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-rose-500" />
+                )}
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">District {postOfficeOptions.length > 0 && '✅'}</label>
+                <input type="text" name="district" value={formData.district} onChange={handleChange} readOnly={postOfficeOptions.length > 0 && !!formData.district} required className={`w-full rounded-xl bg-white/10 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-rose-500 ${postOfficeOptions.length > 0 && formData.district ? 'opacity-75' : ''}`} />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-200">State {postOfficeOptions.length > 0 && '✅'}</label>
+                <input type="text" name="state" value={formData.state} onChange={handleChange} readOnly={postOfficeOptions.length > 0 && !!formData.state} required className={`w-full rounded-xl bg-white/10 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-rose-500 ${postOfficeOptions.length > 0 && formData.state ? 'opacity-75' : ''}`} />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div><label className="mb-2 block text-sm font-medium text-gray-200">Work Address</label><input type="text" name="workAddress" value={formData.workAddress} onChange={handleChange} required className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-white shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10" placeholder="Office / Workplace" /></div>
+            <div><label className="mb-2 block text-sm font-medium text-gray-200">Weight (kg)</label><input type="number" name="weight" value={formData.weight} onChange={handleChange} required className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-white shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10" placeholder="Weight" /></div>
+            <div><label className="mb-2 block text-sm font-medium text-gray-200">Availability</label><select name="availability" value={formData.availability} onChange={handleChange} className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-white shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10"><option value="available" className="text-gray-800">Available</option><option value="unavailable" className="text-gray-800">Unavailable</option></select></div>
+            <div><label className="mb-2 block text-sm font-medium text-gray-200">Last Donation (Optional)</label><input type="date" name="lastDonationDate" value={formData.lastDonationDate} onChange={handleChange} className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-white shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10" /></div>
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-gray-200">Contact Preference</label>
+              <select name="contactPreference" value={formData.contactPreference} onChange={handleChange} className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-white shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-rose-400/60 dark:border-white/10 dark:bg-white/10"><option value="phone" className="text-gray-800">Phone</option><option value="email" className="text-gray-800">Email</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 flex justify-between gap-4">
+          {step === 1 ? (
+            <button type="button" onClick={handleNext} className="w-full rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl">Next Step ➡️</button>
+          ) : (
+            <>
+              <button type="button" onClick={handleBack} className="w-1/3 rounded-2xl bg-gray-600 px-6 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl">⬅️ Back</button>
+              <button type="submit" disabled={loading} className="w-2/3 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 px-8 py-4 font-bold text-white shadow-lg transition hover:scale-105 hover:shadow-xl disabled:opacity-50">{loading ? "Submitting..." : (isAlreadyDonor ? "Update Profile" : "Register as Donor")}</button>
+            </>
           )}
         </div>
+
+        {step === 2 && isAlreadyDonor && (
+          <button type="button" onClick={handleDelete} className="mt-4 w-full text-center text-sm text-red-400 hover:text-red-300 underline">Delete Profile</button>
+        )}
       </form>
     </Layout>
   );

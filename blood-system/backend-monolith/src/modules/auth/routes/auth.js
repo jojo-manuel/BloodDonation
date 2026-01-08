@@ -10,7 +10,8 @@ const registerValidation = [
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('role').isIn(['DONOR', 'DOCTOR', 'BLOODBANK_ADMIN', 'admin', 'bloodbank', 'user']).withMessage('Invalid role'),
-    body('hospital_id').trim().notEmpty().withMessage('Hospital ID is required')
+    // hospital_id is optional for regular users, required for staff
+    body('hospital_id').optional().trim()
 ];
 
 const loginValidation = [
@@ -39,7 +40,9 @@ router.post('/register', registerValidation, async (req, res) => {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ success: false, message: 'User already exists' });
 
-        const user = new User({ email, password, name, role, hospital_id });
+        // Use provided hospital_id or default for regular users
+        const userHospitalId = hospital_id || 'public-user';
+        const user = new User({ email, password, name, role, hospital_id: userHospitalId });
         await user.save();
         const token = generateToken(user);
 

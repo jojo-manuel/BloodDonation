@@ -14,7 +14,7 @@ export default function UserAvatar() {
       if (!token) {
         return; // No token, user is not logged in
       }
-      
+
       try {
         const response = await api.get('/users/me');
         if (response.data.success) {
@@ -47,7 +47,11 @@ export default function UserAvatar() {
   };
 
   const handleDashboardClick = () => {
-    navigate("/dashboard");
+    if (window.location.port === '3000') {
+      window.location.href = "http://localhost:3002/dashboard";
+    } else {
+      navigate("/dashboard");
+    }
     setShowDropdown(false);
   };
 
@@ -69,11 +73,11 @@ export default function UserAvatar() {
       {showDropdown && (
         <>
           {/* Backdrop to close dropdown when clicking outside */}
-          <div 
-            className="fixed inset-0 z-10" 
+          <div
+            className="fixed inset-0 z-10"
             onClick={() => setShowDropdown(false)}
           />
-          
+
           {/* Dropdown menu */}
           <div className="absolute right-0 mt-3 z-20 w-52 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl">
             <div className="p-2">
@@ -86,7 +90,7 @@ export default function UserAvatar() {
                   Dashboard
                 </span>
               </button>
-              
+
               <button
                 onClick={handleProfileClick}
                 className="w-full text-left rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 text-white px-4 py-3 mb-1"
@@ -97,7 +101,7 @@ export default function UserAvatar() {
                   <span className="ml-auto badge badge-primary badge-sm bg-rose-500/20 text-rose-200 border-rose-500/30">New</span>
                 </span>
               </button>
-              
+
               <button
                 onClick={handleSettingsClick}
                 className="w-full text-left rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 text-white px-4 py-3 mb-1"
@@ -107,7 +111,7 @@ export default function UserAvatar() {
                   Settings
                 </span>
               </button>
-              
+
               <button
                 onClick={handleLogout}
                 className="w-full text-left rounded-xl bg-white/5 hover:bg-red-500/20 transition-all duration-200 text-white hover:text-red-200 px-4 py-3"

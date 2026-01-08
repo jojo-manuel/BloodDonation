@@ -164,7 +164,13 @@ export default function LandingPage() {
               Become a Donor
             </button>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => {
+                if (window.location.port === '3000') {
+                  window.location.href = "http://localhost:3002/dashboard";
+                } else {
+                  navigate("/dashboard");
+                }
+              }}
               className="px-8 py-4 rounded-xl bg-neutral-900 border border-neutral-800 text-white font-bold text-lg hover:bg-neutral-800 transition-all hover:-translate-y-1"
             >
               Find Blood

@@ -52,6 +52,8 @@ function App() {
             <Route path="/bloodbank-admin-register" element={<BloodBankAdminRegister />} />
 
             {/* User/Donor Dashboard - Restricted to users and donors */}
+
+            {/* User/Donor Dashboard - Restricted to users and donors */}
             <Route path="/dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
             <Route path="/user-dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
             <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserProfile /></RequireRole>} />

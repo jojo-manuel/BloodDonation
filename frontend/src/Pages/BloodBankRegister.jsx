@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import Layout from "../components/Layout";
 import UserAvatar from "../components/UserAvatar";
+import { getLocationByPincode } from "../lib/pincodeApi";
 
 function Navbar() {
   return (
@@ -27,12 +28,17 @@ export default function BloodBankRegister() {
   const [errors, setErrors] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
+    pincode: "",
     address: "",
+    district: "",
+    state: "",
     email: "",
     phone: "",
     licenseNumber: "",
     operatingHours: "",
   });
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -42,6 +48,41 @@ export default function BloodBankRegister() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle pincode change and auto-fill location
+  const handlePincodeChange = async (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setFormData({ ...formData, pincode: value });
+    setPincodeError("");
+
+    if (value.length === 6) {
+      setPincodeLoading(true);
+      try {
+        const locationData = await getLocationByPincode(value);
+        setFormData(prev => ({
+          ...prev,
+          pincode: value,
+          district: locationData.district || "",
+          state: locationData.state || "",
+        }));
+      } catch (err) {
+        setPincodeError(err.message || "Invalid pincode");
+        setFormData(prev => ({
+          ...prev,
+          district: "",
+          state: "",
+        }));
+      } finally {
+        setPincodeLoading(false);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        district: "",
+        state: "",
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -108,7 +149,7 @@ export default function BloodBankRegister() {
           <h1 className="mb-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             🩸 Blood Bank Registration
           </h1>
-          
+
           {errors.length > 0 && (
             <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-400">
               <ul className="list-disc list-inside">
@@ -135,9 +176,43 @@ export default function BloodBankRegister() {
               />
             </div>
 
+            {/* Pincode with Auto-fill */}
+            <div>
+              <label htmlFor="pincode" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+                Pincode * {pincodeLoading && <span className="text-pink-500 animate-pulse">⏳ Loading...</span>}
+              </label>
+              <input
+                type="text"
+                id="pincode"
+                name="pincode"
+                value={formData.pincode}
+                onChange={handlePincodeChange}
+                required
+                maxLength={6}
+                inputMode="numeric"
+                placeholder="Enter 6-digit pincode"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              />
+              {pincodeError && <p className="text-red-500 text-sm mt-1">{pincodeError}</p>}
+            </div>
+
+            {/* Auto-filled District and State */}
+            {formData.district && formData.state && (
+              <div className="grid grid-cols-2 gap-4 p-3 rounded-lg bg-green-100/50 dark:bg-green-900/20 border border-green-300 dark:border-green-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">District</label>
+                  <p className="text-gray-900 dark:text-white font-semibold">{formData.district}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">State</label>
+                  <p className="text-gray-900 dark:text-white font-semibold">{formData.state}</p>
+                </div>
+              </div>
+            )}
+
             <div>
               <label htmlFor="address" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
-                Address *
+                Street Address / Local Body *
               </label>
               <textarea
                 id="address"
@@ -145,7 +220,8 @@ export default function BloodBankRegister() {
                 value={formData.address}
                 onChange={handleInputChange}
                 required
-                rows={3}
+                rows={2}
+                placeholder="Enter street address, building name, etc."
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               />
             </div>

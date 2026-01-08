@@ -1,14 +1,73 @@
 services:
   # ==========================================
-  # BACKEND API SERVICE (Port 5000)
+  # BACKEND API SERVICES (Separate per Frontend)
   # ==========================================
-  blood-backend-api:
+
+  # Login Backend (Port 5001)
+  backend-login:
     build:
-      context: ../
-      dockerfile: blood-system/backend-monolith/Dockerfile
-    container_name: blood-backend-api
+      context: ./
+      dockerfile: backend-login/Dockerfile
+    container_name: blood-backend-login
     ports:
-      - "5000:3000" # Host Port 5000 -> Container Port 3000 (API)
+      - "5001:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRES_IN=24h
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - blood-db
+    networks:
+      - app-net
+
+  # Admin Backend (Port 5002)
+  backend-admin:
+    build:
+      context: ./
+      dockerfile: backend-admin/Dockerfile
+    container_name: blood-backend-admin
+    ports:
+      - "5002:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRES_IN=24h
+      - FRONTEND_URL=http://localhost:3001
+    depends_on:
+      - blood-db
+    networks:
+      - app-net
+
+  # Donor Backend (Port 5003)
+  backend-donor:
+    build:
+      context: ./
+      dockerfile: backend-donor/Dockerfile
+    container_name: blood-backend-donor
+    ports:
+      - "5003:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRES_IN=24h
+      - FRONTEND_URL=http://localhost:3002
+    depends_on:
+      - blood-db
+    networks:
+      - app-net
+
+  # BloodBank Backend (Port 5004)
+  backend-bloodbank:
+    build:
+      context: ./
+      dockerfile: backend-bloodbank/Dockerfile
+    container_name: blood-backend-bloodbank
+    ports:
+      - "5004:3000"
     environment:
       - PORT=3000
       - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
@@ -18,16 +77,17 @@ services:
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
+      - FRONTEND_URL=http://localhost:3003
     depends_on:
       - blood-db
     networks:
       - app-net
 
   # ==========================================
-  # FRONTEND SERVICES (Separated by Role)
+  # FRONTEND SERVICES (Each with its own Backend)
   # ==========================================
 
-  # Login / Main App Container (Port 3000)
+  # Login / Main App Container (Port 3000) -> Backend Login (5001)
   web-login:
     build:
       context: ../frontend
@@ -35,14 +95,16 @@ services:
     container_name: blood-frontend-login
     ports:
       - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:5001
     volumes:
-      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx-configs/nginx-login.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - blood-backend-api
+      - backend-login
     networks:
       - app-net
 
-  # Admin Dashboard Container (Port 3001)
+  # Admin Dashboard Container (Port 3001) -> Backend Admin (5002)
   web-admin:
     build:
       context: ../frontend
@@ -50,14 +112,16 @@ services:
     container_name: blood-frontend-admin
     ports:
       - "3001:80"
+    environment:
+      - VITE_API_URL=http://localhost:5002
     volumes:
-      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx-configs/nginx-admin.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - blood-backend-api
+      - backend-admin
     networks:
       - app-net
 
-  # Donor Dashboard Container (Port 3002)
+  # Donor Dashboard Container (Port 3002) -> Backend Donor (5003)
   web-donor:
     build:
       context: ../frontend
@@ -65,14 +129,16 @@ services:
     container_name: blood-frontend-donor
     ports:
       - "3002:80"
+    environment:
+      - VITE_API_URL=http://localhost:5003
     volumes:
-      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx-configs/nginx-donor.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - blood-backend-api
+      - backend-donor
     networks:
       - app-net
 
-  # Blood Bank Dashboard Container (Port 3003)
+  # Blood Bank Dashboard Container (Port 3003) -> Backend BloodBank (5004)
   web-bloodbank:
     build:
       context: ../frontend
@@ -80,15 +146,17 @@ services:
     container_name: blood-frontend-bloodbank
     ports:
       - "3003:80"
+    environment:
+      - VITE_API_URL=http://localhost:5004
     volumes:
-      - ../frontend/nginx-local.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx-configs/nginx-bloodbank.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - blood-backend-api
+      - backend-bloodbank
     networks:
       - app-net
 
   # ==========================================
-  # DATABASE
+  # DATABASE (Shared)
   # ==========================================
   blood-db:
     image: mongo:6

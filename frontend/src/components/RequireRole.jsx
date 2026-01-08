@@ -71,7 +71,7 @@ export default function RequireRole({ children, allowedRoles = [] }) {
         console.warn('RequireRole: Role mismatch but already at dashboard. Allowing rendering to prevent loop.');
         return children;
       }
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/user-profile" replace />;
     }
   }
 

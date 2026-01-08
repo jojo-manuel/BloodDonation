@@ -13,8 +13,8 @@ const donorValidation = [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('blood_group').isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).withMessage('Invalid blood group'),
     body('contact').trim().notEmpty().withMessage('Contact is required'),
-    body('age').isInt({ min: 18, max: 65 }).withMessage('Age must be between 18 and 65'),
-    body('hospital_id').trim().notEmpty().withMessage('Hospital ID is required')
+    body('age').isInt({ min: 18, max: 65 }).withMessage('Age must be between 18 and 65')
+    // hospital_id validation removed
 ];
 
 // ==========================================
@@ -24,7 +24,7 @@ const donorValidation = [
 /**
  * POST /donors
  * Create a new donor profile
- * Access: BLOODBANK_ADMIN
+ * Access: Authenticated User / BLOODBANK_ADMIN
  */
 router.post('/', donorValidation, validateEligibility, async (req, res) => {
     try {
@@ -37,11 +37,23 @@ router.post('/', donorValidation, validateEligibility, async (req, res) => {
         }
 
         // Get hospital_id from headers (set by gateway)
-        const hospital_id = req.headers['x-hospital-id'] || req.body.hospital_id;
+        const hospital_id = req.headers['x-hospital-id'] || req.body.hospital_id || 'generic';
+        const userId = req.headers['x-user-id'];
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID is required for registration' });
+        }
+
+        // Check if donor already exists
+        const existingDonor = await Donor.findOne({ userId });
+        if (existingDonor) {
+            return res.status(400).json({ success: false, message: 'You are already registered as a donor' });
+        }
 
         const donor = new Donor({
             ...req.body,
-            hospital_id
+            hospital_id,
+            userId
         });
 
         await donor.save();
@@ -155,6 +167,62 @@ router.get('/', async (req, res) => {
             message: 'Failed to fetch donors',
             error: error.message
         });
+    }
+});
+
+/**
+ * GET /address/:postalCode
+ * Get address details by postal code
+ * Access: Authenticated User
+ */
+router.get('/address/:postalCode', async (req, res) => {
+    try {
+        const { postalCode } = req.params;
+
+        // Use India Post API
+        const response = await fetch(`https://api.postalpincode.in/pincode/${postalCode}`);
+        const data = await response.json();
+
+        if (data && data.length > 0 && data[0].Status === 'Success') {
+            res.json({
+                success: true,
+                data: data[0].PostOffice
+            });
+        } else {
+            res.status(404).json({ success: false, message: 'Invalid pincode or no data found' });
+        }
+    } catch (error) {
+        console.error('Pincode fetch error:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch address' });
+    }
+});
+
+/**
+ * GET /me
+ * Get current user's donor profile
+ * Access: Authenticated User
+ */
+router.get('/me', async (req, res) => {
+    try {
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID not found in context' });
+        }
+
+        const donor = await Donor.findOne({ userId: userId });
+
+        if (!donor) {
+            return res.status(404).json({
+                success: false,
+                message: 'Donor profile not found',
+                requiresRegistration: true
+            });
+        }
+
+        res.json({ success: true, data: donor });
+    } catch (error) {
+        console.error('Get me error:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

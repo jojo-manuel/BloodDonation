@@ -52,7 +52,7 @@ export default function AuthCallback() {
           console.log('✅ AuthCallback: Verification - stored role:', storedRole);
 
           // Redirect based on user role
-          let redirectPath = '/dashboard'; // default for regular users
+          let redirectPath = '/user-profile'; // default for regular users
           if (role === 'bloodbank') {
             redirectPath = '/bloodbank/dashboard';
           } else if (role === 'admin') {

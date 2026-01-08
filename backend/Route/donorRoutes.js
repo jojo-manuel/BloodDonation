@@ -19,6 +19,15 @@ router.put('/update', authMiddleware, validate({ body: donorRegisterBody }), upd
 // Delete the authenticated user's donor profile
 router.delete('/delete', authMiddleware, deleteDonor);
 
+// Get the authenticated user's donor profile
+router.get('/me', authMiddleware, getMe);
+
+// Get address details by postal code
+router.get('/address/:postalCode', getAddressByPostalCode);
+
+// Get unique cities where donors are available
+router.get('/cities/available', getAvailableCities);
+
 // Public donor search with filters
 router.get('/search', searchDonors);
 
@@ -27,9 +36,6 @@ router.get('/searchByMrid/:mrid', searchDonorsByMrid);
 
 // Get a single donor by id
 router.get('/:id', getOne);
-
-// Get the authenticated user's donor profile
-router.get('/me', authMiddleware, getMe);
 
 // Respond to a donation request (accept or reject)
 router.put('/requests/:requestId/respond', authMiddleware, respondToRequest);
@@ -50,11 +56,5 @@ router.put('/requests/:id/status', authMiddleware, donationRequestController.upd
 
 // List all donation requests (admin view)
 router.get('/requests/all', authMiddleware, donationRequestController.listAll);
-
-// Get address details by postal code
-router.get('/address/:postalCode', getAddressByPostalCode);
-
-// Get unique cities where donors are available
-router.get('/cities/available', getAvailableCities);
 
 module.exports = router;

@@ -46,9 +46,15 @@ const donorSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    userId: {
+        type: String,
+        required: [true, 'User ID is required'],
+        unique: true
+    },
     hospital_id: {
         type: String,
-        required: [true, 'Hospital ID is required'],
+        required: false, // Changed from true to false for self-registration
+        default: 'generic', // Default value
         trim: true
     },
     address: {
