@@ -8,6 +8,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files
+app.use('/uploads', express.static('uploads'));
+
 // CORS Configuration
 const allowedOrigins = [
     'http://localhost:5173',
