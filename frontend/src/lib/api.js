@@ -64,13 +64,17 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const errorMessage = error.response?.data?.message || error.message;
 
-    console.error(`❌ API Error: ${requestMethod} ${fullUrl}`);
-    console.error(`   Status: ${status || 'Network Error'}`);
-    console.error(`   Message: ${errorMessage}`);
-    console.error(`   Response Data:`, error.response?.data);
+    // Skip logging for expected 404 on /donors/me (check for existing profile)
+    if (!(status === 404 && requestUrl.includes('/donors/me'))) {
+      console.error(`❌ API Error: ${requestMethod} ${fullUrl}`);
+      console.error(`   Status: ${status || 'Network Error'}`);
+      console.error(`   Message: ${errorMessage}`);
+      console.error(`   Response Data:`, error.response?.data);
+    }
 
     // If it's a "Route not found" error, show more details
-    if (errorMessage === 'Route not found' || status === 404) {
+    // Skip logging for /donors/me 404 as it is a valid check for existence
+    if ((errorMessage === 'Route not found' || status === 404) && !requestUrl.includes('/donors/me')) {
       console.error(`🚨 ROUTE NOT FOUND DETAILS:`);
       console.error(`   Full URL: ${fullUrl}`);
       console.error(`   Base URL: ${error.config?.baseURL}`);
