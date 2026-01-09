@@ -83,18 +83,7 @@ function Navbar({ onLogout }) {
             </div>
             {showDropdown && (
               <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-white/10 backdrop-blur-xl rounded-2xl w-52 border border-white/20">
-                <li className="mb-1">
-                  <a
-                    onClick={handleProfileClick}
-                    className="justify-between rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200 text-white cursor-pointer"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-sm">👤</span>
-                      Profile
-                    </span>
-                    <span className="badge badge-primary badge-sm bg-rose-500/20 text-rose-200 border-rose-500/30">New</span>
-                  </a>
-                </li>
+                {/* Profile link removed as requested */}
                 <li className="mb-1">
                   <a
                     onClick={handleSettingsClick}
