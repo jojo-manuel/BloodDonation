@@ -58,6 +58,14 @@ app.use('/api/bloodbank', bloodbankRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
 
+// Patient Routes
+const patientRoutes = require('./modules/patient/routes/routes');
+app.use('/api/patients', patientRoutes);
+
+// Review Routes
+const reviewRoutes = require('./modules/review/routes/routes');
+app.use('/api/reviews', reviewRoutes);
+
 // Users Routes
 const userRoutes = require('./modules/users/routes/users');
 app.use('/api/users', userRoutes);

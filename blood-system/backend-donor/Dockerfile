@@ -9,9 +9,6 @@ COPY backend-donor/package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy source code (app.js and server.js)
-COPY backend-donor/src/ ./src/
-
 # Copy shared modules from monolith
 COPY backend-monolith/src/modules/auth/ ./src/modules/auth/
 COPY backend-monolith/src/modules/donor/ ./src/modules/donor/
@@ -19,6 +16,9 @@ COPY backend-monolith/src/modules/request/ ./src/modules/request/
 COPY backend-monolith/src/modules/inventory/ ./src/modules/inventory/
 COPY backend-monolith/src/modules/users/ ./src/modules/users/
 COPY backend-monolith/src/middleware/ ./src/middleware/
+
+# Copy source code (app.js, server.js, and local module overrides)
+COPY backend-donor/src/ ./src/
 
 # Expose port
 EXPOSE 3000

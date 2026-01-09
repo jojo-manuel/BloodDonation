@@ -11,7 +11,7 @@ export function ChatProvider({ children }) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
-    const [pollingEnabled, setPollingEnabled] = useState(true);
+    const [pollingEnabled, setPollingEnabled] = useState(false);
 
     // Fetch all conversations
     const fetchConversations = useCallback(async () => {
@@ -98,6 +98,9 @@ export function ChatProvider({ children }) {
         if (!pollingEnabled) return;
 
         const pollInterval = setInterval(() => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) return; // Don't poll if not logged in
+
             fetchUnreadCount();
             if (currentConversation) {
                 fetchMessages(currentConversation._id);
@@ -112,10 +115,13 @@ export function ChatProvider({ children }) {
 
     // Initial fetch
     useEffect(() => {
+        // Chat disabled for debugging
+        /*
         const token = localStorage.getItem('accessToken');
         if (token) {
             fetchUnreadCount();
         }
+        */
     }, [fetchUnreadCount]);
 
     const value = {

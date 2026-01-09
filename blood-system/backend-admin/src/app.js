@@ -42,10 +42,12 @@ app.get('/health', (req, res) => {
 const authRoutes = require('./modules/auth/routes/auth');
 const adminRoutes = require('./modules/admin/routes/admin');
 const userRoutes = require('./modules/users/routes/users');
+const chatRoutes = require('./modules/chat/routes/chat');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error Handling
 app.use((err, req, res, next) => {
@@ -55,7 +57,7 @@ app.use((err, req, res, next) => {
 
 // 404 for unhandled routes
 app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Route not found on Admin Backend' });
+    res.status(404).json({ success: false, message: 'Route not found on REAL ADMIN BACKEND' });
 });
 
 module.exports = app;

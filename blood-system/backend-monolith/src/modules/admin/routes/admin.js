@@ -41,6 +41,22 @@ router.get('/donors', async (req, res) => {
     }
 });
 
+// PATCH /api/admin/bloodbanks/:id/approve - Approve a blood bank
+router.patch('/bloodbanks/:id/approve', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        user.isActive = true;
+        await user.save();
+
+        res.json({ success: true, message: 'Blood bank approved successfully', data: user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // GET /api/admin/bloodbanks - List all blood banks
 router.get('/bloodbanks', async (req, res) => {
     try {

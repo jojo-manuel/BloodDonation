@@ -101,6 +101,8 @@ services:
       - ./nginx-configs/nginx-login.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend-login
+      - backend-donor
+      - backend-bloodbank
     networks:
       - app-net
 

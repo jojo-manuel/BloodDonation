@@ -21,6 +21,8 @@ COPY backend-monolith/src/modules/request/ ./src/modules/request/
 COPY backend-monolith/src/modules/notification/ ./src/modules/notification/
 COPY backend-monolith/src/modules/users/ ./src/modules/users/
 COPY backend-monolith/src/modules/chat/ ./src/modules/chat/
+COPY backend-monolith/src/modules/patient/ ./src/modules/patient/
+COPY backend-monolith/src/modules/review/ ./src/modules/review/
 COPY backend-monolith/src/middleware/ ./src/middleware/
 
 # Expose port

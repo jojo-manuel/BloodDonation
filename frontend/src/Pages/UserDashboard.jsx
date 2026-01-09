@@ -436,8 +436,19 @@ export default function UserDashboard() {
         setPatients(patientsData);
       }
 
-      // Blood bank feature removed; ensure empty list
-      setBloodBanks([]);
+      // Fetch blood banks
+      try {
+        const bbRes = await api.get('/bloodbank/all');
+        console.log('🏥 Blood Banks Response:', bbRes.data);
+        if (bbRes.data.success) {
+          setBloodBanks(bbRes.data.data || []);
+        } else {
+          setBloodBanks([]);
+        }
+      } catch (bbError) {
+        console.error('❌ Error fetching blood banks:', bbError);
+        setBloodBanks([]);
+      }
     } catch (error) {
       console.error('❌ Error fetching patients:', error);
       console.error('Error details:', error.response?.data);

@@ -17,6 +17,7 @@ COPY backend-monolith/src/modules/auth/ ./src/modules/auth/
 COPY backend-monolith/src/modules/admin/ ./src/modules/admin/
 COPY backend-monolith/src/modules/users/ ./src/modules/users/
 COPY backend-monolith/src/modules/request/ ./src/modules/request/
+COPY backend-monolith/src/modules/chat/ ./src/modules/chat/
 COPY backend-monolith/src/middleware/ ./src/middleware/
 
 # Expose port

@@ -67,7 +67,22 @@ export default function BloodBankDashboard() {
   const [bookings, setBookings] = useState([]); // Added for booking display
   const [donors, setDonors] = useState([]);
   const [bloodBankDetails, setBloodBankDetails] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
+  const [analytics, setAnalytics] = useState({
+    overview: {
+      totalBooking: 0,
+      completedBookings: 0,
+      totalPatients: 0,
+      fulfilledPatients: 0
+    },
+    timeBased: {
+      today: { bookings: 0 },
+      thisWeek: { bookings: 0 },
+      thisMonth: { bookings: 0, patients: 0, requests: 0 }
+    },
+    bloodGroupDistribution: [],
+    monthlyTrend: [],
+    recentActivity: []
+  });
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [editingPatient, setEditingPatient] = useState(null);
   const [rescheduleModal, setRescheduleModal] = useState(null); // For reschedule modal
@@ -434,7 +449,7 @@ export default function BloodBankDashboard() {
       const res = await api.get("/bloodbank/donors");
       if (res.data.success) {
         setDonors(res.data.data);
-        console.log(`âœ… Fetched ${res.data.data.length} donors from database`);
+        console.log(`✅ Fetched ${res.data.data.length} donors from database`);
       }
     } catch (err) {
       console.error("Failed to fetch donors", err);
@@ -1715,7 +1730,7 @@ export default function BloodBankDashboard() {
                   <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
                     <div className="mb-6 text-center">
                       <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                        ðŸ¥ Patients List
+                        🏥 Patients List
                       </h2>
                       <p className="text-sm text-gray-700 dark:text-gray-300">
                         Manage all patients requiring blood transfusions
@@ -1764,14 +1779,14 @@ export default function BloodBankDashboard() {
                                   onClick={() => startEditing(p)}
                                   className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
                                 >
-                                  <span className="mr-1">âœï¸</span>
+                                  <span className="mr-1">✏️</span>
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleDeletePatient(p._id)}
                                   className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 px-4 py-2 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
                                 >
-                                  <span className="mr-1">ðŸ—‘ï¸</span>
+                                  <span className="mr-1">🗑️</span>
                                   Delete
                                 </button>
                               </div>
@@ -1788,7 +1803,7 @@ export default function BloodBankDashboard() {
                 <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
                   <div className="mb-6 text-center">
                     <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                      ðŸ“… Booked Slots
+                      📅 Booked Slots
                     </h2>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
                       View and manage all confirmed booking slots
@@ -1799,7 +1814,7 @@ export default function BloodBankDashboard() {
                   <div className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 shadow-md">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                        <span className="text-2xl">ðŸ”</span>
+                        <span className="text-2xl">🔍</span>
                         Filter Bookings
                       </h3>
                       <button

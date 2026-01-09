@@ -28,6 +28,8 @@ export default function BloodBankAdminRegister() {
   const [formData, setFormData] = useState({
     name: "",
     hospitalName: "",
+    email: "",
+    password: "",
     pincode: "",
     localBody: "",
     district: "",
@@ -49,6 +51,9 @@ export default function BloodBankAdminRegister() {
     const errors = [];
     if (!formData.name.trim()) errors.push("Blood bank name is required");
     if (!formData.hospitalName.trim()) errors.push("Hospital name is required");
+    if (!formData.email.trim()) errors.push("Email/Username is required");
+    if (!formData.password.trim()) errors.push("Password is required");
+    if (formData.password.length < 6) errors.push("Password must be at least 6 characters");
     if (!formData.pincode.trim()) errors.push("Pincode is required");
     if (!/^[0-9]{6}$/.test(formData.pincode)) errors.push("Pincode must be 6 digits");
     if (!formData.localBody.trim()) errors.push("Local body is required");
@@ -78,6 +83,8 @@ export default function BloodBankAdminRegister() {
       const payload = {
         name: formData.name,
         hospitalName: formData.hospitalName,
+        email: formData.email,
+        password: formData.password,
         pincode: formData.pincode,
         localBody: formData.localBody,
         district: formData.district,
@@ -114,7 +121,7 @@ export default function BloodBankAdminRegister() {
           <p className="mb-6 text-center text-sm text-gray-600 dark:text-gray-400">
             Fill in the details below. Your registration will be reviewed by an admin.
           </p>
-          
+
           {errors.length > 0 && (
             <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700 dark:bg-red-900/30 dark:text-red-400">
               <ul className="list-disc list-inside">
@@ -154,6 +161,39 @@ export default function BloodBankAdminRegister() {
                 onChange={handleInputChange}
                 required
                 placeholder="Enter hospital name"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+                Username (Email) *
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                placeholder="Enter email for login"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
+                Password *
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                placeholder="Create a password"
+                minLength={6}
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               />
             </div>

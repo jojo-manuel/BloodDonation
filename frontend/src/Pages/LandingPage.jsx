@@ -181,6 +181,12 @@ export default function LandingPage() {
             >
               Staff Login
             </button>
+            <button
+              onClick={() => navigate("/bloodbank-register")}
+              className="px-8 py-4 rounded-xl bg-purple-600/20 border border-purple-500/50 text-purple-400 font-bold text-lg hover:bg-purple-600 hover:text-white transition-all shadow-lg shadow-purple-900/10 hover:shadow-purple-900/40 hover:-translate-y-1"
+            >
+              Register Blood Bank
+            </button>
           </div>
 
           <div className="mt-16 pt-8 border-t border-white/5 grid grid-cols-3 gap-8">

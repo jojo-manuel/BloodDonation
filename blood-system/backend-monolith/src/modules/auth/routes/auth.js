@@ -15,7 +15,8 @@ const registerValidation = [
 ];
 
 const loginValidation = [
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    // body('email').isEmail().normalizeEmail().withMessage('Valid email is required'), // Disabled to allow username login
+    body('email').notEmpty().withMessage('Email or Username is required'),
     body('password').notEmpty().withMessage('Password is required')
 ];
 
@@ -59,12 +60,21 @@ router.post('/register', registerValidation, async (req, res) => {
 
 router.post('/login', loginValidation, async (req, res) => {
     try {
+        console.log('Login Request Body:', req.body);
         const errors = validationResult(req);
-        if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+        if (!errors.isEmpty()) {
+            console.log('Login Validation Errors:', errors.array());
+            return res.status(400).json({ success: false, errors: errors.array() });
+        }
 
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        let { email, password } = req.body;
+        if (email) email = email.trim();
+
+        // Search by email OR username (if the field 'email' contains a username)
+        const user = await User.findOne({
+            $or: [{ email: email }, { username: email }]
+        });
+        if (!user) return res.status(401).json({ success: false, message: 'Invalid email/username or password' });
 
         if (!user.isActive) return res.status(403).json({ success: false, message: 'Account deactivated' });
 

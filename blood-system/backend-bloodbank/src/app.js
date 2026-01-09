@@ -57,6 +57,13 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 
+// New Routes
+const patientRoutes = require('./modules/patient/routes/routes');
+const reviewRoutes = require('./modules/review/routes/routes');
+
+app.use('/api/patients', patientRoutes);
+app.use('/api/reviews', reviewRoutes);
+
 // Error Handling
 app.use((err, req, res, next) => {
     console.error(err.stack);
