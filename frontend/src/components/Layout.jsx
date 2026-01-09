@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import api from "../lib/api";
-import ChatWidget from "./ChatWidget";
+// import ChatWidget from "./ChatWidget";
 
 function Navbar({ onLogout }) {
   const navigate = useNavigate();
@@ -152,7 +152,7 @@ export default function Layout({ children }) {
       <Footer />
 
       {/* Chat Widget - only show if user is logged in */}
-      {localStorage.getItem('accessToken') && <ChatWidget />}
+      {/* {localStorage.getItem('accessToken') && <ChatWidget />} */}
     </div>
   );
 }
