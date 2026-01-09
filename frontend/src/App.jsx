@@ -56,7 +56,7 @@ function App() {
             {/* User/Donor Dashboard - Restricted to users and donors */}
             <Route path="/dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
             <Route path="/user-dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
-            <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserProfile /></RequireRole>} />
+            {/* <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserProfile /></RequireRole>} /> */}
             <Route path="/user-settings" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserSettings /></RequireRole>} />
 
             {/* Admin Dashboard - Restricted to admins */}
