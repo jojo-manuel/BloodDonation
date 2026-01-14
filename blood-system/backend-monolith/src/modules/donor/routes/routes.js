@@ -163,10 +163,84 @@ router.get('/search', async (req, res) => {
         if (city) query['houseAddress.city'] = city;
         if (availability) query.availability = (availability === 'available');
 
+        console.log('🔍 Donor Search Request:', { bloodGroup, city, availability });
+        console.log('🔍 Constructed Query:', JSON.stringify(query));
+
         const donors = await Donor.find(query).select('-__v -createdAt -updatedAt');
+        console.log(`✅ Search Results: Found ${donors.length} donors`);
+
         res.json({ success: true, count: donors.length, data: donors });
     } catch (error) {
         console.error('Error searching donors:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Search donors by patient MRID
+router.get('/searchByMrid/:mrid', async (req, res) => {
+    try {
+        const { mrid } = req.params;
+        const { bloodBankId } = req.query;
+
+        console.log(`🔍 Search by MRID: ${mrid}, BloodBank: ${bloodBankId || 'Any'}`);
+
+        if (!mrid) {
+            return res.status(400).json({ success: false, message: 'MR number is required' });
+        }
+
+        // Import Patient model dynamically to avoid load order issues
+        // In Docker, we ensure this module is copied.
+        const Patient = require('../../patient/models/Patient');
+
+        // Build query to find patient
+        const patientQuery = { mrid: mrid.toUpperCase() };
+        if (bloodBankId) {
+            patientQuery.bloodBankId = bloodBankId;
+        }
+
+        const patient = await Patient.findOne(patientQuery);
+
+        if (!patient) {
+            let msg = 'Patient not found with given MR number';
+            if (bloodBankId) msg += ' and Blood Bank';
+            return res.status(404).json({ success: false, message: msg });
+        }
+
+        console.log(`✅ Patient found: ${patient.name} (${patient.bloodGroup})`);
+
+        // Find donors specific to this patient's needs
+        // Logic: Match blood group. Exclude blocked/suspended.
+        // Assuming we want ALL compatible donors or just EXACT match?
+        // Usually exact match is preferred first.
+
+        const query = {
+            blood_group: patient.bloodGroup,
+            isActive: true
+            // isBlocked: false // Schema check needed
+        };
+
+        const donors = await Donor.find(query).select('-password');
+
+        console.log(`✅ Donors found: ${donors.length}`);
+
+        res.json({
+            success: true,
+            message: `Found ${donors.length} donor(s)`,
+            data: donors,
+            patientInfo: {
+                mrid: patient.mrid,
+                bloodGroup: patient.bloodGroup,
+                name: patient.name,
+                bloodBankId: patient.bloodBankId
+            }
+        });
+
+    } catch (error) {
+        console.error('Error searching by MRID:', error);
+        // If module not found (e.g. Patient not copied), handle gracefully
+        if (error.code === 'MODULE_NOT_FOUND') {
+            return res.status(500).json({ success: false, message: 'Configuration Error: Patient module missing' });
+        }
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

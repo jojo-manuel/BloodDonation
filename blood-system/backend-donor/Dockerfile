@@ -12,6 +12,7 @@ RUN npm install
 # Copy shared modules from monolith
 COPY backend-monolith/src/modules/auth/ ./src/modules/auth/
 COPY backend-monolith/src/modules/donor/ ./src/modules/donor/
+COPY backend-monolith/src/modules/patient/ ./src/modules/patient/
 COPY backend-monolith/src/modules/request/ ./src/modules/request/
 COPY backend-monolith/src/modules/inventory/ ./src/modules/inventory/
 COPY backend-monolith/src/modules/users/ ./src/modules/users/

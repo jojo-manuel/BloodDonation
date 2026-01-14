@@ -46,8 +46,10 @@ const authRoutes = require('./modules/auth/routes/auth');
 const donorRoutes = require('./modules/donor/routes/routes');
 const requestRoutes = require('./modules/request/routes/routes');
 const userRoutes = require('./modules/users/routes/users');
+const patientRoutes = require('./modules/patient/routes/routes');
+const bloodbankRoutes = require('./modules/bloodbank/routes/routes');
 
-// Mount routes with and without /api prefix to support both Gateway and Direct Nginx access
+// Mount routes with and without /api prefix
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
 
@@ -59,6 +61,12 @@ app.use('/requests', requestRoutes);
 
 app.use('/api/users', userRoutes);
 app.use('/users', userRoutes);
+
+app.use('/api/patients', patientRoutes);
+app.use('/patients', patientRoutes);
+
+app.use('/api/bloodbank', bloodbankRoutes);
+app.use('/bloodbank', bloodbankRoutes);
 
 // Mock Chat Route to prevent 404s
 app.get('/api/chat/unread-count', (req, res) => {

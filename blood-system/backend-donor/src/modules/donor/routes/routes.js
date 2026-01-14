@@ -17,5 +17,8 @@ router.get('/me', authenticate, donorController.getProfile);
 router.post('/register', authenticate, donorController.createProfile);
 router.put('/update', authenticate, donorController.updateProfile);
 router.delete('/delete', authenticate, donorController.deleteProfile);
+// Send request to donor
+const requestController = require('../../request/controllers/requestController');
+router.post('/:donorId/requests', authenticate, requestController.createRequest);
 
 module.exports = router;

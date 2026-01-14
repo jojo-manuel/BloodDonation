@@ -1,5 +1,6 @@
 const axios = require('axios');
 const Donor = require('../models/donorModel');
+const User = require('../../users/models/UserModel');
 
 exports.getAddressByPincode = async (req, res) => {
     try {
@@ -107,9 +108,14 @@ exports.searchDonors = async (req, res) => {
 
         if (bloodGroup) query.bloodGroup = bloodGroup;
         if (city) query['houseAddress.city'] = new RegExp(city, 'i'); // Case-insensitive
-        if (availability) query.availability = availability === 'true';
+        if (availability === 'available') query.availability = true;
+        else if (availability === 'unavailable') query.availability = false;
+        // If availability is somehow 'true'/'false' strings
+        else if (availability === 'true') query.availability = true;
+        else if (availability === 'false') query.availability = false;
 
-        const donors = await Donor.find(query);
+        const donors = await Donor.find(query)
+            .populate('userId', 'username name email phone profileImage');
         res.json({ success: true, data: donors });
     } catch (error) {
         console.error('Error searching donors:', error);
@@ -121,29 +127,60 @@ exports.searchDonors = async (req, res) => {
 exports.searchDonorsByMrid = async (req, res) => {
     try {
         const { mrid } = req.params;
-        // Logic to search by MRID would go here if MRID was part of Donor model
-        // For now, keeping the mock logic as requested previously or implementing if MRID is added
+        const { bloodBankId } = req.query;
+        const Patient = require('../models/PatientModel');
 
-        // Since MRID is likely on the Patient or Hospital side or a specific field we haven't added to Donor,
-        // we'll keep the mock purely for demonstration unless instructed otherwise.
-
-        const mockDonor = {
-            _id: '675a7c2d8e4b1a2f3c4d5e6f',
-            name: 'Mock Donor',
-            bloodGroup: 'O+',
-            contactNumber: '1234567890',
-            email: 'mock@donor.com',
-            address: '123 Mock St, Mock City',
-            mrid: mrid
-        };
-
-        if (mrid === '123') {
-            res.json({ success: true, data: [mockDonor] });
-        } else {
-            res.status(404).json({ success: false, message: 'Donor not found with this MRID' });
+        if (!mrid) {
+            return res.status(400).json({ success: false, message: 'MRID is required' });
         }
+
+        // Build query
+        const query = { mrid: { $regex: new RegExp(`^${mrid}$`, 'i') } };
+        if (bloodBankId) {
+            // The frontend sends the User _id of the blood bank.
+            // But the Patient model stores 'hospital_id' which corresponds to the 'hospital_id' field in the User model.
+            // So we must fetch the User to get the correct hospital_id string.
+            const bbUser = await User.findById(bloodBankId);
+            if (bbUser && bbUser.hospital_id) {
+                query.hospital_id = bbUser.hospital_id;
+            } else {
+                // Fallback: use the provided ID directly
+                query.hospital_id = bloodBankId;
+            }
+        }
+
+        // Find patient by MRID (case-insensitive) and optionally blood bank
+        const patient = await Patient.findOne(query);
+
+        if (!patient) {
+            console.log(`Patient not found for MRID: ${mrid}${bloodBankId ? ` and Blood Bank: ${bloodBankId}` : ''}`);
+            return res.status(404).json({ success: false, message: 'Patient not found with this MRID' });
+        }
+
+        console.log(`Found patient: ${patient.patientName || patient.name}, BG: ${patient.bloodGroup}`);
+
+        // Find donors matching the patient's blood group
+        const donors = await Donor.find({
+            bloodGroup: patient.bloodGroup,
+            availability: true
+        })
+            .populate('userId', 'username name email phone profileImage');
+
+        console.log(`Found ${donors.length} matching donors for BG ${patient.bloodGroup}`);
+
+        res.json({
+            success: true,
+            data: donors,
+            patientInfo: {
+                name: patient.patientName || patient.name,
+                bloodGroup: patient.bloodGroup,
+                mrid: patient.mrid,
+                hospital_id: patient.hospital_id
+            }
+        });
+
     } catch (error) {
         console.error('Error searching donor by MRID:', error);
-        res.status(500).json({ success: false, message: 'Failed to search donor' });
+        res.status(500).json({ success: false, message: 'Failed to search donor by MRID' });
     }
 };

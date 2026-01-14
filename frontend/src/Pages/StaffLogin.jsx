@@ -75,7 +75,9 @@ export default function StaffLogin() {
                 // Validate Role
                 const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'bloodbank'];
 
-                if (allowedRoles.includes(res.data.data.user.role)) {
+                if (res.data.data.user.role === 'bleeding_staff') {
+                    navigate("/bloodbank/bleeding-staff");
+                } else if (allowedRoles.includes(res.data.data.user.role)) {
                     // Redirect to dashboard
                     navigate("/bloodbank/dashboard");
                 } else {

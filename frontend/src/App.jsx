@@ -14,6 +14,7 @@ import BloodBankAdminRegister from "./Pages/BloodBankAdminRegister";
 import BloodBankLogin from "./Pages/BloodBankLogin";
 import StaffLogin from "./Pages/StaffLogin";
 import BloodBankDashboard from "./Pages/BloodBankDashboard";
+import BleedingStaffDashboard from "./Pages/BleedingStaffDashboard";
 import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
 import UserProfile from "./Pages/UserProfile";
@@ -64,6 +65,9 @@ function App() {
 
             {/* Blood Bank Dashboard - Restricted to blood bank staff */}
             <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
+
+            {/* Dedicated Bleeding Staff Dashboard */}
+            <Route path="/bloodbank/bleeding-staff" element={<RequireRole allowedRoles={['bleeding_staff', 'bloodbank']}><BleedingStaffDashboard /></RequireRole>} />
 
             <Route path="/bloodbank-login" element={<BloodBankLogin />} />
             <Route path="/staff-login" element={<StaffLogin />} />

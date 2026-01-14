@@ -4,8 +4,8 @@ services:
     name: blood-backend
     runtime: docker
     plan: free
-    dockerfilePath: blood-system/backend-monolith/Dockerfile
-    dockerContext: blood-system/backend-monolith
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
     envVars:
       - key: PORT
         value: "3000"

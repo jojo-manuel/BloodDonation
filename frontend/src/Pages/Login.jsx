@@ -125,9 +125,10 @@ export default function Login() {
             username: user.username
           }).toString();
 
+          const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
           if (user?.role.toLowerCase() === 'admin') {
             window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
-          } else if (user?.role.toLowerCase() === 'bloodbank') {
+          } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
             window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
           } else {
             // Default user/donor
@@ -211,9 +212,10 @@ export default function Login() {
             username: user.username
           }).toString();
 
+          const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
           if (user?.role.toLowerCase() === 'admin') {
             window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
-          } else if (user?.role.toLowerCase() === 'bloodbank') {
+          } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
             window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
           } else {
             // Default user/donor - Redirect to Port 3002

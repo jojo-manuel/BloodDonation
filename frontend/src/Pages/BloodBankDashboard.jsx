@@ -60,7 +60,7 @@ const ConfirmationModal_Removed = ({ isOpen, title, message, type = 'confirm', o
 
 export default function BloodBankDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview'); // Default to overview
+  const [activeTab, setActiveTab] = useState(localStorage.getItem('role') === 'bleeding_staff' ? 'bleeding' : 'overview'); // Default view based on role
   const [patients, setPatients] = useState([]);
   const [users, setUsers] = useState([]);
   const [donationRequests, setDonationRequests] = useState([]);
@@ -224,7 +224,10 @@ export default function BloodBankDashboard() {
       setLoading(true);
       const res = await api.post('/bloodbank/staff', newStaffData);
       if (res.data.success) {
-        setCreatedStaffCredentials(res.data.data); // Capture credentials including password
+        setCreatedStaffCredentials({
+          username: res.data.data.staff.username || res.data.data.staff.email,
+          generatedPassword: res.data.data.credentials.password
+        });
         setShowStaffModal(false);
         setShowCredentialsModal(true); // Show success modal
         setNewStaffData({ name: '', role: 'frontdesk', email: '', phone: '' }); // Reset form
@@ -250,7 +253,7 @@ export default function BloodBankDashboard() {
           const res = await api.post(`/bloodbank/staff/${staffId}/reset-password`);
           if (res.data.success) {
             setCreatedStaffCredentials({
-              username: res.data.data.username,
+              username: res.data.data.email,
               generatedPassword: res.data.data.newPassword
             });
             setShowCredentialsModal(true);
@@ -595,6 +598,11 @@ export default function BloodBankDashboard() {
 
       if (res.data.success) {
         setSearchedBooking(res.data.data);
+        // Initialize bleeding data if found
+        setBleedingData({
+          weight: res.data.data.weight || '',
+          bagSerialNumber: res.data.data.bagSerialNumber || ''
+        });
       } else {
         showToast('Booking not found', 'error');
         setSearchedBooking(null);
@@ -604,6 +612,39 @@ export default function BloodBankDashboard() {
       setSearchedBooking(null);
     } finally {
       setSearchingToken(false);
+    }
+  };
+
+  // Bleeding Room State
+  const [bleedingData, setBleedingData] = useState({ weight: '', bagSerialNumber: '' });
+  const [updatingBleeding, setUpdatingBleeding] = useState(false);
+
+  // Handle Bleeding Completion
+  const handleBleedingComplete = async () => {
+    if (!searchedBooking) return;
+    if (!bleedingData.weight || !bleedingData.bagSerialNumber) {
+      showToast('Please enter both Weight and Bag Serial Number', 'warning');
+      return;
+    }
+
+    setUpdatingBleeding(true);
+    try {
+      const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
+        status: 'completed',
+        weight: bleedingData.weight,
+        bagSerialNumber: bleedingData.bagSerialNumber
+      });
+
+      if (res.data.success) {
+        setSearchedBooking(res.data.data); // Update view with new data
+        showToast('Donation completed and verified successfully! 🎉', 'success');
+        // Optional: clear search after delay or keep showing success state
+      }
+    } catch (err) {
+      console.error("Failed to complete bleeding", err);
+      showToast(err.response?.data?.message || "Failed to update details", 'error');
+    } finally {
+      setUpdatingBleeding(false);
     }
   };
 
@@ -1246,6 +1287,11 @@ export default function BloodBankDashboard() {
     });
   };
 
+  const handleCopy = (text, label) => {
+    navigator.clipboard.writeText(text);
+    showToast(`${label} copied to clipboard!`, 'success');
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/bloodbank-login");
@@ -1279,6 +1325,7 @@ export default function BloodBankDashboard() {
               { id: 'users', label: 'Manage Users', icon: '👥' },
               { id: 'staff', label: 'Manage Staff', icon: '👔' },
               { id: 'frontdesk', label: 'Frontdesk', icon: '🖥️' },
+              { id: 'bleeding', label: 'Bleeding Room', icon: '💉' },
               { id: 'reviews', label: 'Reviews', icon: '⭐' },
             ]
               .filter(item => {
@@ -2482,13 +2529,31 @@ export default function BloodBankDashboard() {
                           </p>
 
                           <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-5 mb-6 text-left border border-gray-200 dark:border-gray-700 select-all">
-                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3">
-                              <p className="text-xs uppercase text-gray-500 font-bold mb-1">Username</p>
-                              <p className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">{createdStaffCredentials.username}</p>
+                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3 flex justify-between items-end">
+                              <div>
+                                <p className="text-xs uppercase text-gray-500 font-bold mb-1">Username</p>
+                                <p className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">{createdStaffCredentials.username}</p>
+                              </div>
+                              <button
+                                onClick={() => handleCopy(createdStaffCredentials.username, 'Username')}
+                                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                                title="Copy Username"
+                              >
+                                📋
+                              </button>
                             </div>
-                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3">
-                              <p className="text-xs uppercase text-gray-500 font-bold mb-1">Password</p>
-                              <p className="font-mono text-xl font-bold text-green-600 dark:text-green-400 tracking-wider">{createdStaffCredentials.generatedPassword}</p>
+                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3 flex justify-between items-end">
+                              <div>
+                                <p className="text-xs uppercase text-gray-500 font-bold mb-1">Password</p>
+                                <p className="font-mono text-xl font-bold text-green-600 dark:text-green-400 tracking-wider break-all">{createdStaffCredentials.generatedPassword}</p>
+                              </div>
+                              <button
+                                onClick={() => handleCopy(createdStaffCredentials.generatedPassword, 'Password')}
+                                className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
+                                title="Copy Password"
+                              >
+                                📋
+                              </button>
                             </div>
                             <div>
                               <p className="text-xs uppercase text-gray-500 font-bold mb-1">Login URL</p>
@@ -3508,6 +3573,158 @@ export default function BloodBankDashboard() {
                           </p>
                         </div>
                       </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Bleeding Room Tab */}
+              {activeTab === 'bleeding' && (
+                <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
+                  <div className="mb-6 text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                      💉 Bleeding Room
+                    </h2>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Verify donor details and manage blood collection
+                    </p>
+                  </div>
+
+                  {/* Token Search Section */}
+                  <div className="max-w-2xl mx-auto mb-8">
+                    <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-700">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <span className="text-2xl">🔍</span>
+                        Scan/Enter Token Number
+                      </h3>
+
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          placeholder="Token #"
+                          value={tokenSearch}
+                          onChange={(e) => setTokenSearch(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleTokenSearch()}
+                          className="flex-1 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 font-mono text-lg"
+                        />
+                        <button
+                          onClick={handleTokenSearch}
+                          disabled={searchingToken}
+                          className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-500 text-white rounded-xl font-semibold hover:from-red-700 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                        >
+                          {searchingToken ? (
+                            <>
+                              <span className="inline-block animate-spin">🕒</span>
+                              Searching...
+                            </>
+                          ) : (
+                            <>
+                              <span>🔍</span>
+                              Search
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking Details & Action */}
+                  {searchedBooking ? (
+                    <div className="max-w-4xl mx-auto animate-fadeIn">
+                      <div className="rounded-2xl border-2 border-red-300 dark:border-red-700 bg-white dark:bg-gray-800 p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+                          <div className="flex items-center gap-4">
+                            <span className="px-4 py-2 rounded-lg bg-yellow-100 text-yellow-800 font-mono font-bold text-xl border border-yellow-300">
+                              #{searchedBooking.tokenNumber}
+                            </span>
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {searchedBooking.donorName}
+                              </h3>
+                              <p className="text-sm text-gray-500 font-mono">{searchedBooking.bookingId}</p>
+                            </div>
+                          </div>
+                          <span className="text-3xl font-bold text-red-600">{searchedBooking.bloodGroup}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          {/* Left Column: Details */}
+                          <div className="space-y-4">
+                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                              <p className="text-sm text-gray-500 font-semibold uppercase">Patient / Recipient</p>
+                              <p className="text-lg font-medium text-gray-900 dark:text-white">{searchedBooking.patientName || 'General Donation'}</p>
+                              {searchedBooking.patientMRID && <p className="text-sm text-gray-500">MRID: {searchedBooking.patientMRID}</p>}
+                            </div>
+
+                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                              <p className="text-sm text-gray-500 font-semibold uppercase">Status</p>
+                              <span className={`inline-block px-3 py-1 rounded-full text-sm font-bold mt-1 ${searchedBooking.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                searchedBooking.status === 'arrived' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                {searchedBooking.status.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right Column: Key Inputs */}
+                          <div className="space-y-6">
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                ⚖️ Donor Weight (kg)
+                              </label>
+                              <input
+                                type="number"
+                                placeholder="Enter weight"
+                                value={bleedingData.weight}
+                                onChange={(e) => setBleedingData({ ...bleedingData, weight: e.target.value })}
+                                disabled={searchedBooking.status === 'completed'}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500 bg-white dark:bg-gray-700 text-xl font-bold"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                👜 Bag Serial Number
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Scan/Enter Bag #"
+                                  value={bleedingData.bagSerialNumber}
+                                  onChange={(e) => setBleedingData({ ...bleedingData, bagSerialNumber: e.target.value })}
+                                  disabled={searchedBooking.status === 'completed'}
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 focus:border-red-500 focus:ring-red-500 bg-white dark:bg-gray-700 text-xl font-mono font-bold"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Check physically against the bag label.
+                              </p>
+                            </div>
+
+                            {searchedBooking.status !== 'completed' && (
+                              <button
+                                onClick={handleBleedingComplete}
+                                disabled={updatingBleeding}
+                                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-green-500/30 transition transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                              >
+                                {updatingBleeding ? 'Verifying...' : '✅ Verify & Complete Donation'}
+                              </button>
+                            )}
+
+                            {searchedBooking.status === 'completed' && (
+                              <div className="p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-xl text-center font-bold">
+                                Donation Recorded Successfully
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 opacity-50">
+                      <div className="text-6xl mb-4">🩸</div>
+                      <p>Waiting for token scan...</p>
                     </div>
                   )}
                 </div>

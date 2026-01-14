@@ -387,4 +387,35 @@ router.get('/:id/eligibility', async (req, res) => {
     }
 });
 
+
+/**
+ * GET /test-collection
+ * Fetch data from 'test' collection and 'donors' collection
+ * Access: Public (for debugging)
+ */
+router.get('/test-collection', async (req, res) => {
+    try {
+        // Access the raw 'test' collection from the database
+        const testCollectionData = await Donor.db.collection('test').find({}).toArray();
+
+        // Fetch donors data
+        const donorsData = await Donor.find({}).limit(20);
+
+        res.json({
+            success: true,
+            data: {
+                test_collection: testCollectionData,
+                donors_collection: donorsData
+            }
+        });
+    } catch (error) {
+        console.error('Fetch test collection error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch combined data',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

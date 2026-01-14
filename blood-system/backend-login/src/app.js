@@ -59,6 +59,17 @@ app.get('/api/notifications', (req, res) => {
     res.json({ success: true, data: [] });
 });
 
+// DEBUG: List all users
+const User = require('./modules/auth/models/User');
+app.get('/api/debug/users', async (req, res) => {
+    try {
+        const users = await User.find({}, 'email role username hospital_id isActive');
+        res.json({ success: true, count: users.length, users });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Error Handling
 app.use((err, req, res, next) => {
     console.error(err.stack);

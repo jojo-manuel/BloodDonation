@@ -17,13 +17,24 @@ router.get('/', verifyToken, async (req, res) => {
 // GET /api/patients/search - Search patients (e.g., by MRID)
 router.get('/search', verifyToken, async (req, res) => {
     try {
-        const hospital_id = req.user.hospital_id;
-        const { mrid } = req.query;
+        const { mrid, bloodBankId } = req.query;
+        // Logic: Use provided bloodBankId (for donors) or fallback to logged-in hospital's ID
+        const targetHospitalId = bloodBankId || req.user.hospital_id;
 
-        let query = { hospital_id };
+        let query = {};
+
+        if (targetHospitalId) {
+            query.hospital_id = targetHospitalId;
+        }
+
         if (mrid) {
             // Case-insensitive regex match for MRID
             query.mrid = { $regex: mrid, $options: 'i' };
+        }
+
+        // Require either a hospital ID OR an MRID to search
+        if (!query.hospital_id && !query.mrid) {
+            return res.status(400).json({ success: false, message: 'Blood Bank ID or MRID is required' });
         }
 
         const patients = await Patient.find(query);

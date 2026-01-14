@@ -22,7 +22,10 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['DONOR', 'DOCTOR', 'BLOODBANK_ADMIN', 'admin', 'bloodbank', 'user'], // Expanded based on usage
+        enum: [
+            'DONOR', 'DOCTOR', 'BLOODBANK_ADMIN', 'admin', 'bloodbank', 'user',
+            'frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'
+        ],
         required: [true, 'Role is required']
     },
     hospital_id: {

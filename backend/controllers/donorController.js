@@ -94,39 +94,50 @@ exports.registerOrUpdateDonor = asyncHandler(async (req, res) => {
  * Query: bloodGroup, city, state, pincode, latitude, longitude, smartMatch, page, limit
  */
 exports.searchDonors = asyncHandler(async (req, res) => {
-  const { 
-    bloodGroup, 
-    city, 
-    state, 
-    pincode, 
-    availability, 
-    latitude, 
+  const {
+    bloodGroup,
+    city,
+    state,
+    pincode,
+    availability,
+    latitude,
     longitude,
     smartMatch = 'true', // Enable smart matching by default
-    page = 1, 
-    limit = 10 
+    page = 1,
+    limit = 10
   } = req.query;
-  
+
+  // Use a local variable to handle logic
+  let useSmartMatch = smartMatch === 'true';
+
+  // Force smartMatch to false if no blood group is provided
+  // Smart matching requires a blood group to calculate compatibility scores
+  if (!bloodGroup) {
+    useSmartMatch = false;
+  }
+
   const maxLimit = Math.min(Number(limit) || 10, 50);
   const skip = (Number(page) - 1) * maxLimit;
 
   const filter = {};
-  
+
   // Basic filters (less strict when smart matching is enabled)
-  if (smartMatch !== 'true') {
+  // If smartMatch is enabled but no bloodGroup is provided, we must fall back to basic matching
+  // because matchDonors requires bloodGroup to function.
+  if (!useSmartMatch) {
     // Traditional exact matching
     if (bloodGroup) filter.bloodGroup = bloodGroup;
     if (city) filter['houseAddress.city'] = city;
     if (state) filter['houseAddress.district'] = state;
     if (pincode) filter['houseAddress.pincode'] = pincode;
   }
-  
+
   if (availability === 'available') filter.availability = true;
 
   // Filter for donors eligible to donate (never donated OR donated 3+ months ago)
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
-  
+
   filter.$or = [
     { lastDonatedDate: null }, // Never donated
     { lastDonatedDate: { $exists: false } }, // Field doesn't exist
@@ -140,10 +151,10 @@ exports.searchDonors = asyncHandler(async (req, res) => {
 
   // Exclude donors who have active bookings (not yet donated)
   const Booking = require('../Models/Booking');
-  const activeDonorIds = await Booking.find({ 
-    status: { $in: ['pending', 'confirmed'] } 
+  const activeDonorIds = await Booking.find({
+    status: { $in: ['pending', 'confirmed'] }
   }).distinct('donorId');
-  
+
   // Add to the filter to exclude donors with active bookings
   if (filter._id) {
     if (filter._id.$nin) {
@@ -188,9 +199,9 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   }));
 
   // Apply smart matching if enabled
-  if (smartMatch === 'true' && bloodGroup) {
+  if (useSmartMatch && bloodGroup) {
     const { matchDonors } = require('../utils/donorMatcher');
-    
+
     const searchCriteria = {
       bloodGroup,
       latitude: latitude ? parseFloat(latitude) : null,
@@ -198,25 +209,25 @@ exports.searchDonors = asyncHandler(async (req, res) => {
       city,
       pincode
     };
-    
+
     // Get matched and scored donors
     donors = matchDonors(donors, searchCriteria);
-    
+
     // Donors are already sorted by score
     const total = donors.length;
     const paginatedDonors = donors.slice(skip, skip + maxLimit);
     const pages = Math.ceil(total / maxLimit);
-    
-    return res.json({ 
-      success: true, 
-      message: 'Smart matching applied', 
+
+    return res.json({
+      success: true,
+      message: 'Smart matching applied',
       smartMatch: true,
-      data: { 
-        data: paginatedDonors, 
-        page: Number(page), 
-        total, 
-        pages 
-      } 
+      data: {
+        data: paginatedDonors,
+        page: Number(page),
+        total,
+        pages
+      }
     });
   }
 
@@ -224,17 +235,17 @@ exports.searchDonors = asyncHandler(async (req, res) => {
   const total = donors.length;
   const paginatedDonors = donors.slice(skip, skip + maxLimit);
   const pages = Math.ceil(total / maxLimit);
-  
-  return res.json({ 
-    success: true, 
-    message: 'OK', 
+
+  return res.json({
+    success: true,
+    message: 'OK',
     smartMatch: false,
-    data: { 
-      data: paginatedDonors, 
-      page: Number(page), 
-      total, 
-      pages 
-    } 
+    data: {
+      data: paginatedDonors,
+      page: Number(page),
+      total,
+      pages
+    }
   });
 });
 
@@ -244,14 +255,24 @@ exports.searchDonors = asyncHandler(async (req, res) => {
  */
 exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
   const { mrid } = req.params;
+  const { bloodBankId } = req.query;
+
   if (!mrid) {
     return res.status(400).json({ success: false, message: 'MR number is required' });
   }
 
-  // Find patient by MRID: normalize to uppercase and compare directly
-  const patient = await Patient.findOne({ mrid: mrid.toUpperCase() });
+  // Build query to find patient
+  const patientQuery = { mrid: mrid.toUpperCase() };
+  if (bloodBankId) {
+    patientQuery.bloodBankId = bloodBankId;
+  }
+
+  // Find patient by MRID (and optionally bloodBankId)
+  const patient = await Patient.findOne(patientQuery);
   if (!patient) {
-    return res.status(404).json({ success: false, message: 'Patient not found with given MR number' });
+    let msg = 'Patient not found with given MR number';
+    if (bloodBankId) msg += ' and Blood Bank';
+    return res.status(404).json({ success: false, message: msg });
   }
 
   // Use patient's bloodGroup to find ALL donors with matching blood group
@@ -261,8 +282,8 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
 
   // Exclude suspended and blocked donors from search results
   const User = require('../Models/User');
-  const suspendedUserIds = await User.find({ 
-    $or: [{ isSuspended: true }, { isBlocked: true }] 
+  const suspendedUserIds = await User.find({
+    $or: [{ isSuspended: true }, { isBlocked: true }]
   }).distinct('_id');
   if (suspendedUserIds.length > 0) {
     filter.userId = { $nin: suspendedUserIds };
@@ -283,23 +304,23 @@ exports.searchDonorsByMrid = asyncHandler(async (req, res) => {
 
   donors = donors.map(donor => {
     const isEligible = !donor.lastDonatedDate || donor.lastDonatedDate < threeMonthsAgo;
-    const daysSinceLastDonation = donor.lastDonatedDate 
+    const daysSinceLastDonation = donor.lastDonatedDate
       ? Math.floor((new Date() - new Date(donor.lastDonatedDate)) / (1000 * 60 * 60 * 24))
       : null;
-    
+
     return {
       ...donor,
       eligibilityStatus: isEligible ? 'eligible' : 'not_eligible',
       daysSinceLastDonation,
-      nextEligibleDate: donor.lastDonatedDate 
+      nextEligibleDate: donor.lastDonatedDate
         ? new Date(new Date(donor.lastDonatedDate).getTime() + (90 * 24 * 60 * 60 * 1000))
         : null
     };
   });
 
-  return res.json({ 
-    success: true, 
-    message: `Found ${donors.length} donor(s) with blood group ${patient.bloodGroup}`, 
+  return res.json({
+    success: true,
+    message: `Found ${donors.length} donor(s) with blood group ${patient.bloodGroup}`,
     data: donors,
     patientInfo: {
       mrid: patient.mrid,
@@ -577,39 +598,39 @@ exports.getAvailableCities = asyncHandler(async (req, res) => {
     // Exclude suspended donors
     const User = require('../Models/User');
     const suspendedUserIds = await User.find({ isSuspended: true }).distinct('_id');
-    
+
     // Exclude donors who have completed donations
     const Booking = require('../Models/Booking');
     const completedDonorIds = await Booking.find({ status: 'completed' }).distinct('donorId');
-    
+
     const filter = {
       lastDonatedDate: { $lt: new Date() },
       userId: { $nin: suspendedUserIds }
     };
-    
+
     if (completedDonorIds.length > 0) {
       filter._id = { $nin: completedDonorIds };
     }
-    
+
     // Get unique cities from available donors
     const cities = await Donor.distinct('houseAddress.city', filter);
-    
+
     // Filter out empty/null cities and sort alphabetically
     const validCities = cities
       .filter(city => city && city.trim().length > 0)
       .map(city => city.trim())
       .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
-    
-    return res.json({ 
-      success: true, 
-      message: 'Available cities retrieved', 
-      data: validCities 
+
+    return res.json({
+      success: true,
+      message: 'Available cities retrieved',
+      data: validCities
     });
   } catch (error) {
     console.error('Error fetching available cities:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch available cities' 
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch available cities'
     });
   }
 });

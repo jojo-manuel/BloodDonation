@@ -170,12 +170,21 @@ router.get('/staff', authMiddleware, async (req, res) => {
 // POST /api/bloodbank/staff - Create new staff member
 router.post('/staff', authMiddleware, async (req, res) => {
     try {
-        const { name, email, phone, role } = req.body;
+        const { name, role, phone } = req.body;
+        let { email } = req.body;
         const bloodBankId = req.user.hospital_id;
 
+        // Auto-generate email if not provided (for "Optional" field in frontend)
+        if (!email || !email.trim()) {
+            const randomId = Math.random().toString(36).slice(-6);
+            // Remove spaces and special chars from name for email prefix
+            const safeName = name ? name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 8) : 'staff';
+            email = `${safeName}_${randomId}@staff.local`;
+        }
+
         // Validate required fields
-        if (!name || !email || !role) {
-            return res.status(400).json({ success: false, message: 'Name, email, and role are required' });
+        if (!name || !role) {
+            return res.status(400).json({ success: false, message: 'Name and role are required' });
         }
 
         // Check if email already exists
@@ -400,10 +409,12 @@ router.put('/bookings/:id/status', authMiddleware, async (req, res) => {
     try {
         const bloodBankId = req.user.hospital_id;
         const { id } = req.params;
-        const { status, rejectionReason } = req.body;
+        const { status, rejectionReason, weight, bagSerialNumber } = req.body;
 
         const updateData = { status };
-        if (rejectionReason) updateData.rejectionReason = rejectionReason; // Assuming rejectionReason isn't in schema yet, likely needs addition or mixed into 'notes'
+        if (rejectionReason) updateData.rejectionReason = rejectionReason;
+        if (weight) updateData.weight = weight;
+        if (bagSerialNumber) updateData.bagSerialNumber = bagSerialNumber;
         // Actually I didn't add rejectionReason to schema. I should probably add it or use 'notes'.
         // Schema has 'notes' (wait, 'notes' was in Request). Booking has no extra fields.
         // I should add 'rejectionReason' to schema if I want to save it, or just ignore for now.

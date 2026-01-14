@@ -51,12 +51,45 @@ export default function AuthCallback() {
           console.log('✅ AuthCallback: Verification - stored token:', storedToken ? 'present' : 'missing');
           console.log('✅ AuthCallback: Verification - stored role:', storedRole);
 
-          // Redirect based on user role
+          // Redirect based on user role and enforce correct port (service)
           let redirectPath = '/dashboard'; // default for regular users
-          if (role === 'bloodbank') {
-            redirectPath = '/bloodbank/dashboard';
+          const currentPort = window.location.port;
+          const currentHostname = window.location.hostname;
+          const authParams = searchParams.toString();
+
+          const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+
+          if (role === 'bloodbank' || staffRoles.includes(role)) {
+            // Blood Bank Roles -> Port 3003
+            if (currentPort !== '3003') {
+              console.log('🚀 AuthCallback: Wrong port for blood bank staff. Redirecting to Port 3003.');
+              window.location.href = `http://${currentHostname}:3003/auth/callback?${authParams}`;
+              return; // Stop execution
+            }
+
+            if (role === 'bleeding_staff') {
+              redirectPath = '/bloodbank/bleeding-staff';
+            } else {
+              redirectPath = '/bloodbank/dashboard';
+            }
           } else if (role === 'admin') {
+            // Admin Role -> Port 3001
+            if (currentPort !== '3001') {
+              console.log('🚀 AuthCallback: Wrong port for admin. Redirecting to Port 3001.');
+              window.location.href = `http://${currentHostname}:3001/auth/callback?${authParams}`;
+              return;
+            }
             redirectPath = '/admin-dashboard';
+          } else {
+            // Donor/User Role -> Port 3002 (or 3000 if acting as main, but usually 3002)
+            // If we want to enforce 3002 for donors:
+            if (['3001', '3003'].includes(currentPort)) {
+              // If a donor accidentally lands on admin/bloodbank port, verify if we should move them?
+              // Usually OK to let them stay if the app supports it, but strictly 3002 is better for API routing.
+              console.log('🚀 AuthCallback: Wrong port for donor. Redirecting to Port 3002.');
+              window.location.href = `http://${currentHostname}:3002/auth/callback?${authParams}`;
+              return;
+            }
           }
 
           console.log('🚀 AuthCallback: Redirecting to:', redirectPath);

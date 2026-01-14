@@ -35,6 +35,32 @@ export default function UserDashboard() {
   });
   const [results, setResults] = useState([]);
   const [mrid, setMrid] = useState("");
+  const [mridBloodBankFilter, setMridBloodBankFilter] = useState(""); // Filter for MRID search
+  const [bloodBanks, setBloodBanks] = useState([]); // List of available blood banks
+  const [searchMode, setSearchMode] = useState('general'); // 'general' | 'mrid'
+
+  // Clear results when switching search modes
+  useEffect(() => {
+    setResults([]);
+    setMridResults([]);
+    setMridError('');
+    setMridSuccess('');
+  }, [searchMode]);
+
+  // Fetch blood banks for dropdown
+  useEffect(() => {
+    const fetchBloodBanks = async () => {
+      try {
+        const res = await api.get('/bloodbank/all');
+        if (res.data.success) {
+          setBloodBanks(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch blood banks", err);
+      }
+    };
+    fetchBloodBanks();
+  }, []);
   const [mridResults, setMridResults] = useState([]);
   const [selectedBloodBank, setSelectedBloodBank] = useState(""); // For multiple blood bank selection
   const [sentRequests, setSentRequests] = useState([]);
@@ -123,12 +149,17 @@ export default function UserDashboard() {
     setLoading(true);
     try {
       const query = new URLSearchParams(searchParams).toString();
+      console.log('🔍 Executing search with query:', query);
       const res = await api.get(`/donors/search?${query}`);
+      console.log('📩 Search response:', res.data);
       if (res.data.success) {
         const node = res?.data?.data;
+        // Handle both pagination formats and direct array
         const arr = Array.isArray(node) ? node : (node?.data || []);
+        console.log('📊 Parsed results:', arr.length, 'donors');
         setResults(arr);
       } else {
+        console.warn('⚠️ Search failed:', res.data.message);
         setResults([]);
       }
     } catch (err) {
@@ -156,7 +187,11 @@ export default function UserDashboard() {
 
     try {
       // Call donor search endpoint (not patient search!)
-      const response = await api.get(`/donors/searchByMrid/${encodeURIComponent(trimmed)}`);
+      let url = `/donors/searchByMrid/${encodeURIComponent(trimmed)}`;
+      if (mridBloodBankFilter) {
+        url += `?bloodBankId=${mridBloodBankFilter}`;
+      }
+      const response = await api.get(url);
 
       if (response.data.success) {
         const donors = response.data.data || [];
@@ -167,14 +202,16 @@ export default function UserDashboard() {
         if (donors.length === 0) {
           setMridError(`Patient found (MRID: ${trimmed}, Blood Group: ${patientInfo?.bloodGroup || 'Unknown'}), but no matching donors available.`);
         } else {
-          setMridSuccess(`Found ${donors.length} donor(s) with blood group ${patientInfo?.bloodGroup || 'matching'} for patient "${patientInfo?.name || trimmed}"`);
+          setMridSuccess(`Found ${donors.length} donor(s) matching patient "${patientInfo?.name || 'Unknown'}" (MRID: ${trimmed}, Blood Group: ${patientInfo?.bloodGroup || 'Unknown'})`);
         }
       } else {
-        setMridError(response.data.message || 'No patient found with this MRID.');
+        // This is where "No patient found with this MRID" comes from if success=false
+        // However, if we want to be more helpful:
+        setMridError(response.data.message || `No patient found with MRID: ${trimmed}`);
         setMridResults([]);
       }
     } catch (error) {
-      const message = error?.response?.data?.message || 'Patient not found with the provided MRID.';
+      const message = error?.response?.data?.message || `Patient search failed for MRID: ${trimmed}`;
       setMridError(message);
       setMridResults([]);
     } finally {
@@ -182,38 +219,36 @@ export default function UserDashboard() {
     }
   };
 
-  // Fetch donation requests sent by the authenticated user
+  // Fetch donation requests (both sent and received)
   const fetchRequests = async () => {
     try {
-      const username = localStorage.getItem('username');
-      // Updated to use the correct Request Service endpoint
-      const sentRes = await api.get('/requests');
-      if (sentRes.data.success) {
-        setSentRequests(sentRes.data.data.requests || sentRes.data.data);
+      const res = await api.get('/requests');
+      if (res.data.success) {
+        const data = res.data.data;
+        // Backend returns { requests: [...], received: [...] }
+        if (data && (data.requests || data.received)) {
+          setSentRequests(data.requests || []);
+          setReceivedRequests(data.received || []);
+        } else if (Array.isArray(data)) {
+          // Fallback for older structure
+          setSentRequests(data);
+          setReceivedRequests([]);
+        }
       } else {
         setSentRequests([]);
+        setReceivedRequests([]);
       }
     } catch (err) {
       console.error("Error fetching requests:", err);
-      setSentRequests([]);
+      // Don't clear on error to prevent flashing, or clear if critical
+      // setSentRequests([]);
+      // setReceivedRequests([]);
     }
     setLoading(false);
   };
 
-  // Fetch donation requests received by the authenticated user
-  // Note: Backend 'Request' model currently maps User -> Hospital, not User -> User.
-  // P2P requests are not fully supported yet.
   const fetchReceivedRequests = async () => {
-    try {
-      // const receivedRes = await api.get('/donors/requests/all');
-      // if (receivedRes.data.success) {
-      //   setReceivedRequests(receivedRes.data.data);
-      // } else {
-      setReceivedRequests([]); // Default to empty
-      // }
-    } catch (err) {
-      setReceivedRequests([]);
-    }
+    // No-op, handled by fetchRequests now
   };
 
 
@@ -401,6 +436,12 @@ export default function UserDashboard() {
 
     // Check for reschedule notifications on mount (after login)
     fetchRescheduleNotifications();
+
+    // Initial donor fetch
+    if (activeTab === "findDonors") {
+      const e = { preventDefault: () => { } };
+      handleSearch(e);
+    }
   }, []);
 
   useEffect(() => {
@@ -421,6 +462,16 @@ export default function UserDashboard() {
       fetchReceivedRequests();
     }, 10000); // every 10s
     return () => clearInterval(id);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "searchByMrid" || activeTab === "myRequests") {
+      api.get('/bloodbank/all').then(res => {
+        if (res.data.success) {
+          setBloodBanks(res.data.data || []);
+        }
+      }).catch(err => console.error("Failed to fetch blood banks:", err));
+    }
   }, [activeTab]);
 
   // Fetch available patients and blood banks for request
@@ -468,6 +519,16 @@ export default function UserDashboard() {
       return;
     }
     setRequestModal(donor);
+
+    // Auto-fill patient details if coming from MRID search
+    if (searchMode === 'mrid' && mrid) {
+      setPatientSearchMRID(mrid);
+      setPatientSearchBloodBank(mridBloodBankFilter || '');
+    } else {
+      setPatientSearchMRID('');
+      setPatientSearchBloodBank('');
+    }
+
     fetchPatientsAndBloodBanks();
   };
 
@@ -638,7 +699,6 @@ export default function UserDashboard() {
   }); // Password change data
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [patients, setPatients] = useState([]); // Available patients
-  const [bloodBanks, setBloodBanks] = useState([]); // Available blood banks
   const [selectedPatient, setSelectedPatient] = useState('');
   const [patientSearchMRID, setPatientSearchMRID] = useState(''); // For MRID search
   const [patientSearchBloodBank, setPatientSearchBloodBank] = useState(''); // For blood bank filter
@@ -662,6 +722,7 @@ export default function UserDashboard() {
       if (bloodBankId) params.append('bloodBankId', bloodBankId);
       if (mrid) params.append('mrid', mrid);
 
+      // Use the newly created /patients/search endpoint
       const res = await api.get(`/patients/search?${params.toString()}`);
 
       if (res.data.success) {
@@ -671,25 +732,26 @@ export default function UserDashboard() {
         // Auto-select if only one patient found
         if (res.data.count === 1) {
           const patient = res.data.data[0];
-          console.log('🎯 Auto-selecting patient:', patient.name, '| MRID:', patient.mrid);
+          console.log('🎯 Auto-selecting patient:', patient.name || patient.patientName, '| MRID:', patient.mrid);
           setSelectedPatient(patient._id);
-          setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
-        } else if (res.data.count === 0) {
-          console.log('❌ No patients found matching criteria');
-          setSelectedPatient('');
-        } else {
-          console.log(`📋 Found ${res.data.count} patients - user needs to select one`);
+
+          // Ensure blood bank dropdown matches the auto-selected patient
+          const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
+          if (bbId && bbId !== patientSearchBloodBank) {
+            setPatientSearchBloodBank(bbId);
+          }
         }
       } else {
         setSearchedPatients([]);
       }
     } catch (error) {
       console.error('❌ Error searching patients:', error);
-      setSearchedPatients([]);
+      // Fallback: don't clear, maybe user is offline or API error, let local filter handle it if possible
     } finally {
       setSearchingPatients(false);
     }
   };
+
 
   // Trigger database search when blood bank or MRID changes
   useEffect(() => {
@@ -711,51 +773,53 @@ export default function UserDashboard() {
     console.log('  Blood Bank Selected:', patientSearchBloodBank);
     console.log('  MRID Entered:', patientSearchMRID);
     console.log('  Total Patients Loaded:', patients.length);
+    console.log('  Searched Patients:', searchedPatients.length);
 
-    if (!patientSearchBloodBank || !patientSearchMRID || patients.length === 0) {
-      console.log('⏸️ Skipping auto-selection (missing criteria)');
-      return; // Need both blood bank and MRID to auto-populate
+    // If we have search results (searchedPatients), use those. 
+    // Otherwise fallback to filtering the 'patients' array.
+    const sourcePatients = searchedPatients.length > 0 ? searchedPatients : patients;
+
+    // Proceed if we have patients, even if blood bank is not selected yet
+    if (sourcePatients.length === 0) {
+      console.log('⏸️ Skipping auto-selection (no patients loaded)');
+      return;
     }
 
-    // Filter patients by blood bank and MRID
-    let filteredPatients = patients.filter(p => {
-      const bbId = p.bloodBankId?._id || p.bloodBankId;
-      const matchesBloodBank = bbId === patientSearchBloodBank;
-      const matchesMRID = p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase());
+    // Filter patients by blood bank (if selected) and MRID
+    let filteredPatients = sourcePatients.filter(p => {
+      const bbId = p.bloodBankId?._id || p.bloodBankId || p.hospital_id;
 
-      console.log(`  Checking patient: ${p.name} (MRID: ${p.mrid})`);
-      console.log(`    Blood Bank Match: ${matchesBloodBank} (${bbId} === ${patientSearchBloodBank})`);
-      console.log(`    MRID Match: ${matchesMRID}`);
+      // If blood bank is selected, it must match
+      const matchesBloodBank = !patientSearchBloodBank || bbId === patientSearchBloodBank;
+
+      // If we are using searchedPatients, they presumably already matched the MRID query if one was sent.
+      // But we double check locally if needed, or if using 'patients' list.
+      const matchesMRID = !patientSearchMRID || (p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase()));
 
       return matchesBloodBank && matchesMRID;
     });
 
     console.log(`📊 Filtered Results: ${filteredPatients.length} patient(s)`);
 
-    // If exactly 1 patient matches, auto-select it
-    if (filteredPatients.length === 1) {
+    // If exactly 1 patient matches AND user entered an MRID, auto-select it.
+    if (filteredPatients.length === 1 && patientSearchMRID) {
       const patient = filteredPatients[0];
-      console.log('🎯 Auto-selecting patient:');
+      console.log('🎯 Auto-selecting patient (MRID match):');
       console.log('  Name:', patient.name || patient.patientName);
-      console.log('  MRID:', patient.mrid);
-      console.log('  Blood Group:', patient.bloodGroup);
-      console.log('  Blood Bank:', patient.bloodBankId?.name);
+
       setSelectedPatient(patient._id);
-      setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
-    } else if (filteredPatients.length === 0) {
-      // No matches - clear selection
-      console.log('❌ No patients found with MRID:', patientSearchMRID);
-      setSelectedPatient('');
-    } else {
-      // Multiple matches - user needs to choose
-      console.log(`📋 Found ${filteredPatients.length} patients with MRID containing "${patientSearchMRID}"`);
-      console.log('  Patient options:');
-      filteredPatients.forEach((p, i) => {
-        console.log(`    ${i + 1}. ${p.name || p.patientName} - MRID: ${p.mrid}`);
-      });
-      // Don't auto-select, let user choose from dropdown
+
+      // Also auto-fill the Blood Bank dropdown if not already set
+      const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
+      if (bbId && bbId !== patientSearchBloodBank) {
+        setPatientSearchBloodBank(bbId);
+        if (typeof setSelectedBloodBank === 'function') {
+          setSelectedBloodBank(bbId);
+        }
+      }
     }
-  }, [patients, patientSearchBloodBank, patientSearchMRID]);
+  }, [patientSearchBloodBank, patientSearchMRID, patients, searchedPatients]);
+
 
   // Generate booking confirmation PDF with QR code
   const generateBookingPDF = async (bookingData) => {
@@ -1147,6 +1211,20 @@ export default function UserDashboard() {
     }
   };
 
+  // Helper to resolve blood bank name
+  const resolveBloodBankName = (req) => {
+    if (req.bloodBankId?.name) return req.bloodBankId.name;
+    if (req.bloodBankName) return req.bloodBankName;
+
+    // Look up via patient's hospital_id
+    const bbId = req.patientId?.hospital_id || req.patientId?.bloodBankId;
+    if (bbId && bloodBanks.length > 0) {
+      const bb = bloodBanks.find(b => b._id === bbId || b.hospital_id === bbId);
+      if (bb) return bb.name;
+    }
+    return 'Not Specified';
+  };
+
   return (
     <Layout>
       {/* Notification System */}
@@ -1328,89 +1406,139 @@ export default function UserDashboard() {
                 </p>
               </div>
 
-              <form onSubmit={handleSearch} className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Type</label>
-                    <select
-                      name="bloodGroup"
-                      value={searchParams.bloodGroup}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                    >
-                      <option value="" className="text-gray-800">All Blood Types</option>
-                      <option value="A+" className="text-gray-800">A+</option>
-                      <option value="A-" className="text-gray-800">A-</option>
-                      <option value="B+" className="text-gray-800">B+</option>
-                      <option value="B-" className="text-gray-800">B-</option>
-                      <option value="AB+" className="text-gray-800">AB+</option>
-                      <option value="AB-" className="text-gray-800">AB-</option>
-                      <option value="O+" className="text-gray-800">O+</option>
-                      <option value="O-" className="text-gray-800">O-</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Location</label>
-                    <CitySearchDropdown
-                      value={searchParams.city}
-                      onChange={(city) => setSearchParams(prev => ({ ...prev, city }))}
-                      placeholder="Search city with donors..."
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Availability</label>
-                    <select
-                      name="availability"
-                      value={searchParams.availability}
-                      onChange={handleChange}
-                      className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
-                    >
-                      <option value="available" className="text-gray-800">Available Only</option>
-                      <option value="all" className="text-gray-800">All Donors</option>
-                    </select>
-                  </div>
+              <div className="flex justify-center mb-6">
+                <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl inline-flex shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('general')}
+                    className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${searchMode === 'general'
+                      ? 'bg-white dark:bg-gray-700 shadow-md text-pink-600 dark:text-pink-400 transform scale-105'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >
+                    General Search
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('mrid')}
+                    className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${searchMode === 'mrid'
+                      ? 'bg-white dark:bg-gray-700 shadow-md text-pink-600 dark:text-pink-400 transform scale-105'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >
+                    ⭕ Search by MRID
+                  </button>
                 </div>
+              </div>
 
-                {/* MRID quick search inside Find Donors tab */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Patient MRID</label>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      placeholder="Enter patient MRID"
-                      value={mrid}
-                      onChange={(e) => setMrid(e.target.value)}
-                      className="flex-1 rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleMridSearch}
-                      disabled={mridLoading}
-                      className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-indigo-500/30 active:scale-[0.99] disabled:opacity-50"
-                    >
-                      <span className="mr-2">🆔</span>
-                      {mridLoading ? 'Searching...' : 'Search by MRID'}
-                    </button>
+              <form onSubmit={(e) => {
+                if (searchMode === 'general') handleSearch(e);
+                else handleMridSearch(e);
+              }} className="space-y-6">
+
+                {searchMode === 'general' ? (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Type</label>
+                      <select
+                        name="bloodGroup"
+                        value={searchParams.bloodGroup}
+                        onChange={handleChange}
+                        className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white transition-all focus:bg-white/30"
+                      >
+                        <option value="" className="text-gray-800">All Blood Types</option>
+                        <option value="A+" className="text-gray-800">A+</option>
+                        <option value="A-" className="text-gray-800">A-</option>
+                        <option value="B+" className="text-gray-800">B+</option>
+                        <option value="B-" className="text-gray-800">B-</option>
+                        <option value="AB+" className="text-gray-800">AB+</option>
+                        <option value="AB-" className="text-gray-800">AB-</option>
+                        <option value="O+" className="text-gray-800">O+</option>
+                        <option value="O-" className="text-gray-800">O-</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Location</label>
+                      <CitySearchDropdown
+                        value={searchParams.city}
+                        onChange={(city) => setSearchParams(prev => ({ ...prev, city }))}
+                        placeholder="Search city with donors..."
+                        className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300 transition-all focus:bg-white/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Availability</label>
+                      <select
+                        name="availability"
+                        value={searchParams.availability}
+                        onChange={handleChange}
+                        className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white transition-all focus:bg-white/30"
+                      >
+                        <option value="available" className="text-gray-800">Available Only</option>
+                        <option value="all" className="text-gray-800">All Donors</option>
+                      </select>
+                    </div>
                   </div>
-                  {mridError && (
-                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">{mridError}</p>
-                  )}
-                  {mridSuccess && (
-                    <p className="mt-2 text-sm text-green-700 dark:text-green-400">{mridSuccess}</p>
-                  )}
-                </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Blood Bank</label>
+                      <select
+                        value={mridBloodBankFilter}
+                        onChange={(e) => setMridBloodBankFilter(e.target.value)}
+                        className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white transition-all focus:bg-white/30"
+                      >
+                        <option value="" className="text-gray-800">Select Blood Bank (Optional)</option>
+                        {bloodBanks.map((bb) => (
+                          <option key={bb._id} value={bb._id} className="text-gray-800">
+                            {bb.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                <div className="flex justify-center">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">Patient MRID</label>
+                      <input
+                        type="text"
+                        placeholder="Enter patient MRID"
+                        value={mrid}
+                        onChange={(e) => setMrid(e.target.value)}
+                        className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300 transition-all focus:bg-white/30"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Feedback Messages */}
+                {searchMode === 'mrid' && (
+                  <>
+                    {mridError && (
+                      <div className="p-4 rounded-xl bg-red-100 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300 animate-fadeIn">
+                        ⚠️ {mridError}
+                      </div>
+                    )}
+                    {mridSuccess && (
+                      <div className="p-4 rounded-xl bg-green-100 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300 animate-fadeIn">
+                        ✅ {mridSuccess}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="flex justify-center pt-2">
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 px-8 py-3 font-semibold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] hover:shadow-pink-500/30 active:scale-[0.99] disabled:opacity-50"
+                    disabled={loading || mridLoading}
+                    className={`inline-flex items-center justify-center rounded-2xl px-10 py-4 font-bold text-white shadow-lg ring-1 ring-black/10 transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50
+                      ${searchMode === 'general'
+                        ? 'bg-gradient-to-r from-pink-500 to-rose-500 hover:shadow-pink-500/30'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:shadow-indigo-500/30'}`}
                   >
-                    <span className="mr-2">🔍</span>
-                    {loading ? "Searching..." : "Search Donors"}
+                    <span className="mr-2 text-xl">{searchMode === 'general' ? '🔍' : '🆔'}</span>
+                    {loading || mridLoading
+                      ? "Searching..."
+                      : (searchMode === 'general' ? "Find Donors" : "Find Patient & Donors")}
                   </button>
                 </div>
               </form>
@@ -1429,8 +1557,11 @@ export default function UserDashboard() {
 
               {(mridResults.length === 0 && results.length === 0) ? (
                 <div className="text-center py-8">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-                  <p className="mt-2 text-gray-600 dark:text-gray-400">No donors found. Try adjusting your search criteria.</p>
+                  {loading ? (
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+                  ) : (
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">No donors found. Try adjusting your search criteria.</p>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1508,6 +1639,24 @@ export default function UserDashboard() {
                     required
                     className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 placeholder-gray-600 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder-gray-300 uppercase"
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-800 dark:text-gray-200">
+                    Select Blood Bank (Optional)
+                  </label>
+                  <select
+                    value={mridBloodBankFilter}
+                    onChange={(e) => setMridBloodBankFilter(e.target.value)}
+                    className="w-full rounded-2xl border border-white/30 bg-white/20 px-4 py-3 text-gray-900 shadow-inner outline-none backdrop-blur-md focus:ring-2 focus:ring-pink-400/60 dark:border-white/10 dark:bg-white/10 dark:text-white"
+                  >
+                    <option value="" className="text-gray-800">All Blood Banks</option>
+                    {bloodBanks.map((bb) => (
+                      <option key={bb._id} value={bb._id} className="text-gray-800">
+                        {bb.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {mridError && (
@@ -1709,6 +1858,8 @@ export default function UserDashboard() {
                           <thead>
                             <tr className="text-left text-gray-700 dark:text-gray-300">
                               <th className="px-2 py-1">ID</th>
+
+
                               <th className="px-2 py-1">From</th>
                               <th className="px-2 py-1">To</th>
                               <th className="px-2 py-1">Blood Group</th>
@@ -1727,14 +1878,14 @@ export default function UserDashboard() {
                                   {request._id.substring(0, 8)}...
                                 </td>
                                 <td className="px-2 py-1">{loginUsername || 'Me'}</td>
-                                <td className="px-2 py-1">{request.receiverId?.username || request.donorId?.userId?.username || request.donorUsername || request.receiverId?.name || 'N/A'}</td>
+                                <td className="px-2 py-1">{resolveBloodBankName(request) === 'Not Specified' ? (request.patientId?.name || 'Blood Bank') : resolveBloodBankName(request)}</td>
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
                                 <td className="px-2 py-1">{getStatusBadge(request.status)}</td>
                                 <td className="px-2 py-1">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
                                 <td className="px-2 py-1">{request.isActive ? 'Yes' : 'No'}</td>
                                 <td className="px-2 py-1">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
-                                    🏥 {request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || 'Not Specified'}
+                                    🏥 {resolveBloodBankName(request)}
                                   </span>
                                 </td>
                                 <td className="px-2 py-1">
@@ -1747,7 +1898,6 @@ export default function UserDashboard() {
                                 </td>
                                 <td className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex flex-col gap-1 min-w-[180px]">
-                                    {/* Pending/Accepted: Show Cancel & Book Taxi */}
                                     {request.status === 'pending' && (
                                       <button
                                         onClick={() => handleCancelRequest(request._id)}
@@ -1757,36 +1907,7 @@ export default function UserDashboard() {
                                         🚫 Cancel
                                       </button>
                                     )}
-
-                                    {request.status === 'accepted' && (
-                                      <div className="flex flex-col gap-1">
-
-                                        <button
-                                          onClick={() => handleCancelRequest(request._id)}
-                                          disabled={updatingId === request._id}
-                                          className="w-full px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-semibold"
-                                        >
-                                          🚫 Cancel Request
-                                        </button>
-                                      </div>
-                                    )}
-
-                                    {/* Booked: Show View Details & Book/Cancel Taxi */}
-                                    {request.status === 'booked' && (
-                                      <div className="flex flex-col gap-1">
-                                        <button
-                                          onClick={() => setSelectedRequest(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded hover:from-purple-700 hover:to-pink-700 font-semibold"
-                                          title="View booking details and download PDF"
-                                        >
-                                          📋 View Details
-                                        </button>
-
-                                      </div>
-                                    )}
-
-                                    {/* Rejected/Cancelled/Completed: Show View */}
-                                    {['rejected', 'cancelled', 'completed'].includes(request.status) && (
+                                    {['accepted', 'booked', 'rejected', 'cancelled', 'completed'].includes(request.status) && (
                                       <button
                                         onClick={() => setSelectedRequest(request)}
                                         className="w-full px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 font-semibold"
@@ -1835,14 +1956,14 @@ export default function UserDashboard() {
                                 <td className="px-2 py-1 font-mono text-xs cursor-pointer hover:text-pink-600" onClick={() => setSelectedRequest(request)}>
                                   {request._id.substring(0, 8)}...
                                 </td>
-                                <td className="px-2 py-1">{request.senderId?.username || request.requesterId?.username || request.requesterUsername || request.senderId?.name || 'N/A'}</td>
+                                <td className="px-2 py-1">{request.senderId?.username || request.requesterId?.username || request.senderId?.name || 'System/Blood Bank'}</td>
                                 <td className="px-2 py-1">{request.bloodGroup}</td>
                                 <td className="px-2 py-1">{getStatusBadge(request.status)}</td>
                                 <td className="px-2 py-1 text-xs">{request.requestedAt ? new Date(request.requestedAt).toLocaleString() : 'N/A'}</td>
                                 <td className="px-2 py-1">{request.isActive ? '✓' : '✗'}</td>
                                 <td className="px-2 py-1">
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200">
-                                    🏥 {request.bloodBankId?.name || request.bloodBankName || request.bloodBankUsername || 'Not Specified'}
+                                    🏥 {resolveBloodBankName(request)}
                                   </span>
                                 </td>
                                 <td className="px-2 py-1">
@@ -1855,7 +1976,6 @@ export default function UserDashboard() {
                                 </td>
                                 <td className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex flex-col gap-1 min-w-[180px]">
-                                    {/* Pending: Show Accept & Reject */}
                                     {request.status === 'pending' && (
                                       <div className="flex gap-1">
                                         <button
@@ -1876,37 +1996,7 @@ export default function UserDashboard() {
                                         </button>
                                       </div>
                                     )}
-
-                                    {/* Accepted: Show Book Slot */}
-                                    {request.status === 'accepted' && (
-                                      <div className="flex flex-col gap-1">
-                                        <button
-                                          onClick={() => setBookingModal(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded hover:from-blue-700 hover:to-indigo-700 font-semibold flex items-center justify-center gap-1"
-                                          title="Book a donation slot"
-                                        >
-                                          <span>📅</span>
-                                          Book Slot
-                                        </button>
-                                      </div>
-                                    )}
-
-                                    {/* Booked: Show View Details & Book/Cancel Taxi */}
-                                    {request.status === 'booked' && (
-                                      <div className="flex flex-col gap-1">
-                                        <button
-                                          onClick={() => setSelectedRequest(request)}
-                                          className="w-full px-2 py-1 text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded hover:from-purple-700 hover:to-pink-700 font-semibold"
-                                          title="View booking details and download PDF"
-                                        >
-                                          📋 View Details
-                                        </button>
-
-                                      </div>
-                                    )}
-
-                                    {/* Rejected/Cancelled/Completed: Show Status Only */}
-                                    {['rejected', 'cancelled', 'completed'].includes(request.status) && (
+                                    {['accepted', 'booked', 'rejected', 'cancelled', 'completed'].includes(request.status) && (
                                       <button
                                         onClick={() => setSelectedRequest(request)}
                                         className="w-full px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 font-semibold"
@@ -2245,7 +2335,6 @@ export default function UserDashboard() {
         )}
       </div>
 
-      {/* Profile Modal */}
       {showProfileModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -2631,8 +2720,8 @@ export default function UserDashboard() {
                 )}
               </div>
 
-              {/* Patient Preview Panel - Shows after blood bank selection */}
-              {patientSearchBloodBank && (
+              {/* Patient Preview Panel - Shows after blood bank selection or MRID search */}
+              {(patientSearchBloodBank || (patientSearchMRID && searchedPatients.length > 0)) && (
                 <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-300 dark:border-blue-700">
                   <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
                     <span className="text-2xl">📋</span>
@@ -2647,12 +2736,26 @@ export default function UserDashboard() {
                       <p className="mt-2 text-gray-600 dark:text-gray-400">Searching database...</p>
                     </div>
                   ) : (() => {
-                    // Use searched patients if MRID is entered, otherwise filter from loaded patients
-                    const displayPatients = (patientSearchMRID && searchedPatients.length > 0)
+                    // Use searched patients if available (from DB search), otherwise filter from loaded patients
+                    let displayPatients = searchedPatients.length > 0
                       ? searchedPatients
                       : patients.filter(p => {
-                        const bbId = p.bloodBankId?._id || p.bloodBankId;
-                        return bbId === patientSearchBloodBank;
+                        const bbId = p.bloodBankId?._id || p.bloodBankId || p.hospital_id;
+
+                        // Debug log for first few checks
+                        // console.log(`Checking patient ${p.name}: bbId=${bbId}, searchBB=${patientSearchBloodBank}`);
+
+                        // If no blood bank selected, show all. If selected, must match.
+                        // We use weak equality (==) just in case one is string and other is object wrapper
+                        // We also check if bbId is included in patientSearchBloodBank if ids look different
+                        const matchBB = !patientSearchBloodBank ||
+                          bbId == patientSearchBloodBank ||
+                          (typeof bbId === 'string' && typeof patientSearchBloodBank === 'string' && bbId === patientSearchBloodBank);
+
+                        // MRID match (if entered)
+                        const matchMRID = !patientSearchMRID || (p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase()));
+
+                        return matchBB && matchMRID;
                       });
 
                     if (displayPatients.length === 0) {
@@ -2660,13 +2763,11 @@ export default function UserDashboard() {
                         <div className="text-center py-4 text-gray-600 dark:text-gray-400">
                           <p className="text-lg">
                             {patientSearchMRID
-                              ? `📭 No patients found with MRID "${patientSearchMRID}"`
+                              ? `📭 No patients found matching "${patientSearchMRID}"`
                               : '📭 No patients found in this blood bank'}
                           </p>
                           <p className="text-sm mt-2">
-                            {patientSearchMRID
-                              ? 'Try a different MRID or check the blood bank selection.'
-                              : 'This blood bank hasn\'t registered any patients yet.'}
+                            Check the MRID or Blood Bank selection.
                           </p>
                         </div>
                       );
@@ -2687,7 +2788,8 @@ export default function UserDashboard() {
                               onClick={() => {
                                 setPatientSearchMRID(patient.mrid);
                                 setSelectedPatient(patient._id);
-                                setSelectedBloodBank(patient.bloodBankId?._id || patient.bloodBankId);
+                                const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
+                                if (bbId) setSelectedBloodBank(bbId);
                               }}
                               className={`p-3 bg-white dark:bg-gray-800 rounded-lg border ${selectedPatient === patient._id
                                 ? 'border-green-500 dark:border-green-500 ring-2 ring-green-200 dark:ring-green-800'
@@ -2711,9 +2813,29 @@ export default function UserDashboard() {
                                     <span className="font-mono bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded text-yellow-900 dark:text-yellow-200 font-bold">
                                       MRID: {patient.mrid}
                                     </span>
-                                    {patient.bloodBankId?.name && (
-                                      <span className="text-xs">🏥 {patient.bloodBankId.name}</span>
-                                    )}
+                                    {(() => {
+                                      // Fix naming display for blood bank
+                                      let bbName = null;
+
+                                      // 1. Try populated object
+                                      if (patient.bloodBankId && typeof patient.bloodBankId === 'object') {
+                                        bbName = patient.bloodBankId.name;
+                                      }
+
+                                      // 2. Try looking up ID in bloodBanks list
+                                      if (!bbName && patient.hospital_id) {
+                                        const matchedBB = bloodBanks.find(bb => bb._id === patient.hospital_id);
+                                        if (matchedBB) bbName = matchedBB.name;
+                                      }
+
+                                      // 3. Try looking up bloodBankId (if it's a string ID) in bloodBanks list
+                                      if (!bbName && patient.bloodBankId && typeof patient.bloodBankId === 'string') {
+                                        const matchedBB = bloodBanks.find(bb => bb._id === patient.bloodBankId);
+                                        if (matchedBB) bbName = matchedBB.name;
+                                      }
+
+                                      return bbName ? <span className="text-xs">🏥 {bbName}</span> : null;
+                                    })()}
                                   </div>
                                 </div>
                                 <div className={`${selectedPatient === patient._id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
@@ -2754,9 +2876,9 @@ export default function UserDashboard() {
                   <span className="text-xl">👤</span> Step 3: Select Patient
                 </label>
 
-                {!patientSearchBloodBank ? (
+                {!patientSearchBloodBank && searchedPatients.length === 0 ? (
                   <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-sm">
-                    ⚠️ Please select a blood bank first to see available patients
+                    ⚠️ Please select a blood bank first OR enter an MRID to see available patients
                   </div>
                 ) : (
                   <>
@@ -2768,8 +2890,9 @@ export default function UserDashboard() {
                         // Check both searchedPatients and patients arrays
                         const allPatients = [...searchedPatients, ...patients];
                         const patient = allPatients.find(p => p._id === e.target.value);
-                        if (patient && patient.bloodBankId) {
-                          setSelectedBloodBank(patient.bloodBankId._id || patient.bloodBankId);
+                        if (patient) {
+                          const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
+                          if (bbId) setSelectedBloodBank(bbId);
                         }
                       }}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
@@ -2779,11 +2902,11 @@ export default function UserDashboard() {
                         {searchingPatients ? '⏳ Searching database...' : '-- Select Patient --'}
                       </option>
                       {(() => {
-                        // Use searched patients if MRID is entered, otherwise filter from loaded patients
-                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0)
+                        // Use searched patients if available (from DB search), otherwise filter from loaded patients
+                        let filteredPatients = searchedPatients.length > 0
                           ? searchedPatients
                           : patients.filter(p => {
-                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            const bbId = p.bloodBankId?._id || p.bloodBankId || p.hospital_id;
                             return bbId === patientSearchBloodBank;
                           });
 
@@ -2801,7 +2924,10 @@ export default function UserDashboard() {
                           <option key={patient._id} value={patient._id}>
                             {patient.name || patient.patientName} - {patient.bloodGroup}
                             {patient.mrid ? ` | MRID: ${patient.mrid}` : ''}
-                            {patient.bloodBankId?.name ? ` | ${patient.bloodBankId.name}` : ''}
+                            {(() => {
+                              const bbName = patient.bloodBankId?.name || (patient.hospital_id && bloodBanks.find(bb => bb._id === patient.hospital_id)?.name);
+                              return bbName ? ` | ${bbName}` : '';
+                            })()}
                           </option>
                         ));
                       })()}
@@ -2814,17 +2940,18 @@ export default function UserDashboard() {
                           🔍 Searching database...
                         </span>
                       ) : (() => {
-                        // Use searched patients if MRID is entered
-                        let filteredPatients = (patientSearchMRID && searchedPatients.length > 0)
+                        // Use searched patients if available
+                        let filteredPatients = searchedPatients.length > 0
                           ? searchedPatients
                           : patients.filter(p => {
-                            const bbId = p.bloodBankId?._id || p.bloodBankId;
+                            const bbId = p.bloodBankId?._id || p.bloodBankId || p.hospital_id;
                             return bbId === patientSearchBloodBank;
                           });
 
                         const count = filteredPatients.length;
                         const selectedBB = bloodBanks.find(bb => bb._id === patientSearchBloodBank);
-                        const isDbSearch = patientSearchMRID && searchedPatients.length > 0;
+                        // Consider it a DB search if we have searchedPatients
+                        const isDbSearch = searchedPatients.length > 0;
 
                         return (
                           <>

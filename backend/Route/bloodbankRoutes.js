@@ -112,6 +112,21 @@ router.post('/register', async (req, res) => {
 });
 
 /**
+ * Get all blood banks (public/auth) for dropdown
+ * GET /api/bloodbank/all
+ */
+router.get('/all', async (req, res) => {
+  try {
+    const bloodBanks = await BloodBank.find().select('name hospitalName address district state pincode phone status');
+    res.json({ success: true, count: bloodBanks.length, data: bloodBanks });
+  } catch (error) {
+    console.error('Error fetching blood banks:', error);
+    res.status(500).json({ success: false, message: 'Error fetching blood banks' });
+  }
+});
+
+
+/**
  * Get blood bank details for the authenticated user
  * GET /api/bloodbank/details
  */

@@ -29,6 +29,8 @@ const bookingSchema = new mongoose.Schema({
     patientMrid: { type: String },
     requesterName: { type: String },
     rejectionReason: { type: String },
+    weight: { type: Number }, // Donor's weight in kg
+    bagSerialNumber: { type: String }, // Blood bag serial number
 }, {
     timestamps: true
 });
