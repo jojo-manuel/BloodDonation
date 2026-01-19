@@ -5,7 +5,8 @@ import axios from 'axios';
 
 // Get API URL from environment variables
 // Support both VITE_API_URL and VITE_API_BASE_URL for backward compatibility
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000');
+// Fallback to inferred Render backend URL if not set in production
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://blood-backend-f9sy.onrender.com' : 'http://localhost:5000');
 const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
 
 // Always log configuration (including production) for debugging
