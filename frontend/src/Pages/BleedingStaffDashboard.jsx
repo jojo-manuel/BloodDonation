@@ -10,25 +10,23 @@ export default function BleedingStaffDashboard() {
     const [searchingToken, setSearchingToken] = useState(false);
     const [bleedingData, setBleedingData] = useState({ weight: '', bagSerialNumber: '' });
     const [updatingBleeding, setUpdatingBleeding] = useState(false);
-    const [todaysBookings, setTodaysBookings] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const { showToast } = useToast();
     const navigate = useNavigate();
 
-    // Fetch today's bookings on mount
+    // Fetch all bookings on mount
     React.useEffect(() => {
-        const fetchTodaysBookings = async () => {
+        const fetchBookings = async () => {
             try {
-                // Get today's date in YYYY-MM-DD
-                const today = new Date().toISOString().split('T')[0];
-                const res = await api.get(`/bloodbank/bookings?date=${today}`);
+                const res = await api.get(`/bloodbank/bookings`);
                 if (res.data.success) {
-                    setTodaysBookings(res.data.data);
+                    setBookings(res.data.data);
                 }
             } catch (err) {
-                console.error("Error fetching today's bookings:", err);
+                console.error("Error fetching bookings:", err);
             }
         };
-        fetchTodaysBookings();
+        fetchBookings();
     }, []);
 
     const handleTokenSearchWithToken = async (token) => {
@@ -142,9 +140,9 @@ export default function BleedingStaffDashboard() {
 
                 {/* Today's Queue Section */}
                 <div className="max-w-4xl mx-auto mb-12">
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">Today's Queue ({new Date().toDateString()})</h3>
+                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">All Booked Slots</h3>
                     <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
-                        {todaysBookings.length > 0 ? (
+                        {bookings.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-100 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-bold">
@@ -157,7 +155,7 @@ export default function BleedingStaffDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                        {todaysBookings.map((b) => (
+                                        {bookings.map((b) => (
                                             <tr key={b._id} className="hover:bg-white/80 dark:hover:bg-gray-700/80 transition">
                                                 <td className="px-6 py-4 font-mono font-bold text-blue-600 dark:text-blue-400">
                                                     {b.tokenNumber || '-'}
@@ -174,7 +172,7 @@ export default function BleedingStaffDashboard() {
                                                         {b.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{b.time}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">{new Date(b.date).toLocaleDateString()} {b.time}</td>
                                                 <td className="px-6 py-4">
                                                     <button
                                                         onClick={() => {
@@ -193,7 +191,7 @@ export default function BleedingStaffDashboard() {
                             </div>
                         ) : (
                             <div className="p-8 text-center text-gray-500">
-                                No bookings found for today.
+                                No booked slots found.
                             </div>
                         )}
                     </div>
