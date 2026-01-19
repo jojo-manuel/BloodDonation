@@ -82,7 +82,7 @@ describe('UserDashboard Component', () => {
       if (url === '/patients') {
         return Promise.resolve({ data: { success: true, data: [] } });
       }
-      if (url === '/bloodbanks') {
+      if (url === '/bloodbanks' || url === '/bloodbank/all') {
         return Promise.resolve({ data: { success: true, data: [] } });
       }
       console.warn(`Unhandled GET URL: ${url}`);
@@ -161,9 +161,9 @@ describe('UserDashboard Component', () => {
 
     const cityInput = screen.getByPlaceholderText(/Search city.../i); // Changed to match component placeholder
     fireEvent.change(cityInput, { target: { value: 'City1' } });
-    fireEvent.click(screen.getByText(/City1/i)); // Click dropdown item
+    fireEvent.click(screen.getByText('City1')); // Click dropdown item
 
-    fireEvent.click(screen.getByRole('button', { name: /Search Donors/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Find Donors/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Donor1/i)).toBeInTheDocument();
@@ -195,7 +195,7 @@ describe('UserDashboard Component', () => {
     });
 
     // Search to show donors
-    fireEvent.click(screen.getByRole('button', { name: /Search Donors/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Find Donors/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Donor1/i)).toBeInTheDocument();
