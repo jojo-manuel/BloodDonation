@@ -106,6 +106,7 @@ export default function UserDashboard() {
     timezone: 'Asia/Kolkata'
   });
   const loginUsername = (typeof window !== 'undefined' && localStorage.getItem('username')) || '';
+  const [bookingBloodBankId, setBookingBloodBankId] = useState(''); // State for selecting blood bank in booking modal
 
   // Status badge component
   const getStatusBadge = (status) => {
@@ -543,13 +544,30 @@ export default function UserDashboard() {
     }
 
     // Get patient details for confirmation
-    const patient = patients.find(p => p._id === selectedPatient);
+    const allPatients = [...searchedPatients, ...patients];
+    const patient = allPatients.find(p => p._id === selectedPatient);
+
+    // Validate Blood Bank is present
+    const bbId = patient?.bloodBankId?._id || patient?.bloodBankId || patient?.hospital_id || patientSearchBloodBank;
+    const resolvedBB = bbId ? bloodBanks.find(b => b._id === bbId) : null;
+    let bbName = patient?.bloodBankId?.name || patient?.bloodBankName || resolvedBB?.name;
+
+    // Fallback: If we have an ID but no name found, use the ID as the name (handles cases where ID is the name)
+    if (bbId && !bbName) {
+      bbName = bbId;
+    }
+
+    if (!bbId) {
+      alert('⚠️ Unable to identify Blood Bank for this patient. Please ensure a Blood Bank is selected.');
+      return;
+    }
 
     try {
       setRequestingId(requestModal._id);
       const body = {
         bloodGroup: requestModal.bloodGroup,
         patientId: selectedPatient,
+        bloodBankId: bbId // Explicitly send the resolved blood bank ID
       };
 
       // Debug logging
@@ -558,7 +576,7 @@ export default function UserDashboard() {
       console.log('  Patient ID:', selectedPatient);
       console.log('  Patient Name:', patient?.name || patient?.patientName);
       console.log('  Patient MRID:', patient?.mrid);
-      console.log('  Blood Bank:', patient?.bloodBankId?.name);
+      console.log('  Blood Bank:', bbName);
       console.log('  Request Body:', body);
 
       const res = await api.post(`/donors/${requestModal._id}/requests`, body);
@@ -567,8 +585,8 @@ export default function UserDashboard() {
 
       if (res.data.success) {
         const successMsg = patient
-          ? `✅ Request sent successfully!\n\n👤 Patient: ${patient.name || patient.patientName}\n🔢 MRID: ${patient.mrid}\n🏥 Blood Bank: ${patient.bloodBankId?.name || 'N/A'}`
-          : 'Request sent successfully with patient and blood bank details!';
+          ? `✅ Request sent successfully!\n\n👤 Patient: ${patient.name || patient.patientName}\n🔢 MRID: ${patient.mrid}\n🏥 Blood Bank: ${bbName || 'N/A'}`
+          : `Request sent successfully!\n🏥 Blood Bank: ${bbName || 'N/A'}`;
 
         alert(successMsg);
 
@@ -755,70 +773,55 @@ export default function UserDashboard() {
 
   // Trigger database search when blood bank or MRID changes
   useEffect(() => {
+    // Only search if we have at least one filter active
     if (patientSearchBloodBank || patientSearchMRID) {
-      // Debounce search by 500ms to avoid too many requests
       const timeoutId = setTimeout(() => {
         searchPatientsInDatabase(patientSearchBloodBank, patientSearchMRID);
       }, 500);
-
       return () => clearTimeout(timeoutId);
     } else {
       setSearchedPatients([]);
     }
   }, [patientSearchBloodBank, patientSearchMRID]);
 
-  // Auto-populate patient when blood bank + MRID uniquely identify a patient
+  // Auto-selection Logic: Reacts to search results or filter changes
   useEffect(() => {
-    console.log('🔍 Auto-selection check triggered:');
-    console.log('  Blood Bank Selected:', patientSearchBloodBank);
-    console.log('  MRID Entered:', patientSearchMRID);
-    console.log('  Total Patients Loaded:', patients.length);
-    console.log('  Searched Patients:', searchedPatients.length);
-
-    // If we have search results (searchedPatients), use those. 
-    // Otherwise fallback to filtering the 'patients' array.
+    // Determine the source of patients: Search results take precedence
     const sourcePatients = searchedPatients.length > 0 ? searchedPatients : patients;
 
-    // Proceed if we have patients, even if blood bank is not selected yet
-    if (sourcePatients.length === 0) {
-      console.log('⏸️ Skipping auto-selection (no patients loaded)');
-      return;
-    }
+    if (sourcePatients.length === 0) return;
 
-    // Filter patients by blood bank (if selected) and MRID
-    let filteredPatients = sourcePatients.filter(p => {
+    // Filter purely based on current criteria to find a unique match
+    const filteredPatients = sourcePatients.filter(p => {
       const bbId = p.bloodBankId?._id || p.bloodBankId || p.hospital_id;
 
-      // If blood bank is selected, it must match
+      // 1. Blood Bank Match (if selected)
       const matchesBloodBank = !patientSearchBloodBank || bbId === patientSearchBloodBank;
 
-      // If we are using searchedPatients, they presumably already matched the MRID query if one was sent.
-      // But we double check locally if needed, or if using 'patients' list.
+      // 2. MRID Match (if entered)
       const matchesMRID = !patientSearchMRID || (p.mrid && p.mrid.toLowerCase().includes(patientSearchMRID.toLowerCase()));
 
       return matchesBloodBank && matchesMRID;
     });
 
-    console.log(`📊 Filtered Results: ${filteredPatients.length} patient(s)`);
-
-    // If exactly 1 patient matches AND user entered an MRID, auto-select it.
-    if (filteredPatients.length === 1 && patientSearchMRID) {
+    // Auto-Select Logic
+    if (filteredPatients.length === 1) {
       const patient = filteredPatients[0];
-      console.log('🎯 Auto-selecting patient (MRID match):');
-      console.log('  Name:', patient.name || patient.patientName);
 
-      setSelectedPatient(patient._id);
+      // Only select if not already selected to avoid loops
+      if (selectedPatient !== patient._id) {
+        console.log('🎯 Auto-selecting patient:', patient.name);
+        setSelectedPatient(patient._id);
+      }
 
-      // Also auto-fill the Blood Bank dropdown if not already set
+      // Auto-fill Blood Bank ONLY if not already selected
       const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
-      if (bbId && bbId !== patientSearchBloodBank) {
+      if (bbId && !patientSearchBloodBank) {
+        console.log('🏥 Auto-selecting Blood Bank from Patient:', bbId);
         setPatientSearchBloodBank(bbId);
-        if (typeof setSelectedBloodBank === 'function') {
-          setSelectedBloodBank(bbId);
-        }
       }
     }
-  }, [patientSearchBloodBank, patientSearchMRID, patients, searchedPatients]);
+  }, [searchedPatients, patients, patientSearchBloodBank, patientSearchMRID]);
 
 
   // Generate booking confirmation PDF with QR code
@@ -966,6 +969,7 @@ export default function UserDashboard() {
   const handleBookSlot = async (request) => {
     // Open booking modal with request details
     setBookingModal(request);
+    setBookingBloodBankId(request.bloodBankId?._id || request.bloodBankId || '');
     // Set minimum date to 3 hours from now
     const minDate = new Date();
     minDate.setHours(minDate.getHours() + 3);
@@ -1000,12 +1004,6 @@ export default function UserDashboard() {
 
   // Step 2: Proceed with booking after consent
   const proceedWithBooking = async (medicalConsentData) => {
-    // Slot booking feature removed
-    setShowConsentForm(false);
-    setBookingLoading(false);
-    setConsentData(null);
-    alert('Slot booking has been removed.');
-    setBookingModal(null);
     try {
       setBookingLoading(true);
       setShowConsentForm(false);
@@ -1013,55 +1011,39 @@ export default function UserDashboard() {
 
       // Create booking using the direct-book-slot endpoint
       const bookingData = {
-        donorId: bookingModal.donorId._id || bookingModal.donorId,
-        bloodBankId: bookingModal.bloodBankId._id || bookingModal.bloodBankId,
+        donorId: bookingModal?.donorId?._id || bookingModal?.donorId,
+        bloodBankId: bookingModal?.bloodBankId?._id || bookingModal?.bloodBankId || bookingBloodBankId,
         requestedDate: selectedDate,
         requestedTime: selectedTime,
-        donationRequestId: bookingModal._id,
-        patientName: bookingModal.patientId?.name || 'N/A',
-        donorName: bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'N/A',
-        requesterName: bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A',
+        donationRequestId: bookingModal?._id,
+        patientName: bookingModal?.patientId?.name || 'N/A',
+        donorName: bookingModal?.donorId?.name || bookingModal?.donorId?.userId?.username || 'N/A',
+        requesterName: bookingModal?.requesterId?.username || bookingModal?.senderId?.username || 'N/A',
         medicalConsent: medicalConsentData // Include consent data
       };
 
       const res = await api.post('/users/direct-book-slot', bookingData);
 
       if (res.data.success) {
-        // Prepare data for PDF
-        const pdfData = {
-          tokenNumber: res.data.data?.tokenNumber || 'PENDING',
-          donorName: bookingModal.donorId?.name || bookingModal.donorId?.userId?.username || 'N/A',
-          donorPhone: bookingModal.donorId?.userId?.phone || bookingModal.donorId?.contactNumber || '',
-          bloodGroup: bookingModal.bloodGroup || bookingModal.donorId?.bloodGroup || 'N/A',
-          patientName: bookingModal.patientId?.name || bookingModal.patientName || 'N/A',
-          patientMRID: bookingModal.patientId?.mrid || bookingModal.mrid || 'N/A',
-          bloodBankName: bookingModal.bloodBankId?.name || 'N/A',
-          bloodBankAddress: bookingModal.bloodBankId?.address || '',
-          bloodBankPhone: bookingModal.bloodBankId?.phone || '',
-          date: selectedDate,
-          time: selectedTime
-        };
-
-        // Generate PDF
-        await generateBookingPDF(pdfData);
-
-        alert('✅ Booking confirmed! Your confirmation PDF has been downloaded.');
+        alert(`✅ Booking Confirmed!\n\nToken: ${res.data.data.tokenNumber}\nDate: ${selectedDate}\nTime: ${selectedTime}`);
         setBookingModal(null);
         setSelectedDate('');
         setSelectedTime('');
-        setConsentData(null);
-        // Refresh requests
+        // Refresh requests to update status
         fetchRequests();
-        fetchReceivedRequests();
       } else {
-        alert(res.data.message || 'Failed to book slot');
+        alert(res.data.message || 'Booking failed');
       }
+
     } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to book slot');
+      console.error(e);
+      alert(e?.response?.data?.message || 'Booking failed');
     } finally {
       setBookingLoading(false);
     }
   };
+
+
 
   // Handle consent form cancellation
   const handleConsentCancel = () => {
@@ -1996,6 +1978,14 @@ export default function UserDashboard() {
                                         </button>
                                       </div>
                                     )}
+                                    {request.status === 'accepted' && (
+                                      <button
+                                        onClick={() => setBookingModal(request)}
+                                        className="w-full mb-1 px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 font-semibold"
+                                      >
+                                        📅 Book Slot
+                                      </button>
+                                    )}
                                     {['accepted', 'booked', 'rejected', 'cancelled', 'completed'].includes(request.status) && (
                                       <button
                                         onClick={() => setSelectedRequest(request)}
@@ -2048,7 +2038,7 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.senderId?.username || 'N/A'}</p>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.requesterId?.name || selectedRequest.requesterId?.username || selectedRequest.senderId?.username || 'N/A'}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
@@ -2060,7 +2050,7 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requested At</label>
-                    <p className="text-gray-900 dark:text-white">{selectedRequest.requestedAt ? new Date(selectedRequest.requestedAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900 dark:text-white">{selectedRequest.createdAt ? new Date(selectedRequest.createdAt).toLocaleString() : (selectedRequest.requestedAt ? new Date(selectedRequest.requestedAt).toLocaleString() : 'N/A')}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Active</label>
@@ -2080,7 +2070,7 @@ export default function UserDashboard() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient</label>
                     <p className="text-gray-900 dark:text-white font-semibold">
-                      👤 {selectedRequest.patientId?.name || selectedRequest.patientUsername || 'Not Specified'}
+                      👤 {selectedRequest.patientId?.patientName || selectedRequest.patientId?.name || selectedRequest.patientUsername || 'Not Specified'}
                     </p>
                     {selectedRequest.patientId?.mrid && (
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -2096,15 +2086,34 @@ export default function UserDashboard() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Units Needed</label>
-                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.unitsNeeded || 'N/A'}</p>
+                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.requiredUnits || selectedRequest.patientId.unitsNeeded || 'N/A'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Needed</label>
-                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.dateNeeded ? new Date(selectedRequest.patientId.dateNeeded).toLocaleDateString() : 'N/A'}</p>
+                        <p className="text-gray-900 dark:text-white">{selectedRequest.patientId.requiredDate ? new Date(selectedRequest.patientId.requiredDate).toLocaleDateString() : (selectedRequest.patientId.dateNeeded ? new Date(selectedRequest.patientId.dateNeeded).toLocaleDateString() : 'N/A')}</p>
                       </div>
                     </>
                   )}
                 </div>
+                {selectedRequest.status === 'booked' && selectedRequest.bookingId && (
+                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl dark:bg-green-900/20 dark:border-green-800">
+                    <h4 className="font-bold text-green-800 dark:text-green-300 mb-2">✅ Booking Confirmed</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Token Number</span>
+                        <p className="text-xl font-mono font-bold text-gray-900 dark:text-white">
+                          {selectedRequest.bookingId.tokenNumber || 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Date & Time</span>
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedRequest.bookingId.date} at {selectedRequest.bookingId.time}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 mt-6">
                 {selectedRequest.status === 'pending' && (
@@ -2124,6 +2133,18 @@ export default function UserDashboard() {
                       {updatingId === selectedRequest._id ? 'Rejecting...' : 'Reject Request'}
                     </button>
                   </>
+                )}
+
+                {selectedRequest.status === 'accepted' && (
+                  <button
+                    onClick={() => {
+                      setBookingModal(selectedRequest);
+                      setSelectedRequest(null);
+                    }}
+                    className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 font-semibold"
+                  >
+                    📅 Book Donation Slot
+                  </button>
                 )}
 
                 {selectedRequest.status === 'booked' && selectedRequest.bookingId && (
@@ -2236,9 +2257,25 @@ export default function UserDashboard() {
                   <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     <p><strong>Request ID:</strong> {bookingModal._id}</p>
                     <p><strong>Blood Group:</strong> {bookingModal.bloodGroup}</p>
-                    <p><strong>Patient:</strong> {bookingModal.patientId?.name || 'N/A'}</p>
-                    <p><strong>Blood Bank:</strong> {bookingModal.bloodBankId?.name || bookingModal.bloodBankName || 'N/A'}</p>
-                    <p><strong>Requester:</strong> {bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A'}</p>
+                    <p><strong>Patient:</strong> {bookingModal.patientId?.patientName || bookingModal.patientId?.name || 'N/A'}</p>
+                    <div>
+                      <strong>Blood Bank:</strong>
+                      {resolveBloodBankName(bookingModal) !== 'Not Specified' ? (
+                        <span> {resolveBloodBankName(bookingModal)}</span>
+                      ) : (
+                        <select
+                          value={bookingBloodBankId}
+                          onChange={(e) => setBookingBloodBankId(e.target.value)}
+                          className="mt-1 w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        >
+                          <option value="">Select Blood Bank</option>
+                          {bloodBanks.map(bb => (
+                            <option key={bb._id} value={bb._id}>{bb.name}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    <p><strong>Requester:</strong> {bookingModal.requesterId?.name || bookingModal.requesterId?.username || bookingModal.senderId?.username || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -2789,7 +2826,10 @@ export default function UserDashboard() {
                                 setPatientSearchMRID(patient.mrid);
                                 setSelectedPatient(patient._id);
                                 const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
-                                if (bbId) setSelectedBloodBank(bbId);
+                                if (bbId) {
+                                  setSelectedBloodBank(bbId);
+                                  setPatientSearchBloodBank(bbId);
+                                }
                               }}
                               className={`p-3 bg-white dark:bg-gray-800 rounded-lg border ${selectedPatient === patient._id
                                 ? 'border-green-500 dark:border-green-500 ring-2 ring-green-200 dark:ring-green-800'
@@ -2892,7 +2932,10 @@ export default function UserDashboard() {
                         const patient = allPatients.find(p => p._id === e.target.value);
                         if (patient) {
                           const bbId = patient.bloodBankId?._id || patient.bloodBankId || patient.hospital_id;
-                          if (bbId) setSelectedBloodBank(bbId);
+                          if (bbId) {
+                            setSelectedBloodBank(bbId);
+                            setPatientSearchBloodBank(bbId);
+                          }
                         }
                       }}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
@@ -3025,7 +3068,39 @@ export default function UserDashboard() {
               // Check both searchedPatients and patients arrays
               const allPatients = [...searchedPatients, ...patients];
               const patient = allPatients.find(p => p._id === selectedPatient);
-              const bloodBankName = patient?.bloodBankId?.name || 'Not Specified';
+
+              let bloodBankName = 'Not Specified';
+              let bloodBankAddress = '';
+
+              if (patient) {
+                // Case 1: bloodBankId is populated object
+                if (patient.bloodBankId?.name) {
+                  bloodBankName = patient.bloodBankId.name;
+                  bloodBankAddress = patient.bloodBankId.address;
+                }
+                // Case 2: bloodBankId is just an ID string, look up in bloodBanks list
+                else if (patient.bloodBankId) {
+                  const bb = bloodBanks.find(b => b._id === patient.bloodBankId || b.hospital_id === patient.bloodBankId);
+                  if (bb) {
+                    bloodBankName = bb.name;
+                    bloodBankAddress = bb.address;
+                  }
+                }
+                // Case 3: Fallback fields
+                else if (patient.bloodBankName) {
+                  bloodBankName = patient.bloodBankName;
+                }
+
+                // Case 4: Fallback to selected blood bank in Step 1
+                if (bloodBankName === 'Not Specified' && patientSearchBloodBank) {
+                  const bb = bloodBanks.find(b => b._id === patientSearchBloodBank);
+                  if (bb) {
+                    bloodBankName = bb.name;
+                    bloodBankAddress = bb.address;
+                  }
+                }
+              }
+
               return (
                 <div className="mb-4 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-xl border border-pink-200 dark:border-pink-800">
                   <h4 className="font-semibold text-pink-900 dark:text-pink-100 mb-2 flex items-center gap-2">
@@ -3033,9 +3108,9 @@ export default function UserDashboard() {
                     Blood Bank (Auto-selected from Patient)
                   </h4>
                   <p className="text-lg font-bold text-pink-800 dark:text-pink-200">{bloodBankName}</p>
-                  {patient?.bloodBankId?.address && (
+                  {bloodBankAddress && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      📍 {patient.bloodBankId.address}
+                      📍 {bloodBankAddress}
                     </p>
                   )}
                 </div>

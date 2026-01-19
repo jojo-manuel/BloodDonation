@@ -163,7 +163,9 @@ describe('UserDashboard Component', () => {
     fireEvent.change(cityInput, { target: { value: 'City1' } });
     fireEvent.click(screen.getByText('City1')); // Click dropdown item
 
-    fireEvent.click(screen.getByRole('button', { name: /Find Donors/i }));
+    // There are two "Find Donors" buttons: one for the tab, one for the search form. We want the second one.
+    const findDonorsButtons = screen.getAllByRole('button', { name: /Find Donors/i });
+    fireEvent.click(findDonorsButtons[1]);
 
     await waitFor(() => {
       expect(screen.getByText(/Donor1/i)).toBeInTheDocument();
@@ -195,7 +197,8 @@ describe('UserDashboard Component', () => {
     });
 
     // Search to show donors
-    fireEvent.click(screen.getByRole('button', { name: /Find Donors/i }));
+    const findDonorsButtons = screen.getAllByRole('button', { name: /Find Donors/i });
+    fireEvent.click(findDonorsButtons[1]);
 
     await waitFor(() => {
       expect(screen.getByText(/Donor1/i)).toBeInTheDocument();

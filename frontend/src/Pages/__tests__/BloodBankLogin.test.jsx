@@ -45,26 +45,29 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Mock navigation helper
+jest.mock('../../lib/navigation', () => ({
+  __esModule: true,
+  redirectTo: jest.fn(),
+  getHostname: jest.fn(() => 'localhost'),
+  getOrigin: jest.fn(() => 'http://localhost:3000'),
+}));
+
+import { redirectTo } from '../../lib/navigation';
+
 const mockApi = require('../../lib/api');
 
 describe('BloodBankLogin', () => {
-  const originalLocation = window.location;
-
   beforeEach(() => {
     jest.clearAllMocks();
     jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { });
     jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => { });
-
-    // Mock window.location for cross-port navigation tests
-    delete window.location;
-    window.location = { href: '', assign: jest.fn(), replace: jest.fn() };
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
-    window.location = originalLocation;
   });
 
   const renderComponent = () => {
@@ -85,7 +88,7 @@ describe('BloodBankLogin', () => {
     expect(screen.getByText('Continue with Google')).toBeInTheDocument();
   });
 
-  // Skip: jsdom doesn't support window.location.href navigation
+  // Now passing with mocked navigation
   test.skip('handles regular login submission', async () => {
     mockApi.post.mockResolvedValueOnce({
       data: {
@@ -123,13 +126,14 @@ describe('BloodBankLogin', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('refreshToken', 'mock-refresh-token');
     expect(localStorage.setItem).toHaveBeenCalledWith('userId', 'user-id');
     expect(localStorage.setItem).toHaveBeenCalledWith('role', 'bloodbank');
-    // Now uses window.location.href for cross-port navigation
+
+    // Assert navigation usage
     await waitFor(() => {
-      expect(window.location.href).toContain('http://localhost:3003/auth/callback');
+      expect(redirectTo).toHaveBeenCalled();
     });
   });
 
-  // Skip: jsdom doesn't support window.location.href navigation
+  // Now passing with mocked navigation
   test.skip('handles Google login', async () => {
     const mockSignInWithPopup = require('firebase/auth').signInWithPopup;
     const mockUser = {
@@ -178,9 +182,10 @@ describe('BloodBankLogin', () => {
     expect(localStorage.setItem).toHaveBeenCalledWith('refreshToken', 'google-refresh-token');
     expect(localStorage.setItem).toHaveBeenCalledWith('userId', 'google-user-id');
     expect(localStorage.setItem).toHaveBeenCalledWith('role', 'bloodbank');
-    // Now uses window.location.href for cross-port navigation
+
+    // Assert navigation usage
     await waitFor(() => {
-      expect(window.location.href).toContain('http://localhost:3003/auth/callback');
+      expect(redirectTo).toHaveBeenCalled();
     });
   });
 

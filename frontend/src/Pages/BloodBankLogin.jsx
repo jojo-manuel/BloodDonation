@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UserAvatar from "../components/UserAvatar";
 import api from "../lib/api";
+import { redirectTo, getHostname, getOrigin } from "../lib/navigation";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { app } from "../firebase";
 
@@ -88,11 +89,12 @@ export default function BloodBankLogin() {
                   role: res.data.data.user.role,
                   username: res.data.data.user.username
                 }).toString();
-                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const hostname = getHostname();
+                const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
                 if (isLocalhost) {
-                  window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                  redirectTo(`http://localhost:3003/auth/callback?${authParams}`);
                 } else {
-                  window.location.href = `${window.location.origin}/auth/callback?${authParams}`;
+                  redirectTo(`${getOrigin()}/auth/callback?${authParams}`);
                 }
               } else if (status === 'pending') {
                 navigate("/bloodbank-pending-approval");
