@@ -584,7 +584,10 @@ exports.getAddressByPostalCode = asyncHandler(async (req, res) => {
       return res.status(404).json({ success: false, message: 'No address details found for the given postal code.' });
     }
   } catch (error) {
-    console.error('Error fetching address details:', error);
+    console.error('Error fetching address details:', error.message);
+    if (error.response) {
+      return res.status(error.response.status || 500).json({ success: false, message: 'External API Error', error: error.response.data });
+    }
     return res.status(500).json({ success: false, message: 'Failed to fetch address details' });
   }
 });

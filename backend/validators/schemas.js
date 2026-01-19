@@ -16,7 +16,7 @@ const localByEmail = z.object({
   email: z.string().email('Invalid email format'),
   password: strongPassword,
   confirmPassword: z.string(),
-  role: z.enum(['user','donor','admin']).optional(),
+  role: z.enum(['user', 'donor', 'admin']).optional(),
   provider: z.literal('local').default('local'),
 }).refine((d) => d.password === d.confirmPassword, {
   path: ['confirmPassword'],
@@ -27,7 +27,7 @@ const localByUsername = z.object({
   username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   password: strongPassword,
   confirmPassword: z.string(),
-  role: z.enum(['user','donor','admin']).optional(),
+  role: z.enum(['user', 'donor', 'admin']).optional(),
   provider: z.literal('local').default('local'),
 }).refine((d) => d.password === d.confirmPassword, {
   path: ['confirmPassword'],
@@ -38,7 +38,7 @@ const googleReg = z.object({
   provider: z.literal('google'),
   email: z.string().email('Invalid email format').optional(),
   name: z.string().min(1).optional(),
-  role: z.enum(['user','donor','admin']).optional(),
+  role: z.enum(['user', 'donor', 'admin']).optional(),
 });
 
 const registerBody = z.union([localByEmail, localByUsername, googleReg]);
@@ -74,7 +74,7 @@ const donorRegisterBody = z.object({
   dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => {
     const dob = new Date(val);
     const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear();
+    let age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
       age--;
@@ -82,7 +82,7 @@ const donorRegisterBody = z.object({
     return age >= 18 && age <= 60 && dob <= today;
   }, "Donor must be between 18 and 60 years old and date of birth cannot be in the future"),
   gender: z.enum(['Male', 'Female', 'Other']),
-  bloodGroup: z.enum(['A+','A-','B+','B-','AB+','AB-','O+','O-'], 'Invalid blood group'),
+  bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], 'Invalid blood group'),
   contactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Contact number must be a valid 10-digit Indian number starting with 6-9').refine(val => val.trim().length === 10, "Contact number cannot be empty or only spaces"),
   emergencyContactNumber: z.string().regex(/^[6-9]\d{9}$/, 'Emergency contact must be a valid 10-digit Indian number starting with 6-9').refine(val => val.trim().length === 10, "Emergency contact cannot be empty or only spaces"),
   houseAddress: z.object({
@@ -101,7 +101,7 @@ const donorRegisterBody = z.object({
     const today = new Date();
     return date <= today;
   }, "Last donation date cannot be in the future").optional(),
-  contactPreference: z.enum(['phone','email','any']).default('any'),
+  contactPreference: z.enum(['phone', 'email', 'any']).default('any'),
   phone: z.string().min(5).max(20).optional(),
 }).refine((data) => data.contactNumber !== data.emergencyContactNumber, {
   path: ['emergencyContactNumber'],
@@ -135,7 +135,7 @@ const bloodBankSubmitDetailsBody = z.object({
 const patientAddBody = z.object({
   patientName: z.string().min(3).max(100).refine(val => val.trim().length > 0, "Patient name cannot be empty or only spaces"),
   address: z.string().min(3).max(300).refine(val => val.trim().length > 0, "Address cannot be empty or only spaces"),
-  bloodGroup: z.enum(['A+','A-','B+','B-','AB+','AB-','O+','O-'], 'Invalid blood group'),
+  bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], 'Invalid blood group'),
   mrid: z.string().min(1).max(50).refine(val => val.trim().length > 0, "MRID cannot be empty or only spaces"),
   requiredUnits: z.number().int().min(1, 'Required units must be at least 1'),
   requiredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => new Date(val) >= new Date(), "Required date cannot be in the past"),
@@ -145,7 +145,7 @@ const patientAddBody = z.object({
 const patientUpdateBody = z.object({
   patientName: z.string().min(3).max(100).refine(val => val.trim().length > 0, "Patient name cannot be empty or only spaces").optional(),
   address: z.string().min(3).max(300).refine(val => val.trim().length > 0, "Address cannot be empty or only spaces").optional(),
-  bloodGroup: z.enum(['A+','A-','B+','B-','AB+','AB-','O+','O-'], 'Invalid blood group').optional(),
+  bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], 'Invalid blood group').optional(),
   requiredUnits: z.number().int().min(1, 'Required units must be at least 1').optional(),
   requiredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").refine(val => new Date(val) >= new Date(), "Required date cannot be in the past").optional(),
 });
