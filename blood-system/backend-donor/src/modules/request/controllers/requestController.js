@@ -1,5 +1,6 @@
 const Request = require('../models/Request');
 const Donor = require('../../donor/models/donorModel');
+const Patient = require('../../patient/models/Patient'); // Ensure Patient model is registered
 
 exports.createRequest = async (req, res) => {
     try {
@@ -30,11 +31,16 @@ exports.createRequest = async (req, res) => {
 exports.getMyRequests = async (req, res) => {
     try {
         const userId = req.user.user_id;
+        console.log(`[DEBUG] getMyRequests for UserID: ${userId}`);
+
         // Find requests where the user is the requester (e.g. looking for donors)
         const sentRequests = await Request.find({ requesterId: userId })
             .populate('donorId', 'name bloodGroup houseAddress contactNumber')
-            .populate('patientId', 'patientName mrid hospital_id')
+            .populate('patientId', 'patientName name mrid hospital_id bloodGroup requiredUnits requiredDate')
+            .populate('bookingId')
             .sort({ createdAt: -1 });
+
+        console.log(`[DEBUG] Found ${sentRequests.length} sent requests`);
 
         // Find requests where the user is the donor (if they are a donor)
         // First find the donor profile ID for this user
@@ -42,19 +48,90 @@ exports.getMyRequests = async (req, res) => {
         let receivedRequests = [];
 
         if (donorProfile) {
+            console.log(`[DEBUG] User is donor: ${donorProfile._id}`);
             receivedRequests = await Request.find({ donorId: donorProfile._id })
-                .populate('requesterId', 'name email phone') // basic user info
-                .populate('patientId', 'patientName mrid hospital_id')
+                .populate('requesterId', 'name username email phone') // basic user info
+                .populate('patientId', 'patientName name mrid hospital_id bloodGroup requiredUnits requiredDate')
+                .populate('bookingId')
                 .sort({ createdAt: -1 });
+            console.log(`[DEBUG] Found ${receivedRequests.length} received requests`);
+        } else {
+            console.log('[DEBUG] User is NOT a donor');
         }
 
-        res.json({
-            success: true,
-            data: {
-                requests: sentRequests, // sent by me
-                received: receivedRequests // received by me (as a donor)
+        // Fetch blood bank data from bloodbank service
+        const axios = require('axios');
+        const bloodBankServiceUrl = process.env.BLOODBANK_SERVICE_URL || 'http://localhost:3000';
+
+        try {
+            const bbResponse = await axios.get(`${bloodBankServiceUrl}/bloodbank/all`);
+            const bloodBanks = bbResponse.data.data || [];
+
+            console.log(`[DEBUG] Fetched ${bloodBanks.length} blood banks from service`);
+            if (bloodBanks.length > 0) {
+                console.log('[DEBUG] Sample blood bank:', {
+                    _id: bloodBanks[0]._id,
+                    name: bloodBanks[0].name,
+                    hospital_id: bloodBanks[0].hospital_id
+                });
             }
-        });
+
+            // Attach blood bank info to each request based on patient's hospital_id
+            const attachBloodBankInfo = (requests) => {
+                return requests.map(req => {
+                    const reqObj = req.toObject();
+                    if (reqObj.patientId && reqObj.patientId.hospital_id) {
+                        const patientHospitalId = reqObj.patientId.hospital_id;
+                        console.log(`[DEBUG] Looking for blood bank with hospital_id: "${patientHospitalId}"`);
+
+                        const bb = bloodBanks.find(b => {
+                            const match = b._id.toString() === patientHospitalId || b.hospital_id === patientHospitalId;
+                            if (match) {
+                                console.log(`[DEBUG] ✅ MATCH FOUND: ${b.name} (hospital_id: "${b.hospital_id}")`);
+                            }
+                            return match;
+                        });
+
+                        if (bb) {
+                            reqObj.bloodBankId = {
+                                _id: bb._id,
+                                name: bb.name,
+                                address: bb.address,
+                                phone: bb.phone
+                            };
+                            console.log(`[DEBUG] Attached blood bank "${bb.name}" to request ${reqObj._id}`);
+                        } else {
+                            console.log(`[DEBUG] ❌ NO MATCH for hospital_id: "${patientHospitalId}"`);
+                            console.log('[DEBUG] Available hospital_ids:', bloodBanks.map(b => `"${b.hospital_id}"`).join(', '));
+                        }
+                    } else {
+                        console.log('[DEBUG] Request has no patient or hospital_id');
+                    }
+                    return reqObj;
+                });
+            };
+
+            const enrichedSentRequests = attachBloodBankInfo(sentRequests);
+            const enrichedReceivedRequests = attachBloodBankInfo(receivedRequests);
+
+            res.json({
+                success: true,
+                data: {
+                    requests: enrichedSentRequests, // sent by me
+                    received: enrichedReceivedRequests // received by me (as a donor)
+                }
+            });
+        } catch (bbError) {
+            console.error('[WARN] Failed to fetch blood banks:', bbError.message);
+            // Return requests without blood bank info if service is unavailable
+            res.json({
+                success: true,
+                data: {
+                    requests: sentRequests,
+                    received: receivedRequests
+                }
+            });
+        }
     } catch (error) {
         console.error('Error fetching requests:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch requests' });
@@ -76,8 +153,13 @@ exports.updateRequestStatus = async (req, res) => {
         // We need to check if userId matches requesterId or if userId matches the donor's userId
 
         // Check if user is the requester (can only cancel)
+        // Check if user is the requester
         if (request.requesterId.toString() === userId) {
-            if (status !== 'cancelled') {
+            // Special Case: If the requester IS ALSO the donor (self-request), allow them to update to any status
+            const donor = await Donor.findById(request.donorId);
+            const isSelfRequest = donor && donor.userId.toString() === userId;
+
+            if (!isSelfRequest && status !== 'cancelled') {
                 return res.status(403).json({ success: false, message: 'Requester can only cancel requests' });
             }
         } else {

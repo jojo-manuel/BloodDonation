@@ -103,6 +103,7 @@ export default function BloodBankDashboard() {
   const [reviews, setReviews] = useState([]); // Reviews for this blood bank
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
+  const [bookingViewMode, setBookingViewMode] = useState('card'); // 'card' or 'table'
 
   // Suggestion: Generic Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -2007,120 +2008,236 @@ export default function BloodBankDashboard() {
                       <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Bookings will appear here once donors book their slots</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {bookings.map((booking) => (
-                        <div key={booking._id} className="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 hover:border-pink-300 dark:hover:border-pink-700 transition">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <h4 className="font-bold text-xl text-gray-900 dark:text-white">
-                                  Booking ID: {booking.bookingId}
-                                </h4>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                  booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                    booking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                                      booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
-                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                  }`}>
-                                  {booking.status.toUpperCase()}
-                                </span>
-                              </div>
+                    <>
+                      {/* View Toggle */}
+                      <div className="flex justify-end mb-4">
+                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                          <button
+                            onClick={() => setBookingViewMode('card')}
+                            className={`px-4 py-2 rounded-md text-sm font-bold transition ${bookingViewMode === 'card'
+                              ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 shadow-sm'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                              }`}
+                          >
+                            🗂️ Cards
+                          </button>
+                          <button
+                            onClick={() => setBookingViewMode('table')}
+                            className={`px-4 py-2 rounded-md text-sm font-bold transition ${bookingViewMode === 'table'
+                              ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 shadow-sm'
+                              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                              }`}
+                          >
+                            📋 Table (All Data)
+                          </button>
+                        </div>
+                      </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">🎫 Token:</span>
-                                  <span className="font-mono bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded font-bold text-yellow-900 dark:text-yellow-200">
-                                    #{booking.tokenNumber || 'N/A'}
-                                  </span>
+                      {bookingViewMode === 'card' ? (
+                        <div className="space-y-4">
+                          {bookings.map((booking) => (
+                            <div key={booking._id} className="rounded-2xl border border-white/20 bg-white/10 p-6 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5 hover:border-pink-300 dark:hover:border-pink-700 transition">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <h4 className="font-bold text-xl text-gray-900 dark:text-white">
+                                      Booking ID: {booking.bookingId}
+                                    </h4>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                      booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                        booking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                          booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
+                                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                      }`}>
+                                      {booking.status.toUpperCase()}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">🎫 Token:</span>
+                                      <span className="font-mono bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded font-bold text-yellow-900 dark:text-yellow-200">
+                                        #{booking.tokenNumber || 'N/A'}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">👤 Donor:</span>
+                                      <span>{booking.donorName || 'N/A'}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">🩸 Blood Group:</span>
+                                      <span className="font-bold text-red-600 dark:text-red-400">{booking.bloodGroup}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">📧 Email:</span>
+                                      <span className="text-xs">{booking.donorId?.userId?.email || 'N/A'}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">📱 Phone:</span>
+                                      <span>{booking.donorId?.userId?.phone || booking.donorId?.contactNumber || 'N/A'}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">📅 Date:</span>
+                                      <span className="font-semibold">{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">🕒 Time:</span>
+                                      <span className="font-semibold">{booking.time}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">🙋 Patient:</span>
+                                      <span>{booking.patientName || 'N/A'}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">🏥 MRID:</span>
+                                      <span className="font-mono">{booking.patientMRID || 'N/A'}</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold">📝 Requester:</span>
+                                      <span>{booking.requesterName || 'N/A'}</span>
+                                    </div>
+                                  </div>
                                 </div>
 
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">👤 Donor:</span>
-                                  <span>{booking.donorName || 'N/A'}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">🩸 Blood Group:</span>
-                                  <span className="font-bold text-red-600 dark:text-red-400">{booking.bloodGroup}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">📧 Email:</span>
-                                  <span className="text-xs">{booking.donorId?.userId?.email || 'N/A'}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">📱 Phone:</span>
-                                  <span>{booking.donorId?.userId?.phone || booking.donorId?.contactNumber || 'N/A'}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">📅 Date:</span>
-                                  <span className="font-semibold">{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">🕒 Time:</span>
-                                  <span className="font-semibold">{booking.time}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">🙋 Patient:</span>
-                                  <span>{booking.patientName || 'N/A'}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">🏥 MRID:</span>
-                                  <span className="font-mono">{booking.patientMRID || 'N/A'}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold">📝 Requester:</span>
-                                  <span>{booking.requesterName || 'N/A'}</span>
+                                <div className="flex flex-col gap-2 ml-4">
+                                  {booking.status === 'pending' && (
+                                    <>
+                                      <button
+                                        onClick={() => setRescheduleModal(booking)}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                                      >
+                                        <span>📅</span>
+                                        Reschedule
+                                      </button>
+                                      <button
+                                        onClick={() => handleConfirmBooking(booking)}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                                      >
+                                        <span>✅</span>
+                                        Confirm
+                                      </button>
+                                      <button
+                                        onClick={() => handleRejectBooking(booking)}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                                      >
+                                        <span>✖️</span>
+                                        Reject
+                                      </button>
+                                    </>
+                                  )}
+                                  {booking.status === 'confirmed' && (
+                                    <button
+                                      onClick={() => setRescheduleModal(booking)}
+                                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
+                                    >
+                                      <span>📅</span>
+                                      Reschedule
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>
-
-                            <div className="flex flex-col gap-2 ml-4">
-                              {booking.status === 'pending' && (
-                                <>
-                                  <button
-                                    onClick={() => setRescheduleModal(booking)}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
-                                  >
-                                    <span>📅</span>
-                                    Reschedule
-                                  </button>
-                                  <button
-                                    onClick={() => handleConfirmBooking(booking)}
-                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
-                                  >
-                                    <span>✅</span>
-                                    Confirm
-                                  </button>
-                                  <button
-                                    onClick={() => handleRejectBooking(booking)}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
-                                  >
-                                    <span>✖️</span>
-                                    Reject
-                                  </button>
-                                </>
-                              )}
-                              {booking.status === 'confirmed' && (
-                                <button
-                                  onClick={() => setRescheduleModal(booking)}
-                                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
-                                >
-                                  <span>📅</span>
-                                  Reschedule
-                                </button>
-                              )}
-                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        /* Table View */
+                        <div className="rounded-2xl border border-white/20 bg-white/10 overflow-hidden shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
+                                <tr>
+                                  <th className="px-6 py-3">Token</th>
+                                  <th className="px-6 py-3">Date/Time</th>
+                                  <th className="px-6 py-3">Donor</th>
+                                  <th className="px-6 py-3">Blood Group</th>
+                                  <th className="px-6 py-3">Status</th>
+                                  <th className="px-6 py-3">Patient (MRID)</th>
+                                  <th className="px-6 py-3">Bleeding Details</th>
+                                  <th className="px-6 py-3">Notes</th>
+                                  <th className="px-6 py-3 text-right">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {bookings.map((booking) => (
+                                  <tr key={booking._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition">
+                                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                                      #{booking.tokenNumber || 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="font-semibold">{new Date(booking.date).toLocaleDateString()}</div>
+                                      <div className="text-xs text-gray-500">{booking.time}</div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="font-bold text-gray-900 dark:text-white">{booking.donorName}</div>
+                                      <div className="text-xs">{booking.donorPhone}</div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className="font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">
+                                        {booking.bloodGroup}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                        booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                          booking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                        }`}>
+                                        {booking.status.toUpperCase()}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div>{booking.patientName || '-'}</div>
+                                      <div className="text-xs font-mono">{booking.patientMRID || '-'}</div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      {booking.status === 'completed' ? (
+                                        <div className="text-xs">
+                                          <div><strong>Weight:</strong> {booking.weight || 'N/A'} kg</div>
+                                          <div><strong>Bag #:</strong> {booking.bagSerialNumber || 'N/A'}</div>
+                                        </div>
+                                      ) : (
+                                        <span className="text-gray-400">-</span>
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-4 text-xs max-w-xs truncate">
+                                      {booking.rejectionReason && (
+                                        <span className="text-red-500 font-semibold" title={booking.rejectionReason}>
+                                          Reason: {booking.rejectionReason}
+                                        </span>
+                                      )}
+                                      {!booking.rejectionReason && <span className="text-gray-400">-</span>}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                      <div className="flex justify-end gap-2">
+                                        {booking.status === 'pending' && (
+                                          <>
+                                            <button onClick={() => setRescheduleModal(booking)} className="text-blue-600 hover:text-blue-800" title="Reschedule">📅</button>
+                                            <button onClick={() => handleConfirmBooking(booking)} className="text-green-600 hover:text-green-800" title="Confirm">✅</button>
+                                            <button onClick={() => handleRejectBooking(booking)} className="text-red-600 hover:text-red-800" title="Reject">✖️</button>
+                                          </>
+                                        )}
+                                        {booking.status === 'confirmed' && (
+                                          <button onClick={() => setRescheduleModal(booking)} className="text-blue-600 hover:text-blue-800" title="Reschedule">📅</button>
+                                        )}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -2292,16 +2409,20 @@ export default function BloodBankDashboard() {
                           <div className="space-y-2 mb-4 text-sm">
                             <div className="flex justify-between">
                               <span className="text-gray-500">Requested Date:</span>
-                              <span className="font-medium text-gray-800 dark:text-gray-200">{new Date(req.requestedDate).toLocaleDateString()}</span>
+                              <span className="font-medium text-gray-800 dark:text-gray-200">
+                                {req.date ? new Date(req.date).toLocaleDateString() : 'N/A'}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-500">Requested Time:</span>
-                              <span className="font-medium text-gray-800 dark:text-gray-200">{req.requestedTime}</span>
+                              <span className="font-medium text-gray-800 dark:text-gray-200">
+                                {req.time || 'N/A'}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-gray-500">Status:</span>
                               <span className={`font-bold ${req.status === 'pending' ? 'text-yellow-500' :
-                                req.status === 'accepted' ? 'text-green-500' :
+                                req.status === 'confirmed' || req.status === 'accepted' ? 'text-green-500' :
                                   'text-red-500'
                                 }`}>{req.status.toUpperCase()}</span>
                             </div>
@@ -2312,12 +2433,21 @@ export default function BloodBankDashboard() {
                               <button
                                 onClick={() => handleAcceptRequest(req._id)}
                                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                title="Approve Booking"
                               >
                                 Accept
                               </button>
                               <button
+                                onClick={() => setRescheduleModal(req)}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                title="Reschedule Date/Time"
+                              >
+                                Reschedule
+                              </button>
+                              <button
                                 onClick={() => handleRejectRequest(req._id)}
                                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                title="Reject Booking"
                               >
                                 Reject
                               </button>

@@ -39,15 +39,43 @@ app.get('/health', (req, res) => {
 });
 
 // Routes - Admin service needs admin, auth, users, and requests
-const authRoutes = require('./modules/auth/routes/auth');
-const adminRoutes = require('./modules/admin/routes/admin');
-const userRoutes = require('./modules/users/routes/users');
-const chatRoutes = require('./modules/chat/routes/chat');
+const fs = require('fs');
+const path = require('path');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/chat', chatRoutes);
+console.log('Checking paths...');
+const authPath = path.join(__dirname, 'modules/auth/routes/auth.js');
+const adminPath = path.join(__dirname, 'modules/admin/routes/admin.js');
+const userPath = path.join(__dirname, 'modules/users/routes/users.js');
+const chatPath = path.join(__dirname, 'modules/chat/routes/chat.js');
+
+console.log(`Auth Path: ${authPath} - Exists: ${fs.existsSync(authPath)}`);
+console.log(`Admin Path: ${adminPath} - Exists: ${fs.existsSync(adminPath)}`);
+console.log(`User Path: ${userPath} - Exists: ${fs.existsSync(userPath)}`);
+console.log(`Chat Path: ${chatPath} - Exists: ${fs.existsSync(chatPath)}`);
+
+try {
+    const authRoutes = require('./modules/auth/routes/auth');
+    app.use('/api/auth', authRoutes);
+    console.log('Auth routes loaded');
+} catch (e) { console.error('Failed to load auth routes:', e); }
+
+try {
+    const adminRoutes = require('./modules/admin/routes/admin');
+    app.use('/api/admin', adminRoutes);
+    console.log('Admin routes loaded');
+} catch (e) { console.error('Failed to load admin routes:', e); }
+
+try {
+    const userRoutes = require('./modules/users/routes/users');
+    app.use('/api/users', userRoutes);
+    console.log('User routes loaded');
+} catch (e) { console.error('Failed to load user routes:', e); }
+
+try {
+    const chatRoutes = require('./modules/chat/routes/chat');
+    app.use('/api/chat', chatRoutes);
+    console.log('Chat routes loaded');
+} catch (e) { console.error('Failed to load chat routes:', e); }
 
 // Error Handling
 app.use((err, req, res, next) => {

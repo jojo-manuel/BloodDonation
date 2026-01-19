@@ -57,6 +57,8 @@ services:
       - FRONTEND_URL=http://localhost:3002
     depends_on:
       - blood-db
+    volumes:
+      - donor-uploads:/app/uploads
     networks:
       - app-net
 
@@ -174,3 +176,4 @@ networks:
 
 volumes:
   blood-data:
+  donor-uploads:

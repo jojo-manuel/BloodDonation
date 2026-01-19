@@ -1,4 +1,68 @@
 const User = require('../models/UserModel');
+const Booking = require('../models/Booking');
+const Request = require('../../request/models/Request');
+
+exports.directBookSlot = async (req, res) => {
+    try {
+        const {
+            donorId,
+            bloodBankId,
+            requestedDate,
+            requestedTime,
+            donationRequestId,
+            patientName,
+            donorName,
+            requesterName,
+            medicalConsent
+        } = req.body;
+
+        // Generate a sequential token number for the day
+        const dateStr = requestedDate.replace(/-/g, ''); // YYYYMMDD
+        const count = await Booking.countDocuments({ date: requestedDate });
+        const sequence = (count + 1).toString().padStart(4, '0');
+        const tokenNumber = `BK-${dateStr}-${sequence}`;
+        console.log(`[DEBUG] Generated Token: ${tokenNumber}`);
+
+        const booking = new Booking({
+            donorId,
+            bloodBankId,
+            donationRequestId,
+            date: requestedDate,
+            time: requestedTime,
+            tokenNumber,
+            meta: {
+                patientName,
+                donorName,
+                requesterName
+            },
+            medicalConsent
+        });
+
+        await booking.save();
+
+        // Update Request status
+        if (donationRequestId) {
+            await Request.findByIdAndUpdate(donationRequestId, {
+                status: 'booked',
+                bookingId: booking._id
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Slot booked successfully',
+            data: booking
+        });
+
+    } catch (error) {
+        console.error('Error booking slot:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to book slot',
+            error: error.message // Sending error description to frontend for debugging
+        });
+    }
+};
 const Donor = require('../../donor/models/donorModel');
 const multer = require('multer');
 const path = require('path');

@@ -30,24 +30,24 @@ exports.createRequest = asyncHandler(async (req, res) => {
   let patient = null;
   let patientUsername = null;
   let patientMRID = null;
-  
+
   console.log('📥 Received donation request:');
   console.log('  Patient ID:', patientId);
-  
+
   if (patientId) {
     const Patient = require('../Models/Patient');
     patient = await Patient.findById(patientId).populate('bloodBankId', 'name address');
-    
+
     console.log('  Patient found:', !!patient);
-    
+
     if (patient) {
       patientUsername = patient.name || patient.patientName;
       patientMRID = patient.mrid;
-      
+
       console.log('  Patient Name:', patientUsername);
       console.log('  Patient MRID:', patientMRID);
       console.log('  Patient Blood Bank:', patient.bloodBankId?.name);
-      
+
       // If no blood bank from sender, get it from patient
       if (!bloodBankId && patient.bloodBankId) {
         bloodBankId = patient.bloodBankId._id;
@@ -85,10 +85,10 @@ exports.createRequest = asyncHandler(async (req, res) => {
   console.log('  bloodBankName:', payload.bloodBankName);
 
   const request = await DonationRequest.create(payload);
-  
+
   console.log('✅ Donation request created successfully');
   console.log('  Request ID:', request._id);
-  
+
   return res.status(201).json({ success: true, message: 'Request sent', data: request });
 });
 
@@ -336,7 +336,13 @@ exports.bookSlot = asyncHandler(async (req, res) => {
   const patient = request.patientId ? await require('../Models/Patient').findById(request.patientId) : null;
   const bloodBank = request.bloodBankId ? await require('../Models/BloodBank').findById(request.bloodBankId) : null;
 
+  // Generate a custom Booking ID (e.g., BK-20260119-1234)
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+  const generatedId = `BK-${dateStr}-${randomSuffix}`;
+
   const booking = await Booking.create({
+    bookingId: generatedId,
     donorId: request.donorId,
     bloodBankId: request.bloodBankId || null,
     date: new Date(requestedDate),
@@ -354,61 +360,61 @@ exports.bookSlot = asyncHandler(async (req, res) => {
 
   // Generate PDF if booking was created
   let pdfUrl = null;
-    try {
-      const PDFDocument = require('pdfkit');
-      const QRCode = require('qrcode');
-      const fs = require('fs');
-      const path = require('path');
+  try {
+    const PDFDocument = require('pdfkit');
+    const QRCode = require('qrcode');
+    const fs = require('fs');
+    const path = require('path');
 
-      // Populate booking data
-      await booking.populate('donorId', 'userId name bloodGroup contactNumber houseAddress');
-      await booking.populate('donorId.userId', 'username name');
-      await booking.populate('bloodBankId', 'name address');
+    // Populate booking data
+    await booking.populate('donorId', 'userId name bloodGroup contactNumber houseAddress');
+    await booking.populate('donorId.userId', 'username name');
+    await booking.populate('bloodBankId', 'name address');
 
-      const doc = new PDFDocument();
-      const pdfPath = path.join(__dirname, '../uploads', `booking-${booking._id}.pdf`);
-      doc.pipe(fs.createWriteStream(pdfPath));
+    const doc = new PDFDocument();
+    const pdfPath = path.join(__dirname, '../uploads', `booking-${booking._id}.pdf`);
+    doc.pipe(fs.createWriteStream(pdfPath));
 
-      // PDF Content
-      doc.fontSize(20).text('Blood Donation Booking Confirmation', { align: 'center' });
-      doc.moveDown();
+    // PDF Content
+    doc.fontSize(20).text('Blood Donation Booking Confirmation', { align: 'center' });
+    doc.moveDown();
 
-      doc.fontSize(14).text(`Token Number: ${booking.tokenNumber}`);
-      doc.text(`Donor Name: ${booking.donorId.userId.name}`);
-      doc.text(`Donor ID: ${booking.donorId.userId.username}`);
-      doc.text(`Blood Group: ${booking.donorId.bloodGroup}`);
-      doc.text(`Blood Bank: ${booking.bloodBankId.name}`);
-      doc.text(`Address: ${booking.bloodBankId.address}`);
-      doc.text(`Date: ${new Date(booking.date).toLocaleDateString()}`);
-      doc.text(`Time: ${booking.time}`);
-      doc.moveDown();
+    doc.fontSize(14).text(`Token Number: ${booking.tokenNumber}`);
+    doc.text(`Donor Name: ${booking.donorId.userId.name}`);
+    doc.text(`Donor ID: ${booking.donorId.userId.username}`);
+    doc.text(`Blood Group: ${booking.donorId.bloodGroup}`);
+    doc.text(`Blood Bank: ${booking.bloodBankId.name}`);
+    doc.text(`Address: ${booking.bloodBankId.address}`);
+    doc.text(`Date: ${new Date(booking.date).toLocaleDateString()}`);
+    doc.text(`Time: ${booking.time}`);
+    doc.moveDown();
 
-      // Generate QR Code
-      const qrData = JSON.stringify({
-        token: booking.tokenNumber,
-        donor: booking.donorId.userId.name,
-        donorId: booking.donorId.userId.username,
-        bloodBank: booking.bloodBankId.name,
-        address: booking.bloodBankId.address,
-        date: new Date(booking.date).toLocaleDateString(),
-        time: booking.time
-      });
+    // Generate QR Code
+    const qrData = JSON.stringify({
+      token: booking.tokenNumber,
+      donor: booking.donorId.userId.name,
+      donorId: booking.donorId.userId.username,
+      bloodBank: booking.bloodBankId.name,
+      address: booking.bloodBankId.address,
+      date: new Date(booking.date).toLocaleDateString(),
+      time: booking.time
+    });
 
-      const qrCodeDataURL = await QRCode.toDataURL(qrData);
-      const qrBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
+    const qrCodeDataURL = await QRCode.toDataURL(qrData);
+    const qrBuffer = Buffer.from(qrCodeDataURL.split(',')[1], 'base64');
 
-      // Add QR Code to PDF (simplified - in real implementation you'd need to handle image embedding)
-      doc.text('Scan QR Code for details:');
-      doc.moveDown();
-      doc.text(qrData); // Placeholder - actual QR image would need additional setup
+    // Add QR Code to PDF (simplified - in real implementation you'd need to handle image embedding)
+    doc.text('Scan QR Code for details:');
+    doc.moveDown();
+    doc.text(qrData); // Placeholder - actual QR image would need additional setup
 
-      doc.end();
+    doc.end();
 
-      pdfUrl = `/uploads/booking-${booking._id}.pdf`;
-    } catch (pdfError) {
-      console.error('PDF generation error:', pdfError);
-      // Don't fail the booking if PDF fails
-    }
+    pdfUrl = `/uploads/booking-${booking._id}.pdf`;
+  } catch (pdfError) {
+    console.error('PDF generation error:', pdfError);
+    // Don't fail the booking if PDF fails
+  }
 
   return res.json({
     success: true,

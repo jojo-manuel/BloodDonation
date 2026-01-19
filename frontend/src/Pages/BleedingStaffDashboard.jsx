@@ -148,9 +148,10 @@ export default function BleedingStaffDashboard() {
                                     <thead className="bg-gray-100 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-bold">
                                         <tr>
                                             <th className="px-6 py-3">Token</th>
-                                            <th className="px-6 py-3">Name</th>
+                                            <th className="px-6 py-3">Date/Time</th>
+                                            <th className="px-6 py-3">Donor</th>
+                                            <th className="px-6 py-3">Patient</th>
                                             <th className="px-6 py-3">Status</th>
-                                            <th className="px-6 py-3">Time</th>
                                             <th className="px-6 py-3">Action</th>
                                         </tr>
                                     </thead>
@@ -160,9 +161,17 @@ export default function BleedingStaffDashboard() {
                                                 <td className="px-6 py-4 font-mono font-bold text-blue-600 dark:text-blue-400">
                                                     {b.tokenNumber || '-'}
                                                 </td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">
+                                                    <div>{new Date(b.date).toLocaleDateString()}</div>
+                                                    <div className="text-xs">{b.time}</div>
+                                                </td>
                                                 <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                                     {b.donorName}
                                                     <span className="ml-2 text-xs text-red-500 font-bold border border-red-200 px-1 rounded">{b.bloodGroup}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                                                    <div>{b.patientName || '-'}</div>
+                                                    {b.patientMRID && <div className="text-xs font-mono text-gray-500">{b.patientMRID}</div>}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${b.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -172,7 +181,6 @@ export default function BleedingStaffDashboard() {
                                                         {b.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{new Date(b.date).toLocaleDateString()} {b.time}</td>
                                                 <td className="px-6 py-4">
                                                     <button
                                                         onClick={() => {

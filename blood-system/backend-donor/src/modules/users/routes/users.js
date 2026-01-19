@@ -10,5 +10,6 @@ router.use(authenticate);
 router.get('/me', userController.getMe);
 router.get('/me/comprehensive', userController.getComprehensiveProfile);
 router.post('/me/profile-image', userController.uploadProfileImage);
+router.post('/direct-book-slot', userController.directBookSlot);
 
 module.exports = router;

@@ -16,6 +16,7 @@ COPY backend-monolith/src/modules/patient/ ./src/modules/patient/
 COPY backend-monolith/src/modules/request/ ./src/modules/request/
 COPY backend-monolith/src/modules/inventory/ ./src/modules/inventory/
 COPY backend-monolith/src/modules/users/ ./src/modules/users/
+COPY backend-monolith/src/modules/bloodbank/ ./src/modules/bloodbank/
 COPY backend-monolith/src/middleware/ ./src/middleware/
 
 # Copy source code (app.js, server.js, and local module overrides)

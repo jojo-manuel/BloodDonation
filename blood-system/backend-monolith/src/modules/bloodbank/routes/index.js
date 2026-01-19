@@ -324,19 +324,45 @@ router.put('/staff/:id', authMiddleware, async (req, res) => {
 router.get('/analytics', authMiddleware, async (req, res) => {
     try {
         const bloodBankId = req.user.hospital_id;
+        console.log('Analytics Debug - User:', req.user);
+        console.log('Analytics Debug - BloodBankID:', bloodBankId);
 
-        // Mock analytics structure matching frontend expectations
+        const totalBookings = await Booking.countDocuments({ hospital_id: bloodBankId });
+        console.log('Analytics Debug - Total Bookings Found:', totalBookings);
+        const completedBookings = await Booking.countDocuments({ hospital_id: bloodBankId, status: 'completed' });
+
+        // Dynamic import or require if not already present
+        const Patient = require('../../patient/models/Patient');
+        const Request = require('../../request/models/Request');
+
+        const totalPatients = await Patient.countDocuments({ hospital_id: bloodBankId });
+        const fulfilledPatients = await Request.countDocuments({
+            hospital_id: bloodBankId,
+            status: 'fulfilled'
+        });
+
+        // Calculate trends (mocked for now as it requires complex aggregation)
+        // You can add real aggregation here if needed later
+
         const analyticsData = {
             overview: {
-                totalBookings: 0,
-                completedBookings: 0,
-                totalPatients: 0,
-                fulfilledPatients: 0
+                totalBookings,
+                completedBookings,
+                totalPatients,
+                fulfilledPatients
             },
             timeBased: {
-                today: { bookings: 0 },
-                thisWeek: { bookings: 0 },
-                thisMonth: { bookings: 0, patients: 0, requests: 0 }
+                today: {
+                    bookings: await Booking.countDocuments({
+                        hospital_id: bloodBankId,
+                        date: {
+                            $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                            $lt: new Date(new Date().setHours(23, 59, 59, 999))
+                        }
+                    })
+                },
+                thisWeek: { bookings: 0 }, // Placeholder
+                thisMonth: { bookings: 0, patients: 0, requests: 0 } // Placeholder
             },
             bloodGroupDistribution: [],
             monthlyTrend: [],
@@ -348,6 +374,7 @@ router.get('/analytics', authMiddleware, async (req, res) => {
             data: analyticsData
         });
     } catch (error) {
+        console.error('Analytics Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -411,23 +438,24 @@ router.put('/bookings/:id/status', authMiddleware, async (req, res) => {
         const { id } = req.params;
         const { status, rejectionReason, weight, bagSerialNumber } = req.body;
 
+        // Debug logging
+        console.log('Update Booking Status Payload:', { id, status, weight, bagSerialNumber });
+
         const updateData = { status };
         if (rejectionReason) updateData.rejectionReason = rejectionReason;
         if (weight) updateData.weight = weight;
         if (bagSerialNumber) updateData.bagSerialNumber = bagSerialNumber;
-        // Actually I didn't add rejectionReason to schema. I should probably add it or use 'notes'.
-        // Schema has 'notes' (wait, 'notes' was in Request). Booking has no extra fields.
-        // I should add 'rejectionReason' to schema if I want to save it, or just ignore for now.
-        // Let's check schema I wrote. 
-        // I wrote: bookingId, donorId, ... requesterName. No rejectionReason.
-        // It's fine, I'll update schema later if strictly needed, or maybe it's passed but not stored? No, user wants it in CSV.
-        // I will add rejectionReason to scheme in next step. For now, let's try to update it; Mongo ignores unknown fields if strict is true (default).
+
+        console.log('Constructed Update Data:', updateData);
 
         const booking = await Booking.findOneAndUpdate(
             { _id: id, hospital_id: bloodBankId },
             updateData,
             { new: true }
         );
+
+        console.log('Updated Booking Result:', booking);
+
 
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -533,13 +561,43 @@ router.get('/visited-donors', authMiddleware, async (req, res) => {
 router.get('/donation-requests', authMiddleware, async (req, res) => {
     try {
         const bloodBankId = req.user.hospital_id;
-        // Fetch pending requests for this hospital
-        const requests = await Request.find({
-            hospital_id: bloodBankId,
-            status: { $in: ['pending', 'approved'] }
-        }).sort({ urgency: -1, createdAt: -1 });
+        console.log(`[DEBUG] Fetching donation requests for Hospital: '${bloodBankId}'`);
 
+        const requests = await Booking.find({
+            hospital_id: bloodBankId,
+            status: 'pending'
+        }).sort({ date: 1, time: 1 });
+
+        console.log(`[DEBUG] Found ${requests.length} pending requests.`);
         res.json({ success: true, data: requests });
+    } catch (error) {
+        console.error('[DEBUG] Error fetching donation requests:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// PUT /api/bloodbank/donation-requests/:id/status
+// Accept or reject a donation request (Booking)
+router.put('/donation-requests/:id/status', authMiddleware, async (req, res) => {
+    try {
+        const bloodBankId = req.user.hospital_id;
+        const { id } = req.params;
+        const { status } = req.body; // 'accepted' or 'rejected' from frontend
+
+        // Map status: 'accepted' -> 'confirmed', 'rejected' -> 'rejected'
+        const bookingStatus = status === 'accepted' ? 'confirmed' : 'rejected';
+
+        const booking = await Booking.findOneAndUpdate(
+            { _id: id, hospital_id: bloodBankId },
+            { status: bookingStatus },
+            { new: true }
+        );
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: 'Booking request not found' });
+        }
+
+        res.json({ success: true, message: `Request ${status}`, data: booking });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

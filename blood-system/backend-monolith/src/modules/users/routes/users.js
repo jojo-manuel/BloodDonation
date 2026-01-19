@@ -84,4 +84,46 @@ router.get('/me/comprehensive', verifyToken, async (req, res) => {
     }
 });
 
+const Booking = require('../../bloodbank/models/Booking');
+
+// POST /direct-book-slot
+// Allows a user to book a slot directly (bypassing full flow if needed)
+router.post('/direct-book-slot', verifyToken, async (req, res) => {
+    try {
+        const { bloodBankId, requestedDate, requestedTime, donorName, patientName, medicalConsent } = req.body;
+        const userId = req.user.user_id;
+
+        // Generate a simple token number
+        const tokenNumber = Math.floor(1000 + Math.random() * 9000).toString();
+
+        const newBooking = new Booking({
+            hospital_id: bloodBankId,
+            donorId: userId, // Assuming user is the donor or linking to user
+            // If the schema expects a Donor ID (from Donor collection), we might need to look it up.
+            // But for now, let's store userId or donorName if schema is loose.
+            // Based on previous file views, Booking has `donorId` (ref) and `donorName`.
+            donorName: donorName || req.user.username || 'Unknown Donor',
+            patientName: patientName,
+            date: new Date(requestedDate),
+            time: requestedTime,
+            status: 'pending', // Pending approval by blood bank
+            tokenNumber: tokenNumber,
+            bookingId: `BK-${Date.now()}`,
+            medicalConsent: medicalConsent
+        });
+
+        await newBooking.save();
+
+        res.json({
+            success: true,
+            message: 'Booking successful',
+            data: newBooking
+        });
+
+    } catch (error) {
+        console.error('Error booking slot:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 module.exports = router;

@@ -20,5 +20,7 @@ router.delete('/delete', authenticate, donorController.deleteProfile);
 // Send request to donor
 const requestController = require('../../request/controllers/requestController');
 router.post('/:donorId/requests', authenticate, requestController.createRequest);
+// Handle request status update via donors route (for consistency with frontend)
+router.put('/requests/:requestId/status', authenticate, requestController.updateRequestStatus);
 
 module.exports = router;

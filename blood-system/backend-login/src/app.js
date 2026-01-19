@@ -41,11 +41,33 @@ app.get('/health', (req, res) => {
 });
 
 // Routes - Login service only needs auth and users
-const authRoutes = require('./modules/auth/routes/auth');
-const userRoutes = require('./modules/users/routes/users');
+// Routes - Login service only needs auth and users
+const fs = require('fs');
+const path = require('path');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+console.log('Checking paths...');
+const authPath = path.join(__dirname, 'modules/auth/routes/auth.js');
+const userPath = path.join(__dirname, 'modules/users/routes/users.js');
+console.log(`Auth Path: ${authPath} - Exists: ${fs.existsSync(authPath)}`);
+console.log(`User Path: ${userPath} - Exists: ${fs.existsSync(userPath)}`);
+
+let authRoutes, userRoutes;
+try {
+    authRoutes = require('./modules/auth/routes/auth');
+    console.log('Auth routes loaded');
+} catch (e) {
+    console.error('Failed to load auth routes:', e);
+}
+
+try {
+    userRoutes = require('./modules/users/routes/users');
+    console.log('User routes loaded');
+} catch (e) {
+    console.error('Failed to load user routes:', e);
+}
+
+if (authRoutes) app.use('/api/auth', authRoutes);
+if (userRoutes) app.use('/api/users', userRoutes);
 
 // Stub routes for chat - Login page doesn't need chat but frontend may request it
 // Return empty/zero responses to prevent 404 errors

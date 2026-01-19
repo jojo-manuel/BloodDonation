@@ -80,4 +80,4 @@ donorSchema.index({ 'houseAddress.city': 1 });
 donorSchema.index({ 'houseAddress.district': 1 });
 donorSchema.index({ 'houseAddress.pincode': 1 });
 
-module.exports = mongoose.model('Donor', donorSchema);
+module.exports = mongoose.models.Donor || mongoose.model('Donor', donorSchema);
