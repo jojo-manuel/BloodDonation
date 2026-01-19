@@ -56,7 +56,8 @@ const allowedOrigins = [
   'http://localhost:8080',   // Common dev port
   'http://127.0.0.1:8080',
   'https://blood-frontend-f9sy.onrender.com', // Production Frontend
-  'https://blood-backend-vd5d.onrender.com'   // Production Backend (self)
+  'https://blood-backend-vd5d.onrender.com',   // Production Backend (self - old?)
+  'https://blood-backend-f9sy.onrender.com'    // Production Backend (new inferred)
 ];
 
 // Add production origins from environment variable
