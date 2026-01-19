@@ -126,13 +126,21 @@ export default function Login() {
           }).toString();
 
           const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
-          if (user?.role.toLowerCase() === 'admin') {
-            window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
-          } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
-            window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+          if (isLocalhost) {
+            // Local Development: Redirect to specific ports
+            if (user?.role.toLowerCase() === 'admin') {
+              window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
+            } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
+              window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+            } else {
+              // Default user/donor
+              window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
+            }
           } else {
-            // Default user/donor
-            window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
+            // Production/Render: Redirect to same origin
+            window.location.href = `${window.location.origin}/auth/callback?${authParams}`;
           }
         } else {
           alert('Authentication failed: ' + response.data.message);
@@ -213,13 +221,20 @@ export default function Login() {
           }).toString();
 
           const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
-          if (user?.role.toLowerCase() === 'admin') {
-            window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
-          } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
-            window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+          if (isLocalhost) {
+            if (user?.role.toLowerCase() === 'admin') {
+              window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
+            } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {
+              window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+            } else {
+              // Default user/donor
+              window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
+            }
           } else {
-            // Default user/donor - Redirect to Port 3002
-            window.location.href = `http://localhost:3002/auth/callback?${authParams}`;
+            // Production/Render: Redirect to same origin
+            window.location.href = `${window.location.origin}/auth/callback?${authParams}`;
           }
         } else {
           alert(data?.message || 'Login failed');

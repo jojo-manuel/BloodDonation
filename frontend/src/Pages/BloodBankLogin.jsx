@@ -88,7 +88,12 @@ export default function BloodBankLogin() {
                   role: res.data.data.user.role,
                   username: res.data.data.user.username
                 }).toString();
-                window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (isLocalhost) {
+                  window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                } else {
+                  window.location.href = `${window.location.origin}/auth/callback?${authParams}`;
+                }
               } else if (status === 'pending') {
                 navigate("/bloodbank-pending-approval");
               } else if (status === 'rejected') {
@@ -156,7 +161,12 @@ export default function BloodBankLogin() {
                   role: res.data.data.user.role,
                   username: res.data.data.user.username
                 }).toString();
-                window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (isLocalhost) {
+                  window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                } else {
+                  window.location.href = `${window.location.origin}/auth/callback?${authParams}`;
+                }
               } else if (status === 'pending') {
                 navigate("/bloodbank-pending-approval");
               } else if (status === 'rejected') {
