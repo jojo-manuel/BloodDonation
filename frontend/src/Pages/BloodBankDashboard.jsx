@@ -10,6 +10,7 @@ import { useToast } from "../context/ToastContext";
 import ConfirmationModal from "../components/ConfirmationModal";
 import { useChat } from "../context/ChatContext";
 
+
 /*
 // Custom Confirmation Modal Component
 const ConfirmationModal_Removed = ({ isOpen, title, message, type = 'confirm', onConfirm, onCancel, inputPlaceholder }) => {
@@ -60,7 +61,14 @@ const ConfirmationModal_Removed = ({ isOpen, title, message, type = 'confirm', o
 
 export default function BloodBankDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(localStorage.getItem('role') === 'bleeding_staff' ? 'bleeding' : 'overview'); // Default view based on role
+  // Get user role
+  const role = localStorage.getItem('role');
+
+  const [activeTab, setActiveTab] = useState(
+    role === 'bleeding_staff' ? 'bleeding' :
+      role === 'doctor' ? 'doctor_assessment' :
+        'overview'
+  ); // Default view based on role
   const [patients, setPatients] = useState([]);
   const [users, setUsers] = useState([]);
   const [donationRequests, setDonationRequests] = useState([]);
@@ -103,7 +111,7 @@ export default function BloodBankDashboard() {
   const [reviews, setReviews] = useState([]); // Reviews for this blood bank
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 }); // Review statistics
   const [loadingReviews, setLoadingReviews] = useState(false); // Loading state for reviews
-  const [bookingViewMode, setBookingViewMode] = useState('card'); // 'card' or 'table'
+  const [bookingViewMode, setBookingViewMode] = useState('table'); // 'card' or 'table'
 
   // Suggestion: Generic Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -120,7 +128,7 @@ export default function BloodBankDashboard() {
   };
 
   // Get user role
-  const role = localStorage.getItem('role');
+
 
   // Staff Management State
   const [staffList, setStaffList] = useState([]);
@@ -177,6 +185,13 @@ export default function BloodBankDashboard() {
   const [searchUserEmail, setSearchUserEmail] = useState('');
   const [searchUserRole, setSearchUserRole] = useState('');
   const [searchUserDate, setSearchUserDate] = useState('');
+
+  // User Management State (Add User)
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [showUserCredentialsModal, setShowUserCredentialsModal] = useState(false);
+  const [newUserData, setNewUserData] = useState({ name: '', email: '', phone: '', role: 'user', bloodGroup: '' });
+  const [createdUserCredentials, setCreatedUserCredentials] = useState(null);
+  const [loadingUserCreate, setLoadingUserCreate] = useState(false);
 
   // Search states for donors
   const [searchBloodGroup, setSearchBloodGroup] = useState('');
@@ -266,6 +281,8 @@ export default function BloodBankDashboard() {
       }
     });
   };
+
+
 
   // Fetch patients list on mount
   // Fetch initial data on mount
@@ -460,6 +477,30 @@ export default function BloodBankDashboard() {
     }
   };
 
+  // Create New User
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      setLoadingUserCreate(true);
+      const res = await api.post('/bloodbank/users', newUserData);
+      if (res.data.success) {
+        setCreatedUserCredentials({
+          email: res.data.data.credentials.email,
+          password: res.data.data.credentials.password
+        });
+        setShowUserModal(false);
+        setShowUserCredentialsModal(true);
+        setNewUserData({ name: '', email: '', phone: '', role: 'user', bloodGroup: '' });
+        fetchUsers();
+      }
+    } catch (err) {
+      console.error("Failed to create user", err);
+      showToast(err.response?.data?.message || "Failed to create user", 'error');
+    } finally {
+      setLoadingUserCreate(false);
+    }
+  };
+
   // Filter donors based on search criteria (client-side filtering)
   const filteredDonors = React.useMemo(() => {
     if (!donors || donors.length === 0) return [];
@@ -563,24 +604,46 @@ export default function BloodBankDashboard() {
     });
   };
 
-  // Handle reschedule booking
+  // Handle reschedule booking or donation request
   const handleRescheduleBooking = async (newDate, newTime) => {
     if (!rescheduleModal) return;
 
+    // Explicit check using flag set in onClick
+    const isDonationReq = rescheduleModal.isDonationRequest === true;
+
+    // Fallback: Check if it has a bookingId (only bookings have this in our schema)
+    const hasBookingId = !!rescheduleModal.bookingId && rescheduleModal.bookingId !== 'N/A';
+
+    // Determine path: default to booking ONLY if it's not a donation request explicitly
+    const isBookingPath = !isDonationReq && hasBookingId;
+
+    const url = isBookingPath
+      ? `/bloodbank/bookings/${rescheduleModal._id}/reschedule`
+      : `/bloodbank/donation-requests/${rescheduleModal._id}/reschedule`;
+
+    console.log(`[DEBUG] Rescheduling: IsDonationReq=${isDonationReq}, HasBookingId=${hasBookingId} -> URL=${url}`);
+
     try {
       setRescheduling(true);
-      const res = await api.put(`/bloodbank/bookings/${rescheduleModal._id}/reschedule`, {
+      const res = await api.put(url, {
         newDate,
         newTime
       });
 
       if (res.data.success) {
-        showToast('Booking rescheduled successfully!', 'success');
+        showToast(isBookingPath ? 'Booking rescheduled successfully!' : 'Request rescheduled and user notified!', 'success');
         setRescheduleModal(null);
-        fetchBookings(); // Refresh bookings list
+
+        // Refresh appropriate list
+        if (isBookingPath) {
+          fetchBookings();
+        } else {
+          fetchDonationRequests();
+        }
       }
     } catch (err) {
-      showToast(err.response?.data?.message || 'Failed to reschedule booking', 'error');
+      console.error("Reschedule failed", err);
+      showToast(err.response?.data?.message || 'Failed to reschedule', 'error');
     } finally {
       setRescheduling(false);
     }
@@ -1330,8 +1393,19 @@ export default function BloodBankDashboard() {
               { id: 'reviews', label: 'Reviews', icon: '⭐' },
             ]
               .filter(item => {
-                // Only allow 'bloodbank' role (owner) to see Manage Staff
-                if (item.id === 'staff') return role === 'bloodbank';
+                // Role-based filtering
+                if (role === 'bleeding_staff') {
+                  return item.id === 'bleeding';
+                }
+                if (role === 'frontdesk') {
+                  const allowed = ['overview', 'frontdesk', 'bookings', 'patients', 'donors', 'received', 'users'];
+                  return allowed.includes(item.id);
+                }
+                if (role === 'bloodbank') {
+                  // Admin sees everything
+                  return true;
+                }
+                // Fallback for other roles or dev
                 return true;
               })
               .map((item) => (
@@ -1548,6 +1622,8 @@ export default function BloodBankDashboard() {
                   )}
                 </>
               )}
+
+
               {activeTab === 'patients' && (
                 <>
                   {/* Add/Edit Patient Form */}
@@ -2073,12 +2149,12 @@ export default function BloodBankDashboard() {
 
                                     <div className="flex items-center gap-2">
                                       <span className="font-semibold">📧 Email:</span>
-                                      <span className="text-xs">{booking.donorId?.userId?.email || 'N/A'}</span>
+                                      <span className="text-xs">{booking.email || booking.donorId?.email || booking.donorId?.userId?.email || 'N/A'}</span>
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                       <span className="font-semibold">📱 Phone:</span>
-                                      <span>{booking.donorId?.userId?.phone || booking.donorId?.contactNumber || 'N/A'}</span>
+                                      <span>{booking.phone || booking.donorId?.phone || booking.donorId?.userId?.phone || 'N/A'}</span>
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -2098,7 +2174,7 @@ export default function BloodBankDashboard() {
 
                                     <div className="flex items-center gap-2">
                                       <span className="font-semibold">🏥 MRID:</span>
-                                      <span className="font-mono">{booking.patientMRID || 'N/A'}</span>
+                                      <span className="font-mono">{booking.patientMrid || booking.patientMRID || 'N/A'}</span>
                                     </div>
 
                                     <div className="flex items-center gap-2">
@@ -2109,7 +2185,7 @@ export default function BloodBankDashboard() {
                                 </div>
 
                                 <div className="flex flex-col gap-2 ml-4">
-                                  {booking.status === 'pending' && (
+                                  {(booking.status === 'pending' || booking.status === 'rescheduled' || booking.status === 'accepted') && (
                                     <>
                                       <button
                                         onClick={() => setRescheduleModal(booking)}
@@ -2134,7 +2210,7 @@ export default function BloodBankDashboard() {
                                       </button>
                                     </>
                                   )}
-                                  {booking.status === 'confirmed' && (
+                                  {(booking.status === 'confirmed' || booking.status === 'booked') && (
                                     <button
                                       onClick={() => setRescheduleModal(booking)}
                                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm flex items-center gap-2 whitespace-nowrap"
@@ -2178,7 +2254,8 @@ export default function BloodBankDashboard() {
                                     </td>
                                     <td className="px-6 py-4">
                                       <div className="font-bold text-gray-900 dark:text-white">{booking.donorName}</div>
-                                      <div className="text-xs">{booking.donorPhone}</div>
+                                      <div className="text-xs">{booking.phone || booking.donorPhone || booking.donorId?.phone}</div>
+                                      <div className="text-xs text-gray-500">{booking.email || booking.donorId?.email || booking.donorId?.userId?.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                       <span className="font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">
@@ -2186,8 +2263,8 @@ export default function BloodBankDashboard() {
                                       </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                        booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${booking.status === 'confirmed' || booking.status === 'booked' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                        booking.status === 'pending' || booking.status === 'rescheduled' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                                           booking.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
                                             'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                         }`}>
@@ -2196,7 +2273,8 @@ export default function BloodBankDashboard() {
                                     </td>
                                     <td className="px-6 py-4">
                                       <div>{booking.patientName || '-'}</div>
-                                      <div className="text-xs font-mono">{booking.patientMRID || '-'}</div>
+                                      <div className="text-xs font-mono">{booking.patientMrid || booking.patientMRID || '-'}</div>
+                                      {booking.requesterName && <div className="text-xs text-gray-500 mt-1">Req: {booking.requesterName}</div>}
                                     </td>
                                     <td className="px-6 py-4">
                                       {booking.status === 'completed' ? (
@@ -2218,14 +2296,14 @@ export default function BloodBankDashboard() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                       <div className="flex justify-end gap-2">
-                                        {booking.status === 'pending' && (
+                                        {(booking.status === 'pending' || booking.status === 'rescheduled' || booking.status === 'accepted') && (
                                           <>
                                             <button onClick={() => setRescheduleModal(booking)} className="text-blue-600 hover:text-blue-800" title="Reschedule">📅</button>
                                             <button onClick={() => handleConfirmBooking(booking)} className="text-green-600 hover:text-green-800" title="Confirm">✅</button>
                                             <button onClick={() => handleRejectBooking(booking)} className="text-red-600 hover:text-red-800" title="Reject">✖️</button>
                                           </>
                                         )}
-                                        {booking.status === 'confirmed' && (
+                                        {(booking.status === 'confirmed' || booking.status === 'booked') && (
                                           <button onClick={() => setRescheduleModal(booking)} className="text-blue-600 hover:text-blue-800" title="Reschedule">📅</button>
                                         )}
                                       </div>
@@ -2394,67 +2472,136 @@ export default function BloodBankDashboard() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {donationRequests.map((req) => (
-                        <div key={req._id} className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="font-bold text-lg text-gray-900 dark:text-white">{req.donorName}</h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">{req.email}</p>
-                            </div>
-                            <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
-                              {req.bloodGroup}
-                            </div>
-                          </div>
 
-                          <div className="space-y-2 mb-4 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Requested Date:</span>
-                              <span className="font-medium text-gray-800 dark:text-gray-200">
-                                {req.date ? new Date(req.date).toLocaleDateString() : 'N/A'}
-                              </span>
+                      {
+                        donationRequests.map((req) => (
+                          <div key={req._id} className="rounded-2xl border border-white/20 bg-white/10 p-5 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-white/5">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                                  {req.donorId?.name || req.patientId?.patientName || req.requesterId?.name || 'Unknown User'}
+                                </h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {req.donorId?.email || req.requesterId?.email || ''}
+                                </p>
+                              </div>
+                              <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">
+                                {req.bloodGroup || req.donorId?.bloodGroup || '?'}
+                              </div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Requested Time:</span>
-                              <span className="font-medium text-gray-800 dark:text-gray-200">
-                                {req.time || 'N/A'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Status:</span>
-                              <span className={`font-bold ${req.status === 'pending' ? 'text-yellow-500' :
-                                req.status === 'confirmed' || req.status === 'accepted' ? 'text-green-500' :
-                                  'text-red-500'
-                                }`}>{req.status.toUpperCase()}</span>
-                            </div>
-                          </div>
 
-                          {req.status === 'pending' && (
-                            <div className="flex gap-2 mt-4">
-                              <button
-                                onClick={() => handleAcceptRequest(req._id)}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
-                                title="Approve Booking"
-                              >
-                                Accept
-                              </button>
-                              <button
-                                onClick={() => setRescheduleModal(req)}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
-                                title="Reschedule Date/Time"
-                              >
-                                Reschedule
-                              </button>
-                              <button
-                                onClick={() => handleRejectRequest(req._id)}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
-                                title="Reject Booking"
-                              >
-                                Reject
-                              </button>
+                            <div className="space-y-2 mb-4 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Request ID:</span>
+                                <span className="font-mono text-xs text-gray-800 dark:text-gray-200">{req._id}</span>
+                              </div>
+
+                              {req.tokenNumber && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500 font-bold text-blue-600">Token:</span>
+                                  <span className="font-mono text-sm font-bold text-blue-800 dark:text-blue-300">{req.tokenNumber}</span>
+                                </div>
+                              )}
+
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">
+                                  {req.status === 'rescheduled' || req.status === 'booked' ? 'Scheduled Date:' : 'Date:'}
+                                </span>
+                                <span className="font-medium text-gray-800 dark:text-gray-200">
+                                  {(req.scheduledDate && (req.status === 'rescheduled' || req.status === 'booked'))
+                                    ? `${new Date(req.scheduledDate).toLocaleDateString()} ${req.scheduledTime || ''}`
+                                    : (req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'N/A')
+                                  }
+                                </span>
+                              </div>
+
+                              {req.donorId && (
+                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                                  <p className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Donor Details</p>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-500">Name:</span>
+                                    <span className="font-medium text-gray-800 dark:text-gray-200">{req.donorId.name}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-500">Phone:</span>
+                                    <span className="font-medium text-gray-800 dark:text-gray-200">{req.donorId.phone || 'N/A'}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {req.patientId && (
+                                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                                  <p className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Patient Details</p>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-500">Name:</span>
+                                    <span className="font-medium text-gray-800 dark:text-gray-200">{req.patientId.patientName || 'N/A'}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-500">MRID:</span>
+                                    <span className="font-mono text-gray-800 dark:text-gray-200">{req.patientId.mrid || 'N/A'}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs">
+                                    <span className="text-gray-500">Hospital:</span>
+                                    <span className="font-medium text-gray-800 dark:text-gray-200">{req.patientId.hospital_id || 'N/A'}</span>
+                                  </div>
+                                  {req.patientId.phoneNumber && (
+                                    <div className="flex justify-between text-xs">
+                                      <span className="text-gray-500">Phone:</span>
+                                      <span className="font-medium text-gray-800 dark:text-gray-200">{req.patientId.phoneNumber}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+                                <span className="text-gray-500">Status:</span>
+                                <span className={`font-bold uppercase ${req.status === 'pending' ? 'text-yellow-500' :
+                                  req.status === 'accepted' || req.status === 'confirmed' ? 'text-green-500' :
+                                    'text-red-500'
+                                  }`}>
+                                  {req.status}
+                                </span>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
+
+                            {/* Debugging: Show full JSON */}
+                            <details className="mb-4">
+                              <summary className="text-xs text-blue-500 cursor-pointer hover:underline mb-2">Show Full Data JSON</summary>
+                              <pre className="text-[10px] bg-black/50 p-2 rounded text-green-400 overflow-auto max-h-40">
+                                {JSON.stringify(req, null, 2)}
+                              </pre>
+                            </details>
+
+                            {(req.status === 'pending' || req.status === 'rescheduled' || req.status === 'booked' || req.status === 'accepted') && (
+                              <div className="flex gap-2 mt-4 flex-wrap">
+                                <button
+                                  onClick={() => setRescheduleModal({ ...req, isDonationRequest: true })}
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                  title="Schedule Date & Time"
+                                >
+                                  {req.status === 'pending' ? 'Schedule' : 'Reschedule'}
+                                </button>
+                                {req.status !== 'accepted' && req.status !== 'confirmed' && (
+                                  <button
+                                    onClick={() => handleAcceptRequest(req._id)}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                    title="Accept Request"
+                                  >
+                                    Accept
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleRejectRequest(req._id)}
+                                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
+                                  title="Reject Request"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      }
                     </div>
                   )}
                 </div>
@@ -2706,13 +2853,21 @@ export default function BloodBankDashboard() {
 
               {activeTab === 'users' && (
                 <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8">
-                  <div className="mb-6 text-center">
-                    <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
-                      👥 Manage Users
-                    </h2>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      View and manage registered users
-                    </p>
+                  <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div>
+                      <h2 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl flex items-center gap-2">
+                        <span>👥</span> Manage Users
+                      </h2>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                        View and manage registered users
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowUserModal(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold shadow-lg hover:shadow-purple-500/30 hover:scale-105 transition flex items-center gap-2"
+                    >
+                      <span>➕</span> Add New User
+                    </button>
                   </div>
 
                   {/* User Search Form */}
@@ -2825,6 +2980,162 @@ export default function BloodBankDashboard() {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  )}
+
+                  {/* Add User Modal */}
+                  {showUserModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+                      <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transform transition-all scale-100">
+                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white flex justify-between items-center">
+                          <h3 className="text-xl font-bold flex items-center gap-2">
+                            <span>👥</span> Create New User
+                          </h3>
+                          <button onClick={() => setShowUserModal(false)} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+                        </div>
+
+                        <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={newUserData.name}
+                              onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                              className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none transition"
+                              placeholder="e.g. John Doe"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                              <input
+                                type="email"
+                                required
+                                value={newUserData.email}
+                                onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none transition"
+                                placeholder="john@example.com"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                              <input
+                                type="tel"
+                                required
+                                value={newUserData.phone}
+                                onChange={(e) => setNewUserData({ ...newUserData, phone: e.target.value })}
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none transition"
+                                placeholder="10-digit number"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Role</label>
+                              <select
+                                value={newUserData.role}
+                                onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none transition"
+                              >
+                                <option value="user">User</option>
+                                <option value="donor">Donor</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Blood Group (Optional)</label>
+                              <select
+                                value={newUserData.bloodGroup}
+                                onChange={(e) => setNewUserData({ ...newUserData, bloodGroup: e.target.value })}
+                                className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-purple-500 outline-none transition"
+                              >
+                                <option value="">Select</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setShowUserModal(false)}
+                              className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={loadingUserCreate}
+                              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition shadow-lg disabled:opacity-50 flex justify-center items-center gap-2"
+                            >
+                              {loadingUserCreate ? 'Creating...' : 'Create User'}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* User Credentials Modal */}
+                  {showUserCredentialsModal && createdUserCredentials && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+                      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border-2 border-green-500 overflow-hidden relative">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-green-500"></div>
+                        <div className="p-8 text-center">
+                          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="text-4xl">✅</span>
+                          </div>
+                          <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">User Created!</h3>
+                          <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            Please copy these credentials. The password will not be shown again.
+                          </p>
+
+                          <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-5 mb-6 text-left border border-gray-200 dark:border-gray-700 select-all">
+                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3 flex justify-between items-end">
+                              <div>
+                                <p className="text-xs uppercase text-gray-500 font-bold mb-1">Email</p>
+                                <p className="font-mono text-lg font-bold text-blue-600 dark:text-blue-400">{createdUserCredentials.email}</p>
+                              </div>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(createdUserCredentials.email)}
+                                className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                                title="Copy Email"
+                              >
+                                📋
+                              </button>
+                            </div>
+                            <div className="mb-3 border-b border-gray-300 dark:border-gray-700 pb-3 flex justify-between items-end">
+                              <div>
+                                <p className="text-xs uppercase text-gray-500 font-bold mb-1">Password</p>
+                                <p className="font-mono text-xl font-bold text-green-600 dark:text-green-400 tracking-wider break-all">{createdUserCredentials.password}</p>
+                              </div>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(createdUserCredentials.password)}
+                                className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition"
+                                title="Copy Password"
+                              >
+                                📋
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setShowUserCredentialsModal(false)}
+                            className="w-full px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-lg transform hover:scale-[1.02]"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -4018,17 +4329,19 @@ export default function BloodBankDashboard() {
                   </h3>
 
                   <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    {rescheduleModal.bookingId && (
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Booking ID:</strong> {rescheduleModal.bookingId}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong>Booking ID:</strong> {rescheduleModal.bookingId}
+                      <strong>Name:</strong> {rescheduleModal.donorName || rescheduleModal.donorId?.name || rescheduleModal.patientId?.name || 'Unknown User'}
                     </p>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong>Donor:</strong> {rescheduleModal.donorName}
+                      <strong>Current Date:</strong> {new Date(rescheduleModal.date || rescheduleModal.scheduledDate || rescheduleModal.createdAt).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong>Current Date:</strong> {new Date(rescheduleModal.date).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong>Current Time:</strong> {rescheduleModal.time}
+                      <strong>Current Time:</strong> {rescheduleModal.time || rescheduleModal.scheduledTime || 'Not scheduled'}
                     </p>
                   </div>
 
@@ -4040,7 +4353,7 @@ export default function BloodBankDashboard() {
                       type="date"
                       id="reschedule-date"
                       min={new Date().toISOString().split('T')[0]}
-                      defaultValue={new Date(rescheduleModal.date).toISOString().split('T')[0]}
+                      defaultValue={new Date(rescheduleModal.date || rescheduleModal.scheduledDate || rescheduleModal.createdAt || Date.now()).toISOString().split('T')[0]}
                       className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -4073,7 +4386,7 @@ export default function BloodBankDashboard() {
                     >
                       {rescheduling ? (
                         <>
-                          <span className="inline-block animate-spin mr-2">â³</span>
+                          <span className="inline-block animate-spin mr-2">⏳</span>
                           Rescheduling...
                         </>
                       ) : (

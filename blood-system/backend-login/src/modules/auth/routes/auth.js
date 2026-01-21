@@ -74,12 +74,21 @@ router.post('/login', loginValidation, async (req, res) => {
         const user = await User.findOne({
             $or: [{ email: email }, { username: email }]
         });
-        if (!user) return res.status(401).json({ success: false, message: 'Invalid email/username or password' });
+        if (!user) {
+            console.log(`[DEBUG] Login Failed: User not found for email '${email}'`);
+            return res.status(401).json({ success: false, message: 'Invalid email/username or password' });
+        }
 
-        if (!user.isActive) return res.status(403).json({ success: false, message: 'Account deactivated' });
+        if (!user.isActive) {
+            console.log(`[DEBUG] Login Failed: User '${user.email}' account is deactivated`);
+            return res.status(403).json({ success: false, message: 'Account deactivated' });
+        }
 
         const isPasswordValid = await user.comparePassword(password);
-        if (!isPasswordValid) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        if (!isPasswordValid) {
+            console.log(`[DEBUG] Login Failed: Invalid password for user '${user.email}'`);
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
 
         user.lastLogin = new Date();
         await user.save();

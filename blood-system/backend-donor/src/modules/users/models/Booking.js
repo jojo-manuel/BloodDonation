@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bookingSchema = new mongoose.Schema({
     donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Donor' },
     bloodBankId: { type: mongoose.Schema.Types.Mixed }, // Accepts both ObjectId and String
+    hospital_id: { type: String }, // Required for Blood Bank Service compatibility
     donationRequestId: { type: mongoose.Schema.Types.ObjectId, ref: 'DonationRequest' },
     date: { type: String, required: true }, // YYYY-MM-DD
     time: { type: String, required: true }, // HH:MM

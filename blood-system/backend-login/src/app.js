@@ -100,7 +100,7 @@ app.use((err, req, res, next) => {
 
 // 404 for unhandled routes
 app.use((req, res) => {
-    res.status(404).json({ success: false, message: 'Route not found on Login Backend' });
+    res.status(404).json({ success: false, message: 'Route not found on Login Backend (5001)' });
 });
 
 module.exports = app;

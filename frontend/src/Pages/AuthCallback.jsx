@@ -78,7 +78,7 @@ export default function AuthCallback() {
               }
             } else {
               // Donor/User Role -> Port 3002
-              if (['3001', '3003'].includes(currentPort)) {
+              if (['3000', '3001', '3003'].includes(currentPort)) {
                 console.log('🚀 AuthCallback: Wrong port for donor. Redirecting to Port 3002.');
                 window.location.href = `http://${currentHostname}:3002/auth/callback?${authParams}`;
                 return;
@@ -90,6 +90,8 @@ export default function AuthCallback() {
           if (role === 'bloodbank' || staffRoles.includes(role)) {
             if (role === 'bleeding_staff') {
               redirectPath = '/bloodbank/bleeding-staff';
+            } else if (role === 'doctor') {
+              redirectPath = '/doctor-dashboard';
             } else {
               redirectPath = '/bloodbank/dashboard';
             }

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Booking = require('../models/Booking');
 const Request = require('../../request/models/Request');
+const DonationRequest = require('../models/DonationRequest');
 
 // Auth middleware for staff routes
 const authMiddleware = async (req, res, next) => {
@@ -18,6 +19,8 @@ const authMiddleware = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
+        console.error('[DEBUG] Auth Middleware Error:', error.message);
+        console.error('[DEBUG] Secret used (first 3 chars):', (process.env.JWT_SECRET || 'your-secret-key').substring(0, 3));
         return res.status(401).json({ success: false, message: 'Invalid token' });
     }
 };
@@ -203,6 +206,7 @@ router.post('/staff', authMiddleware, async (req, res) => {
         const staff = new User({
             name,
             email,
+            username,
             password: generatedPassword, // Will be hashed by pre-save hook
             phone,
             role,
@@ -403,8 +407,84 @@ router.get('/bookings', authMiddleware, async (req, res) => {
             };
         }
 
-        const bookings = await Booking.find(query).sort({ date: 1, time: 1 });
-        res.json({ success: true, data: bookings });
+        // 1. Fetch standard Bookings
+        const bookings = await Booking.find(query).lean();
+
+        // 2. Fetch DonationRequests that are effectively bookings (scheduled)
+        // Check for scheduledDate and relevant statuses
+        let drQuery = {
+            scheduledDate: { $exists: true, $ne: null },
+            status: { $in: ['rescheduled', 'booked', 'accepted', 'pending', 'arrived', 'completed'] } // Include pending if it has a date? mostly rescheduled
+        };
+
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(date);
+            endDate.setDate(endDate.getDate() + 1);
+            drQuery.scheduledDate = {
+                $gte: startDate,
+                $lt: endDate
+            };
+        }
+
+        const donationRequests = await DonationRequest.find(drQuery)
+            .populate({
+                path: 'donorId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate({
+                path: 'requesterId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate('patientId', 'patientName mrid hospital_id')
+            .lean();
+
+        console.log(`[DEBUG] GET /bookings - Found ${donationRequests.length} donation requests with scheduledDate.`);
+        if (donationRequests.length > 0) {
+            console.log(`[DEBUG] Sample DR: ID=${donationRequests[0]._id}, Status=${donationRequests[0].status}, Date=${donationRequests[0].scheduledDate}`);
+        }
+
+        // Filter DonationRequests - For now, allow ALL scheduled requests to match GET /donation-requests behavior
+        // In a real multi-tenant app, we might want to strictly filter by hospital, but for now we follow the existing pattern.
+        const mappedRequests = donationRequests
+            // .filter(req => req.patientId && req.patientId.hospital_id === bloodBankId) // Removed strict filter
+            .map(req => ({
+                _id: req._id,
+                bookingId: req.tokenNumber || req._id.toString().slice(-6).toUpperCase(),
+                donorName: req.donorId?.name || req.requesterId?.name || 'Unknown',
+                donorId: req.donorId || null,
+                bloodGroup: req.bloodGroup || req.donorId?.bloodGroup,
+                email: req.donorId?.email || req.requesterId?.email,
+                phone: req.donorId?.phone || req.requesterId?.phone,
+                date: req.scheduledDate,
+                time: req.scheduledTime,
+                status: req.status,
+                tokenNumber: req.tokenNumber,
+                hospital_id: req.patientId?.hospital_id || bloodBankId,
+                patientName: req.patientId?.patientName,
+                patientMrid: req.patientId?.mrid,
+                weight: req.weight,
+                bagSerialNumber: req.bagSerialNumber,
+                isDonationRequest: true, // Flag for frontend
+                requesterName: req.requesterId?.name,
+                requesterPhone: req.requesterId?.phone,
+                requesterEmail: req.requesterId?.email,
+                createdAt: req.createdAt
+            }));
+
+        // 3. Merge and Sort
+        const allBookings = [...bookings, ...mappedRequests].sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            if (dateA.getTime() === dateB.getTime()) {
+                return (a.time || '').localeCompare(b.time || '');
+            }
+            return dateA - dateB;
+        });
+
+        res.json({ success: true, data: allBookings });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -416,10 +496,39 @@ router.get('/bookings/token/:token', authMiddleware, async (req, res) => {
         const bloodBankId = req.user.hospital_id;
         const { token } = req.params;
 
-        const booking = await Booking.findOne({
+        let booking = await Booking.findOne({
             hospital_id: bloodBankId,
             tokenNumber: token
         });
+
+        if (!booking) {
+            const dr = await DonationRequest.findOne({ tokenNumber: token })
+                .populate('donorId')
+                .populate('patientId');
+
+            if (dr) {
+                booking = {
+                    _id: dr._id,
+                    bookingId: 'N/A',
+                    donorName: dr.donorId?.name || 'Unknown',
+                    bloodGroup: dr.bloodGroup || dr.donorId?.bloodGroup,
+                    email: dr.donorId?.email,
+                    phone: dr.donorId?.phone,
+                    date: dr.scheduledDate,
+                    time: dr.scheduledTime,
+                    status: dr.status,
+                    hospital_id: dr.patientId?.hospital_id || bloodBankId,
+                    tokenNumber: dr.tokenNumber,
+                    patientName: dr.patientId?.patientName,
+                    patientMrid: dr.patientId?.mrid,
+                    patientMRID: dr.patientId?.mrid,
+                    weight: dr.weight,
+                    bagSerialNumber: dr.bagSerialNumber,
+                    rejectionReason: dr.rejectionReason,
+                    isDonationRequest: true
+                };
+            }
+        }
 
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found' });
@@ -448,11 +557,29 @@ router.put('/bookings/:id/status', authMiddleware, async (req, res) => {
 
         console.log('Constructed Update Data:', updateData);
 
-        const booking = await Booking.findOneAndUpdate(
+        let booking = await Booking.findOneAndUpdate(
             { _id: id, hospital_id: bloodBankId },
             updateData,
             { new: true }
         );
+
+        if (!booking) {
+            const dr = await DonationRequest.findByIdAndUpdate(
+                id,
+                updateData,
+                { new: true }
+            ).populate('donorId').populate('patientId');
+
+            if (dr) {
+                booking = {
+                    ...dr.toObject(),
+                    donorName: dr.donorId?.name || 'Unknown',
+                    patientName: dr.patientId?.patientName,
+                    patientMRID: dr.patientId?.mrid,
+                    patientMrid: dr.patientId?.mrid
+                };
+            }
+        }
 
         console.log('Updated Booking Result:', booking);
 
@@ -496,7 +623,7 @@ router.get('/donors', authMiddleware, async (req, res) => {
         const bloodBankId = req.user.hospital_id;
         // Donors associated with this hospital (if any) or public donors in region
         // For now, return empty or all donors for testing
-        const donors = await User.find({ role: 'donor' }).select('-password').limit(10);
+        const donors = await User.find({ role: 'donor' }).select('-password');
         res.json({ success: true, data: donors });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -557,18 +684,35 @@ router.get('/visited-donors', authMiddleware, async (req, res) => {
     }
 });
 
+// DonationRequest imported at top
+// const Patient = require('../../patient/models/Patient'); // if needed
+
 // GET /api/bloodbank/donation-requests
 router.get('/donation-requests', authMiddleware, async (req, res) => {
     try {
         const bloodBankId = req.user.hospital_id;
-        console.log(`[DEBUG] Fetching donation requests for Hospital: '${bloodBankId}'`);
+        console.log(`[DEBUG] Fetching donation requests from 'donationrequests' collection`);
 
-        const requests = await Booking.find({
-            hospital_id: bloodBankId,
-            status: 'pending'
-        }).sort({ date: 1, time: 1 });
+        // Fetch all from DonationRequest collection as we established it might not have hospital_id
+        const requests = await DonationRequest.find({})
+            .populate({
+                path: 'donorId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate({
+                path: 'requesterId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate('patientId', 'patientName mrid bloodGroup phoneNumber hospital_id')
+            .sort({ createdAt: -1 });
 
-        console.log(`[DEBUG] Found ${requests.length} pending requests.`);
+        console.log(`[DEBUG] Found ${requests.length} documents in 'donationrequests'.`);
+        if (requests.length > 0) {
+            console.log('[DEBUG] First request donor details:', requests[0].donorId);
+            console.log('[DEBUG] First request requester details:', requests[0].requesterId);
+        }
         res.json({ success: true, data: requests });
     } catch (error) {
         console.error('[DEBUG] Error fetching donation requests:', error);
@@ -577,28 +721,165 @@ router.get('/donation-requests', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/bloodbank/donation-requests/:id/status
-// Accept or reject a donation request (Booking)
+// Accept or reject a donation request (DonationRequest model)
 router.put('/donation-requests/:id/status', authMiddleware, async (req, res) => {
+    try {
+        // const bloodBankId = req.user.hospital_id; // DonationRequest might not have hospital_id to check against yet
+        const { id } = req.params;
+        const { status } = req.body; // 'accepted' or 'rejected'
+
+        console.log(`[DEBUG] Updating status of DonationRequest ${id} to ${status}`);
+
+        const request = await DonationRequest.findByIdAndUpdate(
+            id,
+            { status: status },
+            { new: true }
+        ).populate('donorId requesterId');
+
+        if (!request) {
+            return res.status(404).json({ success: false, message: 'Donation request not found' });
+        }
+
+        if (status === 'accepted') {
+            const bookingExists = await Booking.findOne({
+                $or: [
+                    { tokenNumber: request.tokenNumber },
+                    { donorId: request.donorId?._id }
+                ],
+                date: request.scheduledDate,
+                hospital_id: req.user.hospital_id
+            });
+
+            if (!bookingExists) {
+                const newBooking = new Booking({
+                    bookingId: 'BK-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                    donorId: request.donorId?._id || request.requesterId?._id, // Fallback if needed
+                    donorName: request.donorId?.name || request.requesterId?.name || 'Unknown',
+                    bloodGroup: request.bloodGroup || request.donorId?.bloodGroup,
+                    email: request.donorId?.email || request.requesterId?.email,
+                    phone: request.donorId?.phone || request.requesterId?.phone,
+                    date: request.scheduledDate || new Date(),
+                    time: request.scheduledTime || '09:00 AM',
+                    status: 'confirmed',
+                    hospital_id: req.user.hospital_id || request.patientId?.hospital_id || 'default_hospital',
+                    tokenNumber: request.tokenNumber || (String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10)),
+                    patientName: request.patientId?.patientName,
+                    patientMrid: request.patientId?.mrid,
+                    requesterName: request.requesterId?.name,
+                    bagSerialNumber: request.bagSerialNumber,
+                    weight: request.weight
+                });
+                await newBooking.save();
+                console.log(`[DEBUG] Created new Booking ${newBooking.bookingId} for accepted donation request`);
+            }
+        }
+
+        // Send Notification
+        const recipientId = request.donorId?._id || request.requesterId?._id;
+        if (recipientId) {
+            await Notification.create({
+                recipient: recipientId,
+                type: status === 'accepted' ? 'success' : 'warning',
+                title: `Donation Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+                message: `Your donation request has been ${status}.`,
+                data: { requestId: request._id, status }
+            });
+        }
+
+        res.json({ success: true, message: `Request ${status}`, data: request });
+    } catch (error) {
+        console.error('[DEBUG] Error updating donation request status:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Import Notification model
+const Notification = require('../../notification/models/Notification');
+
+// PUT /api/bloodbank/donation-requests/:id/reschedule
+router.put('/donation-requests/:id/reschedule', authMiddleware, async (req, res) => {
     try {
         const bloodBankId = req.user.hospital_id;
         const { id } = req.params;
-        const { status } = req.body; // 'accepted' or 'rejected' from frontend
+        const { newDate, newTime } = req.body;
 
-        // Map status: 'accepted' -> 'confirmed', 'rejected' -> 'rejected'
-        const bookingStatus = status === 'accepted' ? 'confirmed' : 'rejected';
+        console.log(`[DEBUG] Rescheduling request ${id} to ${newDate} ${newTime}`);
 
-        const booking = await Booking.findOneAndUpdate(
-            { _id: id, hospital_id: bloodBankId },
-            { status: bookingStatus },
-            { new: true }
-        );
+        // Check for existing token
+        const existingRequest = await DonationRequest.findById(id);
+        const updateData = {
+            status: 'booked', // Changed from 'rescheduled' to 'booked'
+            scheduledDate: new Date(newDate),
+            scheduledTime: newTime
+        };
 
-        if (!booking) {
-            return res.status(404).json({ success: false, message: 'Booking request not found' });
+        if (existingRequest && !existingRequest.tokenNumber) {
+            updateData.tokenNumber = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + Math.floor(Math.random() * 10) + Math.floor(Math.random() * 10);
         }
 
-        res.json({ success: true, message: `Request ${status}`, data: booking });
+        const request = await DonationRequest.findOneAndUpdate(
+            { _id: id },
+            updateData,
+            { new: true }
+        )
+            .populate({
+                path: 'donorId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate({
+                path: 'requesterId',
+                select: 'name email phone bloodGroup',
+                model: 'User'
+            })
+            .populate('patientId', 'patientName mrid bloodGroup phoneNumber hospital_id');
+
+        if (!request) {
+            console.log('[DEBUG] Request not found for rescheduling');
+            return res.status(404).json({ success: false, message: 'Request not found' });
+        }
+
+        // Also update Booking if it exists (for confirmed/accepted requests that became bookings)
+        // Match by tokenNumber if available, or donor + old date
+        if (existingRequest) {
+            const query = {};
+            if (existingRequest.tokenNumber) {
+                query.tokenNumber = existingRequest.tokenNumber;
+            } else {
+                query.donorId = existingRequest.donorId;
+                query.date = existingRequest.scheduledDate; // Use old date
+            }
+            query.hospital_id = bloodBankId;
+
+            console.log('[DEBUG] Attempting to update associated Booking with query:', query);
+
+            await Booking.findOneAndUpdate(
+                query,
+                {
+                    date: new Date(newDate),
+                    time: newTime,
+                    status: 'confirmed', // Keep it confirmed or match new status? confirmed is fine.
+                    tokenNumber: updateData.tokenNumber || existingRequest.tokenNumber // Ensure token is synced if generated
+                }
+            );
+        }
+
+        // Send Notification
+        const recipientId = request.donorId?._id || request.requesterId?._id;
+        if (recipientId) {
+            await Notification.create({
+                recipient: recipientId,
+                type: 'info',
+                title: 'Donation Rescheduled',
+                message: `Your donation request has been rescheduled to ${new Date(newDate).toLocaleDateString()} at ${newTime}. Please contact the blood bank if this does not work for you.`,
+                data: { requestId: request._id, newDate, newTime }
+            });
+            console.log(`[DEBUG] Notification sent to ${recipientId}`);
+        }
+
+        res.json({ success: true, message: 'Request rescheduled and user notified', data: request });
     } catch (error) {
+        console.error('[DEBUG] Error rescheduling request:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -615,6 +896,64 @@ router.get('/users', authMiddleware, async (req, res) => {
         }).select('-password');
         res.json({ success: true, data: staff });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// POST /api/bloodbank/users - Create a new user (Donor, Staff, or User)
+router.post('/users', authMiddleware, async (req, res) => {
+    try {
+        const { name, email, password, phone, role: rawRole, bloodGroup, address } = req.body;
+        const bloodBankId = req.user.hospital_id;
+
+        // Normalize role (frontend sends 'donor', schema expects 'DONOR')
+        const role = rawRole === 'donor' ? 'DONOR' : rawRole;
+
+
+        // Auto-generate password if not provided
+        const finalPassword = password || Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+
+        // Check if user exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Email already in use' });
+        }
+
+        const newUser = new User({
+            name,
+            email,
+            password: finalPassword,
+            phone,
+            role: role || 'user',
+            bloodGroup,
+            address,
+            confirmed: true, // Auto-confirm since created by admin/bloodbank
+            isActive: true,
+            // Only set hospital_id if it's a staff role
+            hospital_id: ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'].includes(role) ? bloodBankId : 'public-user'
+        });
+
+        await newUser.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully',
+            data: {
+                user: {
+                    _id: newUser._id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role
+                },
+                credentials: {
+                    email: newUser.email,
+                    password: finalPassword
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating user:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });

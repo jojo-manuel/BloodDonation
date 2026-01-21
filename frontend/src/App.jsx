@@ -14,6 +14,7 @@ import BloodBankAdminRegister from "./Pages/BloodBankAdminRegister";
 import BloodBankLogin from "./Pages/BloodBankLogin";
 import StaffLogin from "./Pages/StaffLogin";
 import BloodBankDashboard from "./Pages/BloodBankDashboard";
+import DoctorDashboard from "./Pages/DoctorDashboard";
 import BleedingStaffDashboard from "./Pages/BleedingStaffDashboard";
 import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
@@ -29,6 +30,37 @@ function App() {
   // Clean up invalid auth state on app startup
   useEffect(() => {
     cleanupAuthState();
+
+    // Port Enforcement Logic
+    const currentPort = window.location.port;
+    const currentHostname = window.location.hostname;
+    const isLocalhost = currentHostname === 'localhost' || currentHostname === '127.0.0.1';
+
+    // Only enforce if we have a role and are on localhost
+    const role = localStorage.getItem('role');
+    const token = localStorage.getItem('accessToken');
+
+    if (isLocalhost && role && token && !window.location.pathname.includes('/auth/callback')) {
+      const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+
+      if (role === 'bloodbank' || staffRoles.includes(role)) {
+        if (currentPort !== '3003') {
+          console.log('🔄 App: Wrong port for bloodbank staff. Redirecting to 3003.');
+          window.location.href = `http://${currentHostname}:3003${window.location.pathname}`;
+        }
+      } else if (role === 'admin') {
+        if (currentPort !== '3001') {
+          console.log('🔄 App: Wrong port for admin. Redirecting to 3001.');
+          window.location.href = `http://${currentHostname}:3001${window.location.pathname}`;
+        }
+      } else {
+        // User/Donor
+        if (['3000', '3001', '3003'].includes(currentPort)) {
+          console.log('🔄 App: Wrong port for user/donor. Redirecting to 3002.');
+          window.location.href = `http://${currentHostname}:3002${window.location.pathname}`;
+        }
+      }
+    }
   }, []);
 
   return (
@@ -64,7 +96,10 @@ function App() {
             <Route path="/admin-dashboard" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
 
             {/* Blood Bank Dashboard - Restricted to blood bank staff */}
-            <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
+            <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
+
+            {/* Dedicated Doctor Dashboard */}
+            <Route path="/doctor-dashboard" element={<RequireRole allowedRoles={['doctor', 'bloodbank']}><DoctorDashboard /></RequireRole>} />
 
             {/* Dedicated Bleeding Staff Dashboard */}
             <Route path="/bloodbank/bleeding-staff" element={<RequireRole allowedRoles={['bleeding_staff', 'bloodbank']}><BleedingStaffDashboard /></RequireRole>} />

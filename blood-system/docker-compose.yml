@@ -170,6 +170,22 @@ services:
     networks:
       - app-net
 
+  # Mongo Express (DB GUI - Port 8081)
+  mongo-express:
+    image: mongo-express
+    container_name: blood-mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: blood-db
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - blood-db
+    networks:
+      - app-net
+
 networks:
   app-net:
     driver: bridge

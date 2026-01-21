@@ -26,6 +26,7 @@ exports.directBookSlot = async (req, res) => {
         const booking = new Booking({
             donorId,
             bloodBankId,
+            hospital_id: bloodBankId, // Sync for Monolith compatibility
             donationRequestId,
             date: requestedDate,
             time: requestedTime,
