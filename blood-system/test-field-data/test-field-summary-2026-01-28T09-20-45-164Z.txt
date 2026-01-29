@@ -1,0 +1,13 @@
+MongoDB Test Field Extraction Report
+=====================================
+Generated: 2026-01-28T09:20:45.166Z
+
+SUMMARY:
+--------
+Total Collections: 13
+Collections with Test Fields: 0
+Total Documents: 76
+Documents with Test Fields: 0
+
+COLLECTION DETAILS:
+------------------

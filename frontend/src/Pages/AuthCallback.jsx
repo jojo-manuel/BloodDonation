@@ -33,7 +33,8 @@ export default function AuthCallback() {
           username
         });
 
-        if (accessToken && refreshToken && userId) {
+        if (accessToken && refreshToken && userId &&
+          accessToken !== 'undefined' && refreshToken !== 'undefined' && userId !== 'undefined') {
           console.log('✅ AuthCallback: All required parameters present, storing tokens...');
 
           // Store authentication data
@@ -92,6 +93,12 @@ export default function AuthCallback() {
               redirectPath = '/bloodbank/bleeding-staff';
             } else if (role === 'doctor') {
               redirectPath = '/doctor-dashboard';
+            } else if (role === 'store_manager') {
+              redirectPath = '/bloodbank/store-manager';
+            } else if (role === 'store_staff') {
+              redirectPath = '/bloodbank/store-staff';
+            } else if (role === 'centrifuge_staff') {
+              redirectPath = '/bloodbank/centrifuge-staff';
             } else {
               redirectPath = '/bloodbank/dashboard';
             }

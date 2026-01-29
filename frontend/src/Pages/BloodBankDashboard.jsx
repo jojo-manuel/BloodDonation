@@ -241,8 +241,8 @@ export default function BloodBankDashboard() {
       const res = await api.post('/bloodbank/staff', newStaffData);
       if (res.data.success) {
         setCreatedStaffCredentials({
-          username: res.data.data.staff.username || res.data.data.staff.email,
-          generatedPassword: res.data.data.credentials.password
+          username: res.data.data.username || res.data.data.email,
+          generatedPassword: res.data.credentials.password
         });
         setShowStaffModal(false);
         setShowCredentialsModal(true); // Show success modal
@@ -1382,6 +1382,7 @@ export default function BloodBankDashboard() {
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             {[
               { id: 'overview', label: 'Dashboard', icon: '📊' },
+              ...(role === 'bloodbank' ? [{ id: 'manager', label: 'Manager Dashboard', icon: '🏢', isLink: true, href: '/bloodbank/manager' }] : []),
               { id: 'patients', label: 'Manage Patients', icon: '🏥' },
               { id: 'bookings', label: 'Booked Slots', icon: '📅' },
               { id: 'donors', label: 'Manage Donors', icon: '🩸' },
@@ -1409,17 +1410,28 @@ export default function BloodBankDashboard() {
                 return true;
               })
               .map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${activeTab === item.id
-                    ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                >
-                  <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                  <span className="font-semibold">{item.label}</span>
-                </button>
+                item.isLink ? (
+                  <Link
+                    key={item.id}
+                    to={item.href}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-gray-600 dark:text-gray-300 hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                  >
+                    <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                    <span className="font-semibold">{item.label}</span>
+                  </Link>
+                ) : (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${activeTab === item.id
+                      ? 'bg-pink-600 text-white shadow-lg shadow-pink-500/20'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
+                      }`}
+                  >
+                    <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                )
               ))}
           </nav>
 

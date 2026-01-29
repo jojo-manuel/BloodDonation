@@ -14,8 +14,12 @@ import BloodBankAdminRegister from "./Pages/BloodBankAdminRegister";
 import BloodBankLogin from "./Pages/BloodBankLogin";
 import StaffLogin from "./Pages/StaffLogin";
 import BloodBankDashboard from "./Pages/BloodBankDashboard";
+import BloodBankManagerDashboard from "./Pages/BloodBankManagerDashboard";
 import DoctorDashboard from "./Pages/DoctorDashboard";
 import BleedingStaffDashboard from "./Pages/BleedingStaffDashboard";
+import StoreManagerDashboard from "./Pages/StoreManagerDashboard";
+import StoreStaffDashboard from "./Pages/StoreStaffDashboard";
+import CentrifugeStaffDashboard from "./Pages/CentrifugeStaffDashboard";
 import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
 import UserProfile from "./Pages/UserProfile";
@@ -54,7 +58,10 @@ function App() {
           window.location.href = `http://${currentHostname}:3001${window.location.pathname}`;
         }
       } else {
-        // User/Donor
+        // User/Donor should generally be on 3002, but 3000 is also acceptable for login/landing.
+        // However, if they are logged in as user/donor, 3002 is the dedicated dashboard.
+        // Let's enforce 3002 for dashboard access to keep things clean, or allow 3000 if it's just landing.
+        // For now, let's redirect to 3002 if they are on 3000/3001/3003 and logged in.
         if (['3000', '3001', '3003'].includes(currentPort)) {
           console.log('🔄 App: Wrong port for user/donor. Redirecting to 3002.');
           window.location.href = `http://${currentHostname}:3002${window.location.pathname}`;
@@ -98,11 +105,23 @@ function App() {
             {/* Blood Bank Dashboard - Restricted to blood bank staff */}
             <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
 
+            {/* Blood Bank Manager Dashboard - Enhanced version for managers */}
+            <Route path="/bloodbank/manager" element={<RequireRole allowedRoles={['bloodbank']}><BloodBankManagerDashboard /></RequireRole>} />
+
             {/* Dedicated Doctor Dashboard */}
             <Route path="/doctor-dashboard" element={<RequireRole allowedRoles={['doctor', 'bloodbank']}><DoctorDashboard /></RequireRole>} />
 
             {/* Dedicated Bleeding Staff Dashboard */}
             <Route path="/bloodbank/bleeding-staff" element={<RequireRole allowedRoles={['bleeding_staff', 'bloodbank']}><BleedingStaffDashboard /></RequireRole>} />
+
+            {/* Dedicated Store Manager Dashboard */}
+            <Route path="/bloodbank/store-manager" element={<RequireRole allowedRoles={['store_manager', 'bloodbank']}><StoreManagerDashboard /></RequireRole>} />
+
+            {/* Dedicated Store Staff Dashboard */}
+            <Route path="/bloodbank/store-staff" element={<RequireRole allowedRoles={['store_staff', 'bloodbank']}><StoreStaffDashboard /></RequireRole>} />
+
+            {/* Dedicated Centrifuge Staff Dashboard */}
+            <Route path="/bloodbank/centrifuge-staff" element={<RequireRole allowedRoles={['centrifuge_staff', 'bloodbank']}><CentrifugeStaffDashboard /></RequireRole>} />
 
             <Route path="/bloodbank-login" element={<BloodBankLogin />} />
             <Route path="/staff-login" element={<StaffLogin />} />

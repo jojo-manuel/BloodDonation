@@ -1,0 +1,101 @@
+{
+  "collections": {
+    "patients": {
+      "totalDocuments": 4,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "notifications": {
+      "totalDocuments": 13,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "bloodbags": {
+      "totalDocuments": 7,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "users": {
+      "totalDocuments": 28,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "donors": {
+      "totalDocuments": 5,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "messages": {
+      "totalDocuments": 0,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "bookings": {
+      "totalDocuments": 6,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "donationrequests": {
+      "totalDocuments": 10,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "bloodcomponents": {
+      "totalDocuments": 0,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "requests": {
+      "totalDocuments": 0,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "bloodunits": {
+      "totalDocuments": 2,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "conversations": {
+      "totalDocuments": 1,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    },
+    "reviews": {
+      "totalDocuments": 0,
+      "documentsWithTestField": 0,
+      "testFieldData": [],
+      "fieldVariations": [],
+      "sampleDocuments": []
+    }
+  },
+  "summary": {
+    "totalCollections": 13,
+    "collectionsWithTestField": 0,
+    "totalDocuments": 76,
+    "documentsWithTestField": 0
+  }
+}

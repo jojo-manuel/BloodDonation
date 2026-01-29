@@ -6,8 +6,8 @@ import axios from 'axios';
 // Get API URL from environment variables
 // Support both VITE_API_URL and VITE_API_BASE_URL for backward compatibility
 // Fallback to inferred Render backend URL if not set in production
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:5000');
-const API_BASE_URL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000');
+const API_BASE_URL = API_URL;
 
 // Always log configuration (including production) for debugging
 console.log('🔧 API Configuration:');
@@ -310,6 +310,32 @@ export const updateSettingCategory = async (category, categoryData) => {
     return response.data;
   } catch (error) {
     console.error(`Error updating ${category} settings:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Generic API request wrapper
+ * @param {string} url - Endpoint URL
+ * @param {string} method - HTTP Method (GET, POST, PUT, DELETE, etc.)
+ * @param {any} data - Request body data
+ * @param {object} config - Axios config overrides
+ * @returns {Promise<any>} Response data
+ */
+export const apiRequest = async (url, method = 'GET', data = null, config = {}) => {
+  try {
+    const response = await api({
+      url,
+      method,
+      data,
+      ...config
+    });
+    return response.data;
+  } catch (error) {
+    // If the error response has data, it might contain the success/message fields we need
+    if (error.response && error.response.data) {
+      throw error.response.data;
+    }
     throw error;
   }
 };

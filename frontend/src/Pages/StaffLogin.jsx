@@ -75,11 +75,57 @@ export default function StaffLogin() {
                 // Validate Role
                 const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'bloodbank'];
 
-                if (res.data.data.user.role === 'bleeding_staff') {
-                    navigate("/bloodbank/bleeding-staff");
-                } else if (allowedRoles.includes(res.data.data.user.role)) {
-                    // Redirect to dashboard
-                    navigate("/bloodbank/dashboard");
+                if (allowedRoles.includes(res.data.data.user.role)) {
+                    // Redirect to Blood Bank App (Port 3003)
+                    console.log('Login Response:', res.data);
+
+                    const user = res.data.data.user;
+                    const token = res.data.data.token || res.data.data.accessToken;
+                    const userId = user._id || user.id;
+
+                    if (!token || !userId) {
+                        alert('Login failed: Missing token or user ID from server response');
+                        console.error('Missing auth data:', { token, userId, data: res.data.data });
+                        return;
+                    }
+
+                    const authParams = new URLSearchParams({
+                        accessToken: token,
+                        refreshToken: token, // Backend currently only returns one token
+                        userId: userId,
+                        role: user.role,
+                        username: user.username
+                    }).toString();
+
+                    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+                    // Determine the target path based on role
+                    let targetPath = '/bloodbank/dashboard';
+                    if (res.data.data.user.role === 'bleeding_staff') {
+                        targetPath = '/bloodbank/bleeding-staff';
+                    } else if (res.data.data.user.role === 'store_manager') {
+                        targetPath = '/bloodbank/store-manager';
+                    } else if (res.data.data.user.role === 'store_staff') {
+                        targetPath = '/bloodbank/store-staff';
+                    } else if (res.data.data.user.role === 'centrifuge_staff') {
+                        targetPath = '/bloodbank/centrifuge-staff';
+                    } else if (res.data.data.user.role === 'doctor') {
+                        targetPath = '/bloodbank/doctor';
+                    }
+
+                    // Append target path to callback params so AuthCallback knows where to go next
+                    // Note: AuthCallback needs to support this 'redirect' param, or we rely on its default role-based routing
+                    // If AuthCallback doesn't support 'redirect', we might rely on it to route correctly by role.
+                    // To be safe, let's assume it routes by role, but passing the specific app port is crucial.
+
+                    if (isLocalhost) {
+                        window.location.href = `http://localhost:3003/auth/callback?${authParams}`;
+                    } else {
+                        // In production, structure might differ, but for now assuming similar subdomain or routing
+                        // If we are on same domain, navigate is fine? No, separate apps.
+                        // Assuming production uses different domains/subdomains.
+                        window.location.href = `${window.location.protocol}//${window.location.hostname}:3003/auth/callback?${authParams}`;
+                    }
                 } else {
                     alert("Access denied. This login is for blood bank staff only.");
                     // Clear auth if invalid role

@@ -1,96 +1,135 @@
 # MongoDB Database Backup Script
-# Creates a complete backup of your MongoDB database
+# This script creates a backup of the local MongoDB database using mongodump
 
 param(
-    [string]$BackupDir = ".\backups\mongodb\$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+    [Parameter(Mandatory=$false)]
+    [string]$BackupPath = ".\database-backup",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$DatabaseName = "bloodbank"
 )
 
-Write-Host "MongoDB Backup Script" -ForegroundColor Cyan
-Write-Host "=====================" -ForegroundColor Cyan
+Write-Host "💾 MongoDB Database Backup Tool" -ForegroundColor Cyan
+Write-Host "===============================" -ForegroundColor Cyan
 Write-Host ""
+
+# Check if Docker is running and MongoDB container is available
+Write-Host "🐳 Checking MongoDB container..." -ForegroundColor Blue
+try {
+    $containerStatus = docker ps --format "table {{.Names}}\t{{.Status}}" | Select-String "blood-db"
+    if ($containerStatus) {
+        Write-Host "✅ MongoDB container is running" -ForegroundColor Green
+    } else {
+        Write-Host "❌ MongoDB container (blood-db) is not running" -ForegroundColor Red
+        Write-Host "Starting MongoDB container..." -ForegroundColor Yellow
+        docker-compose up -d blood-db
+        Start-Sleep -Seconds 5
+    }
+} catch {
+    Write-Host "❌ Docker is not running or not accessible" -ForegroundColor Red
+    exit 1
+}
 
 # Create backup directory
-Write-Host "Creating backup directory: $BackupDir" -ForegroundColor Yellow
-New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
+$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+$fullBackupPath = Join-Path $BackupPath "$DatabaseName-backup-$timestamp"
 
-# Check if MongoDB container is running
-Write-Host "Checking MongoDB container status..." -ForegroundColor Yellow
-$containerStatus = docker ps --filter "name=blood-db" --format "{{.Status}}"
-if (-not $containerStatus) {
-    Write-Host "ERROR: MongoDB container is not running!" -ForegroundColor Red
-    Write-Host "Please start the containers with: docker compose up -d" -ForegroundColor Yellow
-    exit 1
-}
-Write-Host "MongoDB container is running" -ForegroundColor Green
-
-# Backup using mongodump
-Write-Host ""
-Write-Host "Creating database backup..." -ForegroundColor Yellow
-docker exec blood-db mongodump --db=blood-monolith --out=/tmp/backup 2>&1 | Out-Null
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Database dump created successfully" -ForegroundColor Green
-}
-else {
-    Write-Host "ERROR creating database dump" -ForegroundColor Red
-    exit 1
+if (-not (Test-Path $BackupPath)) {
+    New-Item -ItemType Directory -Path $BackupPath -Force | Out-Null
 }
 
-# Copy backup from container to host
-Write-Host "Copying backup to host..." -ForegroundColor Yellow
-docker cp blood-db:/tmp/backup/blood-monolith "$BackupDir\blood-monolith"
+Write-Host "📁 Creating backup directory: $fullBackupPath" -ForegroundColor Blue
+New-Item -ItemType Directory -Path $fullBackupPath -Force | Out-Null
 
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Backup copied successfully" -ForegroundColor Green
+# Method 1: Using mongodump inside the container
+Write-Host "💾 Creating database backup using mongodump..." -ForegroundColor Blue
+try {
+    # Execute mongodump inside the MongoDB container
+    docker exec blood-db mongodump --db $DatabaseName --out /tmp/backup
+    
+    # Copy the backup from container to host
+    docker cp blood-db:/tmp/backup/$DatabaseName $fullBackupPath
+    
+    Write-Host "✅ Database backup created successfully" -ForegroundColor Green
+    Write-Host "📍 Backup location: $fullBackupPath" -ForegroundColor Gray
+    
+    # Get backup size
+    $backupSize = (Get-ChildItem -Path $fullBackupPath -Recurse | Measure-Object -Property Length -Sum).Sum
+    $backupSizeMB = [math]::Round($backupSize / 1MB, 2)
+    Write-Host "📊 Backup size: $backupSizeMB MB" -ForegroundColor Gray
+    
+} catch {
+    Write-Host "❌ Backup failed with mongodump: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Trying alternative method..." -ForegroundColor Yellow
+    
+    # Method 2: Using mongoexport for each collection
+    Write-Host "💾 Creating backup using mongoexport..." -ForegroundColor Blue
+    
+    # Get list of collections
+    $collections = docker exec blood-db mongo $DatabaseName --quiet --eval "db.getCollectionNames().join(',')"
+    $collectionList = $collections -split ","
+    
+    foreach ($collection in $collectionList) {
+        if ($collection.Trim()) {
+            Write-Host "  Exporting collection: $collection" -ForegroundColor Gray
+            $outputFile = Join-Path $fullBackupPath "$collection.json"
+            docker exec blood-db mongoexport --db $DatabaseName --collection $collection --out "/tmp/$collection.json"
+            docker cp "blood-db:/tmp/$collection.json" $outputFile
+        }
+    }
+    
+    Write-Host "✅ Alternative backup method completed" -ForegroundColor Green
 }
-else {
-    Write-Host "ERROR copying backup" -ForegroundColor Red
-    exit 1
-}
-
-# Clean up container backup
-docker exec blood-db rm -rf /tmp/backup 2>&1 | Out-Null
-
-# Export each collection to JSON for easy viewing
-Write-Host ""
-Write-Host "Exporting collections to JSON..." -ForegroundColor Yellow
-
-$collections = @('users', 'patients', 'donors', 'donationrequests', 'bookings', 'notifications', 'reviews')
-$jsonDir = "$BackupDir\json"
-New-Item -ItemType Directory -Force -Path $jsonDir | Out-Null
-
-foreach ($collection in $collections) {
-    Write-Host "   Exporting $collection..." -ForegroundColor Gray
-    docker exec blood-db mongoexport --db=blood-monolith --collection=$collection --out=/tmp/$collection.json 2>&1 | Out-Null
-    docker cp blood-db:/tmp/$collection.json "$jsonDir\$collection.json" 2>&1 | Out-Null
-    docker exec blood-db rm /tmp/$collection.json 2>&1 | Out-Null
-}
-
-Write-Host "JSON exports completed" -ForegroundColor Green
 
 # Create backup metadata
 $metadata = @{
-    BackupDate   = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    DatabaseName = "blood-monolith"
-    Collections  = $collections
-    BackupMethod = "mongodump + mongoexport"
-} | ConvertTo-Json
+    timestamp = $timestamp
+    database = $DatabaseName
+    backupPath = $fullBackupPath
+    method = "mongodump"
+    collections = @()
+}
 
-$metadata | Out-File "$BackupDir\backup-info.json"
+# Get collection information
+Write-Host "📊 Gathering collection statistics..." -ForegroundColor Blue
+try {
+    $stats = docker exec blood-db mongo $DatabaseName --quiet --eval "
+        db.getCollectionNames().forEach(function(collection) {
+            var count = db.getCollection(collection).count();
+            print(collection + ':' + count);
+        });
+    "
+    
+    $stats -split "`n" | ForEach-Object {
+        if ($_ -match "(.+):(\d+)") {
+            $collectionName = $matches[1]
+            $documentCount = [int]$matches[2]
+            $metadata.collections += @{
+                name = $collectionName
+                documents = $documentCount
+            }
+            Write-Host "  📁 $collectionName`: $documentCount documents" -ForegroundColor Gray
+        }
+    }
+} catch {
+    Write-Host "⚠️  Could not gather collection statistics" -ForegroundColor Yellow
+}
 
-# Calculate backup size
-$backupSize = (Get-ChildItem -Path $BackupDir -Recurse | Measure-Object -Property Length -Sum).Sum
-$backupSizeMB = [math]::Round($backupSize / 1MB, 2)
+# Save metadata
+$metadataFile = Join-Path $fullBackupPath "backup-metadata.json"
+$metadata | ConvertTo-Json -Depth 3 | Out-File -FilePath $metadataFile -Encoding UTF8
 
 Write-Host ""
-Write-Host "BACKUP COMPLETED SUCCESSFULLY!" -ForegroundColor Green
-Write-Host "==============================" -ForegroundColor Green
-Write-Host "Location: $BackupDir" -ForegroundColor Cyan
-Write-Host "Size: $backupSizeMB MB" -ForegroundColor Cyan
-Write-Host "Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Cyan
+Write-Host "✅ Backup completed successfully!" -ForegroundColor Green
+Write-Host "📍 Backup location: $fullBackupPath" -ForegroundColor Cyan
+Write-Host "📄 Metadata file: $metadataFile" -ForegroundColor Cyan
+
+# Display next steps
 Write-Host ""
-Write-Host "Backup contains:" -ForegroundColor Yellow
-Write-Host "  - blood-monolith/ (BSON format - for restore)" -ForegroundColor Gray
-Write-Host "  - json/ (JSON format - human readable)" -ForegroundColor Gray
-Write-Host "  - backup-info.json (metadata)" -ForegroundColor Gray
+Write-Host "📋 Next Steps:" -ForegroundColor Cyan
+Write-Host "1. Verify backup contents in: $fullBackupPath" -ForegroundColor White
+Write-Host "2. Use this backup for Atlas migration or disaster recovery" -ForegroundColor White
+Write-Host "3. To restore: mongorestore --db $DatabaseName $fullBackupPath" -ForegroundColor White
+
 Write-Host ""
+Write-Host "🎉 Backup process completed!" -ForegroundColor Green
