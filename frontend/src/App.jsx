@@ -103,7 +103,7 @@ function App() {
             <Route path="/admin-dashboard" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
 
             {/* Blood Bank Dashboard - Restricted to blood bank staff */}
-            <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'frontdesk', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff']}><BloodBankDashboard /></RequireRole>} />
+            <Route path="/bloodbank/dashboard" element={<RequireRole allowedRoles={['bloodbank', 'BLOODBANK_ADMIN', 'store_manager']}><BloodBankDashboard /></RequireRole>} />
 
             {/* Blood Bank Manager Dashboard - Enhanced version for managers */}
             <Route path="/bloodbank/manager" element={<RequireRole allowedRoles={['bloodbank']}><BloodBankManagerDashboard /></RequireRole>} />

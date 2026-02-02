@@ -22,7 +22,7 @@ export default function AuthCallback() {
         const accessToken = searchParams.get('accessToken');
         const refreshToken = searchParams.get('refreshToken');
         const userId = searchParams.get('userId');
-        const role = searchParams.get('role');
+        let role = searchParams.get('role');
         const username = searchParams.get('username');
 
         console.log('🔄 AuthCallback: Received parameters:', {
@@ -41,6 +41,23 @@ export default function AuthCallback() {
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('refreshToken', refreshToken);
           localStorage.setItem('userId', userId);
+
+          // Decode token to get the real role, ensuring consistency
+          try {
+            const base64Url = accessToken.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const decoded = JSON.parse(jsonPayload);
+            if (decoded.role && decoded.role !== role) {
+              console.warn(`⚠️ AuthCallback: Role mismatch! URL param: ${role}, Token: ${decoded.role}. Using token role.`);
+              role = decoded.role;
+            }
+          } catch (e) {
+            console.error('❌ AuthCallback: Failed to decode token to verify role', e);
+          }
+
           localStorage.setItem('role', role);
           localStorage.setItem('username', username);
 

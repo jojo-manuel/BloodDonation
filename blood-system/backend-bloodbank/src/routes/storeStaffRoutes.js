@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware, requireRole } = require('../middleware/auth');
 const BloodInventory = require('../models/BloodInventory');
+const Booking = require('../models/Booking');
+const Patient = require('../models/Patient');
 
 // Middleware for store staff authorization
 const requireStoreStaff = (req, res, next) => {
@@ -12,7 +14,7 @@ const requireStoreStaff = (req, res, next) => {
     });
   }
 
-  if (!['store_staff', 'store_manager', 'bloodbank', 'BLOODBANK_ADMIN'].includes(req.user.role)) {
+  if (!['store_staff', 'store_manager', 'bloodbank', 'BLOODBANK_ADMIN', 'bleeding_staff'].includes(req.user.role)) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. Store staff role required.'
@@ -31,39 +33,73 @@ const requireAuth = [authMiddleware, requireStoreStaff];
 router.get('/inventory', requireAuth, async (req, res) => {
   try {
     const hospital_id = req.user.hospital_id;
-    const { 
-      search, 
-      bloodGroup, 
-      status, 
+    const {
+      search,
+      bloodGroup,
+      status,
+      includeAllocated,
       sortBy = 'expiryDate',
       sortOrder = 'asc'
     } = req.query;
 
     // Build query
     let query = { hospital_id };
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       query.bloodGroup = bloodGroup;
     }
-    
-    if (status && status !== 'all') {
-      query.status = status;
-    }
-    
-    if (search) {
+
+    // Default behavior: show available items
+    // If includeAllocated is true, also show items allocated to current user
+    if (includeAllocated === 'true') {
+      // Fetch available AND items allocated to current user
       query.$or = [
+        { status: 'available' },
+        { status: 'reserved', allocatedTo: req.user.id }
+      ];
+    } else if (status && status !== 'all') {
+      // Specific status filter
+      query.status = status;
+    } else {
+      // Default: only show available items
+      query.status = 'available';
+    }
+
+    if (search) {
+      // Combine with existing $or if needed, or simple $and logic
+      // Since we might have used $or for includeAllocated, we need $and
+      const searchConditions = [
         { donorName: { $regex: search, $options: 'i' } },
         { location: { $regex: search, $options: 'i' } },
         { notes: { $regex: search, $options: 'i' } },
-        { firstSerialNumber: parseInt(search) || 0 },
-        { lastSerialNumber: parseInt(search) || 0 }
+        { serialNumber: { $regex: search, $options: 'i' } },
+        { itemName: { $regex: search, $options: 'i' } }
       ];
+
+      // Add numeric search for serial numbers if search is a number
+      const numSearch = parseInt(search);
+      if (!isNaN(numSearch)) {
+        searchConditions.push(
+          { firstSerialNumber: numSearch },
+          { lastSerialNumber: numSearch }
+        );
+      }
+
+      if (query.$or) {
+        query.$and = [
+          { $or: query.$or },
+          { $or: searchConditions }
+        ];
+        delete query.$or;
+      } else {
+        query.$or = searchConditions;
+      }
     }
 
     // Build sort object
     let sort = {};
     const sortDirection = sortOrder === 'desc' ? -1 : 1;
-    
+
     switch (sortBy) {
       case 'expiryDate':
         sort.expiryDate = sortDirection;
@@ -85,6 +121,10 @@ router.get('/inventory', requireAuth, async (req, res) => {
       .sort(sort)
       .populate('createdBy', 'name')
       .populate('updatedBy', 'name');
+
+    console.log(`[Store Staff Inventory] User: ${req.user.email}, Hospital: ${hospital_id}`);
+    console.log(`[Store Staff Inventory] Query:`, JSON.stringify(query));
+    console.log(`[Store Staff Inventory] Found ${inventory.length} items`);
 
     res.json({
       success: true,
@@ -112,6 +152,7 @@ router.post('/inventory', requireAuth, async (req, res) => {
   try {
     const hospital_id = req.user.hospital_id;
     const {
+      itemName,
       bloodGroup,
       donationType,
       firstSerialNumber,
@@ -126,17 +167,17 @@ router.post('/inventory', requireAuth, async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!bloodGroup || !firstSerialNumber || !lastSerialNumber || !collectionDate || !expiryDate) {
+    if ((!bloodGroup && !itemName) || !firstSerialNumber || !lastSerialNumber || !collectionDate || !expiryDate) {
       return res.status(400).json({
         success: false,
-        message: 'Blood group, serial numbers, collection date, and expiry date are required'
+        message: 'Item name OR Blood group, serial numbers, collection date, and expiry date are required'
       });
     }
 
     // Validate serial number range
     const firstSerial = parseInt(firstSerialNumber);
     const lastSerial = parseInt(lastSerialNumber);
-    
+
     if (firstSerial > lastSerial) {
       return res.status(400).json({
         success: false,
@@ -165,7 +206,7 @@ router.post('/inventory', requireAuth, async (req, res) => {
     // Validate dates
     const collectionDateObj = new Date(collectionDate);
     const expiryDateObj = new Date(expiryDate);
-    
+
     if (expiryDateObj <= collectionDateObj) {
       return res.status(400).json({
         success: false,
@@ -175,7 +216,8 @@ router.post('/inventory', requireAuth, async (req, res) => {
 
     const newItem = new BloodInventory({
       hospital_id,
-      bloodGroup,
+      itemName: itemName || undefined,
+      bloodGroup: bloodGroup || undefined,
       donationType: donationType || 'whole_blood',
       firstSerialNumber: firstSerial,
       lastSerialNumber: lastSerial,
@@ -232,7 +274,7 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
     if (updates.firstSerialNumber || updates.lastSerialNumber) {
       const firstSerial = parseInt(updates.firstSerialNumber || item.firstSerialNumber);
       const lastSerial = parseInt(updates.lastSerialNumber || item.lastSerialNumber);
-      
+
       if (firstSerial > lastSerial) {
         return res.status(400).json({
           success: false,
@@ -267,7 +309,7 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
     if (updates.collectionDate || updates.expiryDate) {
       const collectionDate = new Date(updates.collectionDate || item.collectionDate);
       const expiryDate = new Date(updates.expiryDate || item.expiryDate);
-      
+
       if (expiryDate <= collectionDate) {
         return res.status(400).json({
           success: false,
@@ -280,8 +322,8 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
     updates.updatedBy = req.user.id;
 
     const updatedItem = await BloodInventory.findByIdAndUpdate(
-      id, 
-      updates, 
+      id,
+      updates,
       { new: true, runValidators: true }
     ).populate('createdBy updatedBy', 'name');
 
@@ -347,7 +389,7 @@ router.put('/inventory/:id/take', requireAuth, async (req, res) => {
     // Append to notes
     const takeNote = `Taken by ${takenBy} for ${department} - ${reason}`;
     updateData.notes = item.notes ? `${item.notes}\n${takeNote}` : takeNote;
-    
+
     if (notes) {
       updateData.notes += `\nAdditional notes: ${notes}`;
     }
@@ -399,7 +441,7 @@ router.put('/inventory/:id/status', requireAuth, async (req, res) => {
       });
     }
 
-    const updateData = { 
+    const updateData = {
       status,
       updatedBy: req.user.id
     };
@@ -407,14 +449,14 @@ router.put('/inventory/:id/status', requireAuth, async (req, res) => {
     // Add status change note
     const statusNote = `Status changed from ${item.status} to ${status} by ${req.user.name || req.user.username}`;
     updateData.notes = item.notes ? `${item.notes}\n${statusNote}` : statusNote;
-    
+
     if (reason) {
       updateData.notes += ` - Reason: ${reason}`;
     }
 
     const updatedItem = await BloodInventory.findByIdAndUpdate(
-      id, 
-      updateData, 
+      id,
+      updateData,
       { new: true, runValidators: true }
     ).populate('createdBy updatedBy', 'name');
 
@@ -443,7 +485,7 @@ router.delete('/inventory/:id', requireAuth, async (req, res) => {
 
     // Find and delete the item
     const deletedItem = await BloodInventory.findOneAndDelete({ _id: id, hospital_id });
-    
+
     if (!deletedItem) {
       return res.status(404).json({
         success: false,
@@ -479,7 +521,7 @@ router.get('/analytics', requireAuth, async (req, res) => {
     const availableItems = await BloodInventory.countDocuments({ hospital_id, status: 'available' });
     const usedItems = await BloodInventory.countDocuments({ hospital_id, status: 'used' });
     const expiredItems = await BloodInventory.countDocuments({ hospital_id, status: 'expired' });
-    
+
     // Items expiring soon
     const expiringSoon = await BloodInventory.countDocuments({
       hospital_id,
@@ -550,6 +592,253 @@ router.get('/expiry-alerts', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch expiry alerts'
+    });
+  }
+});
+
+/**
+ * PUT /api/store-staff/inventory/:id/allocate
+ * Allocate inventory item to a department or staff
+ */
+router.put('/inventory/:id/allocate', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { department, userId, notes } = req.body;
+    const hospital_id = req.user.hospital_id;
+
+    if (!department && !userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Either Department or Staff Member is required for allocation'
+      });
+    }
+
+    // Find the item
+    const item = await BloodInventory.findOne({ _id: id, hospital_id });
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    // Check if item is available
+    if (item.status !== 'available') {
+      return res.status(400).json({
+        success: false,
+        message: `Item is not available (current status: ${item.status})`
+      });
+    }
+
+    const updateData = {
+      status: 'reserved',
+      allocationNotes: notes,
+      allocatedAt: new Date(),
+      updatedBy: req.user.id
+    };
+
+    if (department) updateData.department = department;
+    if (userId) updateData.allocatedTo = userId;
+
+    const updatedItem = await BloodInventory.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('createdBy updatedBy allocatedTo', 'name');
+
+    res.json({
+      success: true,
+      message: 'Item allocated successfully',
+      data: updatedItem
+    });
+  } catch (error) {
+    console.error('Store staff allocation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to allocate item'
+    });
+  }
+});
+
+/**
+ * PUT /api/store-staff/inventory/:id/bill
+ * Bill inventory item as purchased
+ */
+router.put('/inventory/:id/bill', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { patientName, patientId, price, notes } = req.body;
+    const hospital_id = req.user.hospital_id;
+
+    if (!patientName || !price) {
+      return res.status(400).json({
+        success: false,
+        message: 'Patient name and price are required for billing'
+      });
+    }
+
+    // Find the item
+    const item = await BloodInventory.findOne({ _id: id, hospital_id });
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Inventory item not found'
+      });
+    }
+
+    // Check if item is available or reserved (can bill reserved items if confirmed)
+    if (!['available', 'reserved'].includes(item.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Item cannot be billed (current status: ${item.status})`
+      });
+    }
+
+    const updatedItem = await BloodInventory.findByIdAndUpdate(
+      id,
+      {
+        status: 'sold',
+        billingStatus: 'billed',
+        patientName,
+        patientId,
+        price,
+        billedAt: new Date(),
+        notes: item.notes ? `${item.notes}\nBilled to ${patientName} - Price: ${price}` : `Billed to ${patientName} - Price: ${price}`,
+        allocationNotes: notes ? (item.allocationNotes ? `${item.allocationNotes}\n${notes}` : notes) : item.allocationNotes,
+        updatedBy: req.user.id
+      },
+      { new: true, runValidators: true }
+    ).populate('createdBy updatedBy allocatedTo', 'name');
+
+    res.json({
+      success: true,
+      message: 'Item stock billed successfully',
+      data: updatedItem
+    });
+  } catch (error) {
+    console.error('Store staff billing error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to bill item'
+    });
+  }
+});
+
+/**
+ * GET /api/store-staff/bookings/token/:tokenNumber
+ * Fetch booking details by token number for billing auto-population
+ */
+router.get('/bookings/token/:tokenNumber', requireAuth, async (req, res) => {
+  try {
+    const { tokenNumber } = req.params;
+    const hospital_id = req.user.hospital_id;
+
+    const booking = await Booking.findOne({
+      tokenNumber: { $regex: new RegExp(`^${tokenNumber}$`, 'i') },
+      hospital_id
+    }).populate('donorId', 'name email phone bloodGroup');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found with this token number'
+      });
+    }
+
+    let patientName = booking.patientName;
+    let patientDetails = null;
+
+    // If patient name is missing but MRID exists, try to fetch from Patient record
+    if (booking.patientMRID) {
+      const patient = await Patient.findOne({
+        mrid: booking.patientMRID,
+        hospital_id
+      });
+      if (patient) {
+        if (!patientName) patientName = patient.patientName;
+        patientDetails = {
+          name: patient.patientName,
+          mrid: patient.mrid,
+          phone: patient.phoneNumber,
+          bloodGroup: patient.bloodGroup,
+          address: patient.address,
+          requiredUnits: patient.requiredUnits,
+          receivedUnits: patient.receivedUnits,
+          requiredDate: patient.requiredDate
+        };
+      }
+    }
+
+    // Try to get patient name from meta if still missing
+    if (!patientName && booking.meta && booking.meta.patientName) {
+      patientName = booking.meta.patientName;
+    }
+
+    // Fallback to requester name if still no patient name found
+    if (!patientName) {
+      patientName = booking.requesterName || (booking.meta && booking.meta.requesterName);
+    }
+
+    // Fallback to donor name if still no patient name found (e.g. strict donor booking)
+    if (!patientName) {
+      patientName = booking.donorName || booking.donorId?.name || (booking.meta && booking.meta.donorName);
+    }
+
+    // Construct Donor Details
+    const donorDetails = {
+      name: booking.donorName || booking.donorId?.name || (booking.meta && booking.meta.donorName),
+      email: booking.donorId?.email,
+      phone: booking.donorId?.phone,
+      bloodGroup: booking.bloodGroup || (booking.donorId?.bloodGroup)
+    };
+
+    res.json({
+      success: true,
+      data: {
+        patientName: patientName,
+        donorName: booking.donorName || booking.donorId?.name || (booking.meta && booking.meta.donorName),
+        patientMRID: booking.patientMRID,
+        requesterName: booking.requesterName,
+        meta: booking.meta,
+        bloodGroup: booking.bloodGroup,
+        donorDetails,
+        patientDetails
+      }
+    });
+  } catch (error) {
+    console.error('Booking lookup error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch booking details'
+    });
+  }
+});
+
+/**
+ * GET /api/store-staff/staff
+ * Get staff members for allocation
+ */
+router.get('/staff', requireAuth, async (req, res) => {
+  try {
+    const hospital_id = req.user.hospital_id;
+    // Need to require User model at top if not present, assuming it is or I need to add it.
+    // Checked file previously, User was NOT imported. Need to import it key!
+    const User = require('../models/User');
+
+    const staff = await User.find({
+      hospital_id,
+      role: { $in: ['doctor', 'bleeding_staff', 'store_staff', 'frontdesk', 'centrifuge_staff'] }
+    }).select('name email role');
+
+    res.json({
+      success: true,
+      data: staff
+    });
+  } catch (error) {
+    console.error('Staff fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch staff'
     });
   }
 });

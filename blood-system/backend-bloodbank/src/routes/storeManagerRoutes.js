@@ -7,6 +7,27 @@ const User = require('../models/User');
 // Simple auth middleware
 const requireAuth = [authMiddleware, requireStoreManager];
 
+// Middleware for inventory read access (more permissive)
+const requireInventoryReadAccess = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
+  }
+
+  // Allow store_manager, bleeding_staff, store_staff, and bloodbank roles
+  const allowedRoles = ['store_manager', 'bleeding_staff', 'store_staff', 'bloodbank', 'BLOODBANK_ADMIN'];
+  if (!allowedRoles.includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Insufficient permissions to view inventory.'
+    });
+  }
+
+  next();
+};
+
 /**
  * GET /api/store-manager/analytics
  * Get dashboard analytics for store manager
@@ -87,12 +108,9 @@ router.get('/analytics', requireAuth, async (req, res) => {
 /**
  * GET /api/store-manager/inventory
  * Get blood inventory with filtering and sorting
+ * Accessible by: store_manager, bleeding_staff, store_staff, bloodbank
  */
-/**
- * GET /api/store-manager/inventory
- * Get blood inventory with filtering and sorting
- */
-router.get('/inventory', requireAuth, async (req, res) => {
+router.get('/inventory', [authMiddleware, requireInventoryReadAccess], async (req, res) => {
   try {
     const hospital_id = req.user.hospital_id;
     const {
@@ -129,7 +147,9 @@ router.get('/inventory', requireAuth, async (req, res) => {
     else if (sortBy === 'collectionDate') sort.collectionDate = -1;
     else if (sortBy === 'bloodGroup') sort.bloodGroup = 1;
 
-    const filteredInventory = await BloodInventory.find(query).sort(sort);
+    const filteredInventory = await BloodInventory.find(query)
+      .sort(sort)
+      .populate('allocatedTo', 'name role email'); // Populate staff details
 
     res.json({
       success: true,
@@ -172,22 +192,16 @@ router.post('/inventory', requireAuth, async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!serialNumber || !collectionDate || !expiryDate) {
+    if ((!bloodGroup && !itemName) || !serialNumber || !collectionDate || !expiryDate) {
       return res.status(400).json({
         success: false,
-        message: 'Serial number, collection date, and expiry date are required'
+        message: 'Item name OR Blood group, serial number, collection date, and expiry date are required'
       });
     }
 
-    const finalItemName = itemName || 'General Inventory';
+    const finalItemName = itemName || undefined;
 
-    // Check for duplicate serial number for the same item type (or globally for hospital?)
-    // User said "dont allow same object from forming duplicste".
-    // I'll scope it to itemName to allow different items to have same serial if needed, OR just hospital_id + serialNumber if serials are strictly unique tags.
-    // Given it's "store", usually barcode/RFID is unique globally. But "Serial Number" might be "Batch A".
-    // Let's assume unique per hospital for safety, or unique per item.
-    // "allow object with similar serials number" -> maybe allow "Syringe A1" and "Bandage A1".
-    // So distinct by (hospital_id, itemName, serialNumber).
+    // Check for duplicate serial number for the same item type (or using hospital scope)
     const duplicate = await BloodInventory.findOne({
       hospital_id,
       itemName: finalItemName,
@@ -243,9 +257,17 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
 
     // Explicitly update only allowed fields to prevent overwriting critical ones if needed, or just standard update
     // For now, standard update using body
+    const updateData = { ...req.body };
+
+    // Auto-mark as 'used' if units count is 0
+    if (updateData.unitsCount !== undefined && updateData.unitsCount <= 0) {
+      updateData.status = 'used';
+      updateData.unitsCount = 0; // Ensure it's exactly 0, not negative
+    }
+
     const updatedItem = await BloodInventory.findOneAndUpdate(
       { _id: id, hospital_id: req.user.hospital_id },
-      req.body,
+      updateData,
       { new: true }
     );
 
@@ -258,7 +280,9 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Inventory item updated successfully',
+      message: updatedItem.status === 'used' && updatedItem.unitsCount === 0
+        ? 'Inventory item marked as sold out (used)'
+        : 'Inventory item updated successfully',
       data: updatedItem
     });
   } catch (error) {
@@ -380,7 +404,14 @@ router.get('/expiry-alerts', requireAuth, async (req, res) => {
 router.put('/inventory/:id/allocate', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, notes } = req.body;
+    const { userId, notes, quantity } = req.body;
+    let quantityToAllocate = parseInt(quantity);
+
+    if (!quantityToAllocate || quantityToAllocate < 1) {
+      quantityToAllocate = 1;
+    }
+
+    console.log(`[Allocate] Request for item ${id}, user ${userId}, hospital ${req.user.hospital_id}, units: ${quantityToAllocate}`);
 
     if (!userId) {
       return res.status(400).json({
@@ -392,40 +423,115 @@ router.put('/inventory/:id/allocate', requireAuth, async (req, res) => {
     // Verify staff exists in the same hospital
     const staffUser = await User.findOne({ _id: userId, hospital_id: req.user.hospital_id });
     if (!staffUser) {
+      console.log(`[Allocate] Staff member not found: ${userId}`);
       return res.status(404).json({
         success: false,
         message: 'Staff member not found'
       });
     }
 
-    const updatedItem = await BloodInventory.findOneAndUpdate(
-      { _id: id, hospital_id: req.user.hospital_id },
-      {
-        allocatedTo: userId,
-        allocatedAt: new Date(),
-        allocationNotes: notes,
-        status: 'reserved' // Marking as reserved when allocated
-      },
-      { new: true }
-    ).populate('allocatedTo', 'name email role');
+    console.log(`[Allocate] Staff found: ${staffUser.name}`);
 
-    if (!updatedItem) {
+    // Find the inventory item
+    const item = await BloodInventory.findOne({ _id: id, hospital_id: req.user.hospital_id });
+
+    if (!item) {
+      console.log(`[Allocate] Inventory item not found: ${id}`);
       return res.status(404).json({
         success: false,
         message: 'Inventory item not found'
       });
     }
 
-    res.json({
-      success: true,
-      message: 'Item allocated successfully',
-      data: updatedItem
-    });
+    // Check availability
+    if (quantityToAllocate > item.unitsCount) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot allocate ${quantityToAllocate} units. Only ${item.unitsCount} available.`
+      });
+    }
+
+    // If multiple units AND partial allocation
+    if (item.unitsCount > quantityToAllocate) {
+      // 1. Create a new item for the allocated unit
+      const allocatedSerial = item.firstSerialNumber ? item.firstSerialNumber : item.serialNumber;
+
+      const newItem = new BloodInventory({
+        hospital_id: item.hospital_id,
+        itemName: item.itemName,
+        bloodGroup: item.bloodGroup,
+        donationType: item.donationType,
+        serialNumber: item.serialNumber, // Keep original batch string if exists
+        firstSerialNumber: item.firstSerialNumber ? allocatedSerial : undefined,
+        lastSerialNumber: item.firstSerialNumber ? (allocatedSerial + quantityToAllocate - 1) : undefined,
+        unitsCount: quantityToAllocate,
+        collectionDate: item.collectionDate,
+        expiryDate: item.expiryDate,
+        donorName: item.donorName,
+        status: 'reserved',
+        location: item.location,
+        temperature: item.temperature,
+        notes: item.notes,
+        allocatedTo: userId,
+        allocatedAt: new Date(),
+        allocationNotes: notes,
+        updatedBy: req.user.id,
+        createdBy: req.user.id // Allocated copy created by manager
+      });
+
+      await newItem.save();
+
+      // 2. Update the original item (reduce count, increment serial)
+      item.unitsCount -= quantityToAllocate;
+
+      if (item.firstSerialNumber) {
+        item.firstSerialNumber += quantityToAllocate;
+      }
+
+      // Mark as used if no units remain
+      if (item.unitsCount <= 0) {
+        item.unitsCount = 0;
+        item.status = 'used';
+      }
+
+      item.updatedBy = req.user.id;
+      await item.save();
+
+      console.log(`[Allocate] Split batch. Allocated ${quantityToAllocate} units. Remaining: ${item.unitsCount}`);
+
+      return res.json({
+        success: true,
+        message: `Allocated ${quantityToAllocate} units successfully`,
+        data: newItem
+      });
+
+    } else {
+      // Allocate the entire item (or remaining part matches request)
+      item.allocatedTo = userId;
+      item.allocatedAt = new Date();
+      item.allocationNotes = notes;
+      item.status = 'reserved';
+      item.updatedBy = req.user.id;
+
+      await item.save();
+
+      const populatedItem = await item.populate('allocatedTo', 'name email role');
+
+      console.log(`[Allocate] Success (Full/Remaining units)`);
+
+      return res.json({
+        success: true,
+        message: 'Item allocated successfully',
+        data: populatedItem
+      });
+    }
+
   } catch (error) {
-    console.error('Allocation error:', error);
+    console.error('Allocation error detailed:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to allocate item'
+      message: 'Failed to allocate item',
+      error: error.message
     });
   }
 });

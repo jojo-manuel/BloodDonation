@@ -105,7 +105,11 @@ const requireBloodBankManager = (req, res, next) => {
     });
   }
 
-  if (!['bloodbank', 'BLOODBANK_ADMIN', 'store_manager'].includes(req.user.role)) {
+  console.log('User accessing blood bank manager route:', JSON.stringify(req.user, null, 2));
+
+  const allowedRoles = ['bloodbank', 'bloodbank_admin', 'store_manager', 'admin'];
+  if (!req.user.role || !allowedRoles.includes(req.user.role.toLowerCase())) {
+    console.log('Access denied for user role:', req.user.role);
     return res.status(403).json({
       success: false,
       message: 'Access denied. Blood bank manager role required.'

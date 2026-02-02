@@ -11,23 +11,75 @@ export default function BleedingStaffDashboard() {
     const [bleedingData, setBleedingData] = useState({ weight: '', bagSerialNumber: '' });
     const [updatingBleeding, setUpdatingBleeding] = useState(false);
     const [bookings, setBookings] = useState([]);
+    const [filterDate, setFilterDate] = useState('');
+
+    // Inventory & Billing State
+    const [inventory, setInventory] = useState([]);
+    const [loadingInventory, setLoadingInventory] = useState(false);
+    const [showBillModal, setShowBillModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [billBookingDetails, setBillBookingDetails] = useState(null);
+    const [billForm, setBillForm] = useState({
+        tokenNumber: '',
+        patientName: '',
+        patientId: '',
+        price: '',
+        notes: ''
+    });
+
     const { showToast } = useToast();
     const navigate = useNavigate();
 
-    // Fetch all bookings on mount
+    // Fetch data on mount
     React.useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                const res = await api.get(`/bloodbank/bookings`);
-                if (res.data.success) {
-                    setBookings(res.data.data);
-                }
-            } catch (err) {
-                console.error("Error fetching bookings:", err);
-            }
-        };
         fetchBookings();
+        fetchInventory();
     }, []);
+
+    // Refetch when filterDate changes
+    React.useEffect(() => {
+        fetchBookings();
+    }, [filterDate]);
+
+    const fetchBookings = async () => {
+        try {
+            let url = `/bloodbank/bookings`;
+            if (filterDate) {
+                url += `?date=${filterDate}`;
+            }
+            const res = await api.get(url);
+            if (res.data.success) {
+                setBookings(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching bookings:", err);
+        }
+    };
+
+    const fetchInventory = async () => {
+        try {
+            setLoadingInventory(true);
+            // Fetch from store-manager endpoint to get all available inventory
+            const res = await api.get('/store-manager/inventory?status=available');
+            if (res.data.success) {
+                setInventory(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching inventory:", err);
+            // Try fallback to store-staff endpoint
+            try {
+                const fallbackRes = await api.get('/store-staff/inventory?includeAllocated=true');
+                if (fallbackRes.data.success) {
+                    setInventory(fallbackRes.data.data);
+                }
+            } catch (fallbackErr) {
+                console.error("Fallback inventory fetch also failed:", fallbackErr);
+                showToast("Failed to load inventory", "error");
+            }
+        } finally {
+            setLoadingInventory(false);
+        }
+    };
 
     const handleTokenSearchWithToken = async (token) => {
         if (!token) return;
@@ -74,8 +126,7 @@ export default function BleedingStaffDashboard() {
             if (res.data.success) {
                 setSearchedBooking(res.data.data); // Update view with new data
                 showToast('Donation completed and verified successfully! 🎉', 'success');
-                // Clear search after a moment to allow next donor? Or keep it? 
-                // Keeping it is better for feedback. User can clear manually or search new token.
+                fetchBookings(); // Refresh bookings list
             }
         } catch (err) {
             console.error("Failed to complete bleeding", err);
@@ -85,9 +136,68 @@ export default function BleedingStaffDashboard() {
         }
     };
 
+    // Inventory Billing Functions
+    const handleTokenSearchForBill = async (tokenOverride) => {
+        const tokenToSearch = (typeof tokenOverride === 'string') ? tokenOverride : billForm.tokenNumber;
+        if (!tokenToSearch) return;
+
+        try {
+            const response = await api.get(`/store-staff/bookings/token/${tokenToSearch}`);
+            if (response.data.success) {
+                // Determine the best available name
+                const bestName = response.data.data.patientName ||
+                    (response.data.data.meta && response.data.data.meta.patientName) ||
+                    response.data.data.requesterName ||
+                    (response.data.data.meta && response.data.data.meta.requesterName) ||
+                    response.data.data.donorName ||
+                    (response.data.data.donorId && response.data.data.donorId.name) || '';
+
+                setBillForm(prev => ({
+                    ...prev,
+                    patientName: bestName,
+                    patientId: response.data.data.patientMRID || ''
+                }));
+                // Set full details for display
+                setBillBookingDetails({
+                    donor: response.data.data.donorDetails,
+                    patient: response.data.data.patientDetails
+                });
+                showToast("Booking details found!", "success");
+            }
+        } catch (err) {
+            console.error('Token search error:', err);
+            showToast('Booking not found', 'error');
+        }
+    };
+
+    const handleBillItem = async (e) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+
+        try {
+            // Using store-staff endpoint
+            const response = await api.put(`/store-staff/inventory/${selectedItem._id}/bill`, billForm);
+            if (response.data.success) {
+                showToast("Item billed successfully", "success");
+                setShowBillModal(false);
+                setSelectedItem(null);
+                setBillForm({ tokenNumber: '', patientName: '', patientId: '', price: '', notes: '' });
+                fetchInventory(); // Refresh inventory
+            }
+        } catch (err) {
+            console.error('Bill item error:', err);
+            showToast(err.response?.data?.message || "Failed to bill item", 'error');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         navigate("/staff-login"); // Redirect to staff login
+    };
+
+    const setTodayFilter = () => {
+        const today = new Date().toISOString().split('T')[0];
+        setFilterDate(today);
     };
 
     return (
@@ -140,7 +250,34 @@ export default function BleedingStaffDashboard() {
 
                 {/* Today's Queue Section */}
                 <div className="max-w-4xl mx-auto mb-12">
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">All Booked Slots</h3>
+                    <div className="flex justify-between items-end mb-4 px-2">
+                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Booked Slots</h3>
+                        <div className="flex gap-3 items-center">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Filter Date</label>
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                    className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white"
+                                />
+                            </div>
+                            <button
+                                onClick={setTodayFilter}
+                                className="h-[38px] px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 rounded-lg text-sm font-bold transition flex items-center gap-2 mt-auto"
+                            >
+                                📅 Show Today
+                            </button>
+                            {filterDate && (
+                                <button
+                                    onClick={() => setFilterDate('')}
+                                    className="h-[38px] px-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm underline mt-auto"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                    </div>
                     <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden backdrop-blur-sm">
                         {bookings.length > 0 ? (
                             <div className="overflow-x-auto">
@@ -200,6 +337,120 @@ export default function BleedingStaffDashboard() {
                         ) : (
                             <div className="p-8 text-center text-gray-500">
                                 No booked slots found.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+
+                {/* Inventory & Purchase Section */}
+                <div className="max-w-4xl mx-auto mb-12">
+                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2 flex justify-between items-center">
+                        <span>Available Inventory for Purchase</span>
+                        <button onClick={fetchInventory} className="text-sm text-blue-500 hover:text-blue-700">Refresh</button>
+                    </h3>
+
+                    {/* Info Banner */}
+                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-start gap-3">
+                            <span className="text-2xl">ℹ️</span>
+                            <div className="flex-1">
+                                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">How to Purchase Inventory</h4>
+                                <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                                    <li><strong>🎫 With Booking:</strong> Search for a patient's token above, then click "Bill to Patient" to auto-fill their details</li>
+                                    <li><strong>💰 Direct Purchase:</strong> Click "Buy Now" and manually enter patient name and details</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {inventory.length > 0 ? (
+                            inventory.map(item => (
+                                <div key={item._id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            {item.itemName && (
+                                                <h4 className="font-bold text-gray-900 dark:text-white mb-1">{item.itemName}</h4>
+                                            )}
+                                            {item.bloodGroup ? (
+                                                <span className={`px-2 py-1 rounded text-lg font-bold ${item.bloodGroup.includes('+') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                                                    }`}>
+                                                    {item.bloodGroup}
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-1 rounded text-sm font-bold bg-gray-100 text-gray-700">
+                                                    General Item
+                                                </span>
+                                            )}
+                                            <p className="text-xs text-gray-500 mt-1 capitalize">{item.donationType?.replace('_', ' ')}</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedItem(item);
+                                                    // Auto-fill from searched booking if available
+                                                    if (searchedBooking) {
+                                                        // Determine the best available name
+                                                        const bestName = searchedBooking.patientName ||
+                                                            (searchedBooking.meta && searchedBooking.meta.patientName) ||
+                                                            searchedBooking.requesterName ||
+                                                            (searchedBooking.meta && searchedBooking.meta.requesterName) ||
+                                                            searchedBooking.donorName ||
+                                                            (searchedBooking.donorId && searchedBooking.donorId.name) || '';
+
+                                                        setBillForm(prev => ({
+                                                            ...prev,
+                                                            tokenNumber: searchedBooking.tokenNumber || '',
+                                                            patientName: bestName,
+                                                            patientId: searchedBooking.patientMRID || ''
+                                                        }));
+
+                                                        // Fetch full details
+                                                        if (searchedBooking.tokenNumber) {
+                                                            handleTokenSearchForBill(searchedBooking.tokenNumber);
+                                                        }
+                                                    } else {
+                                                        // Clear form for direct purchase
+                                                        setBillForm({
+                                                            tokenNumber: '',
+                                                            patientName: '',
+                                                            patientId: '',
+                                                            price: '',
+                                                            notes: ''
+                                                        });
+                                                        setBillBookingDetails(null);
+                                                    }
+                                                    setShowBillModal(true);
+                                                }}
+                                                className="flex-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                                                title={searchedBooking ? "Bill to selected patient" : "Direct purchase - enter patient details"}
+                                            >
+                                                {searchedBooking ? '🎫 Bill to Patient' : '💰 Buy Now'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                        <div className="flex justify-between">
+                                            <span>Units:</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-200">{item.unitsCount}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Expiry:</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-200">
+                                                {new Date(item.expiryDate).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>Location:</span>
+                                            <span className="font-medium text-gray-900 dark:text-gray-200">{item.location || 'Storage'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full py-8 text-center text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                {loadingInventory ? 'Loading inventory...' : 'No available inventory items found.'}
                             </div>
                         )}
                     </div>
@@ -312,7 +563,222 @@ export default function BleedingStaffDashboard() {
                         </div>
                     </div>
                 )}
+
+
+                {/* Bill Modal */}
+                {showBillModal && selectedItem && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn">
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    {searchedBooking ? '🎫 Bill to Patient' : '💰 Purchase Inventory'}
+                                </h3>
+                                <button
+                                    onClick={() => setShowBillModal(false)}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="p-6 bg-gray-50 dark:bg-gray-900/30">
+                                <div className="flex items-center gap-3 mb-4">
+                                    {selectedItem.bloodGroup ? (
+                                        <span className={`px-2 py-1 rounded text-sm font-bold ${selectedItem.bloodGroup.includes('+') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                                            }`}>
+                                            {selectedItem.bloodGroup}
+                                        </span>
+                                    ) : (
+                                        <span className="px-2 py-1 rounded text-sm font-bold bg-gray-100 text-gray-700">
+                                            {selectedItem.itemName || 'Item'}
+                                        </span>
+                                    )}
+                                    <span className="text-gray-600 dark:text-gray-300 text-sm">
+                                        Serial: {selectedItem.serialNumber || `${selectedItem.firstSerialNumber}-${selectedItem.lastSerialNumber}`}
+                                    </span>
+                                </div>
+
+                                {/* Quick Select Booking */}
+                                {bookings.length > 0 && (
+                                    <div className="mb-2">
+                                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                            Quick Select from Bookings
+                                        </label>
+                                        <select
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                                            onChange={(e) => {
+                                                const bookingId = e.target.value;
+                                                const booking = bookings.find(b => b._id === bookingId);
+                                                if (booking) {
+                                                    // Determine the best available name
+                                                    const bestName = booking.patientName ||
+                                                        (booking.meta && booking.meta.patientName) ||
+                                                        booking.requesterName ||
+                                                        (booking.meta && booking.meta.requesterName) ||
+                                                        booking.donorName ||
+                                                        (booking.donorId && booking.donorId.name) || '';
+
+                                                    setBillForm(prev => ({
+                                                        ...prev,
+                                                        tokenNumber: booking.tokenNumber || '',
+                                                        patientName: bestName,
+                                                        patientId: booking.patientMRID || ''
+                                                    }));
+
+                                                    // Fetch full details
+                                                    if (booking.tokenNumber) {
+                                                        handleTokenSearchForBill(booking.tokenNumber);
+                                                    }
+                                                }
+                                            }}
+                                            defaultValue=""
+                                        >
+                                            <option value="" disabled>-- Select a patient from list --</option>
+                                            {bookings.map(b => (
+                                                <option key={b._id} value={b._id}>
+                                                    {b.tokenNumber ? `#${b.tokenNumber}` : 'No Token'} - {b.patientName || b.donorName || b.donorId?.name || 'Unknown Patient'} ({b.status})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {/* Auto-filled Details Display using billBookingDetails */}
+                                {billBookingDetails && (
+                                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800 text-sm">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {/* Donor Details */}
+                                            <div>
+                                                <h4 className="font-bold text-gray-700 dark:text-gray-300 uppercase text-xs mb-2 border-b pb-1">Donor Details</h4>
+                                                <p><span className="font-semibold">Name:</span> {billBookingDetails.donor?.name || 'N/A'}</p>
+                                                {billBookingDetails.donor?.email && <p><span className="font-semibold">Email:</span> {billBookingDetails.donor.email}</p>}
+                                                {billBookingDetails.donor?.phone && <p><span className="font-semibold">Phone:</span> {billBookingDetails.donor.phone}</p>}
+                                                {billBookingDetails.donor?.bloodGroup && <p><span className="font-semibold">Blood Group:</span> {billBookingDetails.donor.bloodGroup}</p>}
+                                            </div>
+
+                                            {/* Patient Details */}
+                                            <div>
+                                                <h4 className="font-bold text-gray-700 dark:text-gray-300 uppercase text-xs mb-2 border-b pb-1">Patient Details</h4>
+                                                <p><span className="font-semibold">Name:</span> {billBookingDetails.patient?.name || billForm.patientName || 'N/A'}</p>
+                                                {billBookingDetails.patient?.mrid && <p><span className="font-semibold">MRID:</span> {billBookingDetails.patient.mrid}</p>}
+                                                {billBookingDetails.patient?.phone && <p><span className="font-semibold">Phone:</span> {billBookingDetails.patient.phone}</p>}
+                                                {billBookingDetails.patient?.address && (
+                                                    <p className="whitespace-pre-wrap"><span className="font-semibold">Address:</span> {billBookingDetails.patient.address.houseName}, {billBookingDetails.patient.address.city}</p>
+                                                )}
+                                                {billBookingDetails.patient?.contact && <p><span className="font-semibold">Contact:</span> {billBookingDetails.patient.contact}</p>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <form onSubmit={handleBillItem} className="p-6 space-y-4">
+                                <div className="flex gap-2 items-end">
+                                    <div className="flex-grow">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Booking Token {!searchedBooking && <span className="text-gray-500 text-xs">(Optional)</span>}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={billForm.tokenNumber}
+                                            onChange={(e) => setBillForm({ ...billForm, tokenNumber: e.target.value })}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder={searchedBooking ? "Auto-filled from booking" : "Enter token to auto-fill patient details"}
+                                        />
+                                        {!searchedBooking && (
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                💡 Leave empty for direct purchase, or enter token to fetch patient details
+                                            </p>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleTokenSearchForBill}
+                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg h-[42px] flex items-center justify-center"
+                                        title="Search Token"
+                                    >
+                                        🔍
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Patient Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={billForm.patientName}
+                                        onChange={(e) => setBillForm({ ...billForm, patientName: e.target.value })}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Name of patient buying"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Patient ID / MRID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={billForm.patientId}
+                                        onChange={(e) => setBillForm({ ...billForm, patientId: e.target.value })}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Optional ID"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Price <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                        <input
+                                            type="number"
+                                            required
+                                            min="0"
+                                            value={billForm.price}
+                                            onChange={(e) => setBillForm({ ...billForm, price: e.target.value })}
+                                            className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Notes
+                                    </label>
+                                    <textarea
+                                        rows="2"
+                                        value={billForm.notes}
+                                        onChange={(e) => setBillForm({ ...billForm, notes: e.target.value })}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Additional details..."
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowBillModal(false)}
+                                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-lg hover:shadow-green-500/30 transition"
+                                    >
+                                        Confirm Purchase
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
-        </Layout>
+        </Layout >
     );
 }

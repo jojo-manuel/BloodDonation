@@ -13,7 +13,9 @@ import {
   Trash2,
   Edit3,
   Save,
-  X
+  X,
+  Share2,
+  DollarSign
 } from 'lucide-react';
 import { apiRequest } from '../lib/api';
 
@@ -52,12 +54,32 @@ const StoreStaffDashboard = () => {
     notes: ''
   });
 
+  const [showAllocateModal, setShowAllocateModal] = useState(false);
+  const [allocateForm, setAllocateForm] = useState({
+    department: '',
+    userId: '',
+    notes: ''
+  });
+
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [billForm, setBillForm] = useState({
+    tokenNumber: '',
+    patientName: '',
+    patientId: '',
+    price: '',
+    notes: ''
+  });
+
+  const [staffList, setStaffList] = useState([]);
+
+
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const donationTypes = ['whole_blood', 'plasma', 'platelets', 'red_cells', 'white_cells'];
   const departments = ['Emergency', 'Surgery', 'ICU', 'Pediatrics', 'Oncology', 'Cardiology', 'Orthopedics', 'General Medicine'];
 
   useEffect(() => {
     fetchInventory();
+    fetchStaff();
   }, []);
 
   useEffect(() => {
@@ -74,6 +96,15 @@ const StoreStaffDashboard = () => {
       console.error('Inventory fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const response = await apiRequest('/store-staff/staff', 'GET');
+      setStaffList(response.data || []);
+    } catch (err) {
+      console.error('Staff fetch error:', err);
     }
   };
 
@@ -157,6 +188,59 @@ const StoreStaffDashboard = () => {
     } catch (err) {
       setError('Failed to mark item as taken');
       console.error('Take item error:', err);
+    }
+  };
+
+  const handleAllocateItem = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await apiRequest(`/store-staff/inventory/${selectedItem._id}/allocate`, 'PUT', allocateForm);
+      if (response.success) {
+        setInventory(inventory.map(item =>
+          item._id === selectedItem._id ? response.data : item
+        ));
+        setShowAllocateModal(false);
+        setSelectedItem(null);
+        setAllocateForm({ department: '', userId: '', notes: '' });
+      }
+    } catch (err) {
+      setError('Failed to allocate item');
+    }
+  };
+
+  const handleTokenSearch = async () => {
+    if (!billForm.tokenNumber) return;
+
+    try {
+      const response = await apiRequest(`/store-staff/bookings/token/${billForm.tokenNumber}`, 'GET');
+      if (response.success) {
+        setBillForm(prev => ({
+          ...prev,
+          patientName: response.data.patientName || '',
+          patientId: response.data.patientMRID || ''
+        }));
+      }
+    } catch (err) {
+      console.error('Token search error:', err);
+      alert('Booking not found or error fetching details');
+    }
+  };
+
+  const handleBillItem = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await apiRequest(`/store-staff/inventory/${selectedItem._id}/bill`, 'PUT', billForm);
+      if (response.success) {
+        setInventory(inventory.map(item =>
+          item._id === selectedItem._id ? response.data : item
+        ));
+        setShowBillModal(false);
+        setSelectedItem(null);
+        setBillForm({ tokenNumber: '', patientName: '', patientId: '', price: '', notes: '' });
+      }
+    } catch (err) {
+      setError('Failed to bill item');
+      console.error('Bill item error:', err);
     }
   };
 
@@ -334,6 +418,30 @@ const StoreStaffDashboard = () => {
                         title="Mark as taken"
                       >
                         <Minus className="h-4 w-4" />
+                      </button>
+                    )}
+                    {item.status === 'available' && (
+                      <button
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowAllocateModal(true);
+                        }}
+                        className="text-purple-600 hover:text-purple-800"
+                        title="Allocate to Department"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                    )}
+                    {['available', 'reserved'].includes(item.status) && (
+                      <button
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setShowBillModal(true);
+                        }}
+                        className="text-green-600 hover:text-green-800"
+                        title="Bill / Sell stock"
+                      >
+                        <DollarSign className="h-4 w-4" />
                       </button>
                     )}
                     <button
@@ -635,6 +743,193 @@ const StoreStaffDashboard = () => {
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
                 >
                   Mark as Taken
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* Allocate Item Modal */}
+      {showAllocateModal && selectedItem && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Allocate Item to Department</h3>
+              <button
+                onClick={() => setShowAllocateModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-600">
+                <strong>{selectedItem.bloodGroup}</strong> - Serial: {selectedItem.firstSerialNumber}-{selectedItem.lastSerialNumber} ({selectedItem.unitsCount} units)
+              </p>
+            </div>
+
+            <form onSubmit={handleAllocateItem} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Staff Member</label>
+                <select
+                  value={allocateForm.userId}
+                  onChange={(e) => setAllocateForm({ ...allocateForm, userId: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Staff...</option>
+                  {staffList.map(staff => (
+                    <option key={staff._id} value={staff._id}>
+                      {staff.name} ({staff.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <select
+                  value={allocateForm.department}
+                  onChange={(e) => setAllocateForm({ ...allocateForm, department: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Allocation Notes</label>
+                <textarea
+                  value={allocateForm.notes}
+                  onChange={(e) => setAllocateForm({ ...allocateForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Reason for allocation or instructions..."
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAllocateModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                >
+                  Allocate
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* Bill Item Modal */}
+      {showBillModal && selectedItem && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Bill Inventory Stock</h3>
+              <button
+                onClick={() => setShowBillModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded-md">
+              <p className="text-sm text-gray-600">
+                <strong>{selectedItem.bloodGroup}</strong> - Serial: {selectedItem.firstSerialNumber}-{selectedItem.lastSerialNumber} ({selectedItem.unitsCount} units)
+              </p>
+            </div>
+
+            <form onSubmit={handleBillItem} className="space-y-4">
+              <div className="flex gap-2 items-end">
+                <div className="flex-grow">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Token Number (Optional)</label>
+                  <input
+                    type="text"
+                    value={billForm.tokenNumber}
+                    onChange={(e) => setBillForm({ ...billForm, tokenNumber: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Enter booking token"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTokenSearch}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 h-[42px] flex items-center justify-center"
+                  title="Search & Auto-fill"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
+                <input
+                  type="text"
+                  value={billForm.patientName}
+                  onChange={(e) => setBillForm({ ...billForm, patientName: e.target.value })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Enter patient name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID / MRID (Optional)</label>
+                <input
+                  type="text"
+                  value={billForm.patientId}
+                  onChange={(e) => setBillForm({ ...billForm, patientId: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Enter ID if available"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <input
+                  type="number"
+                  value={billForm.price}
+                  onChange={(e) => setBillForm({ ...billForm, price: e.target.value })}
+                  required
+                  min="0"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  value={billForm.notes}
+                  onChange={(e) => setBillForm({ ...billForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Any billing notes..."
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowBillModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                >
+                  Confirm & Bill
                 </button>
               </div>
             </form>

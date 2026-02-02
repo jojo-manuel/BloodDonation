@@ -74,6 +74,11 @@ const bookingSchema = new mongoose.Schema({
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  meta: {
+    patientName: String,
+    donorName: String,
+    requesterName: String
   }
 }, {
   timestamps: true

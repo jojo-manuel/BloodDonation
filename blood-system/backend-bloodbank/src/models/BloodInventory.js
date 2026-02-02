@@ -41,7 +41,7 @@ const bloodInventorySchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['available', 'reserved', 'used', 'expired', 'quarantine'],
+    enum: ['available', 'reserved', 'used', 'expired', 'quarantine', 'sold'],
     default: 'available'
   },
   location: {
@@ -71,6 +71,32 @@ const bloodInventorySchema = new mongoose.Schema({
   allocationNotes: {
     type: String,
     trim: true
+  },
+  department: {
+    type: String,
+    enum: ['Emergency', 'Surgery', 'ICU', 'Pediatrics', 'Oncology', 'Cardiology', 'Orthopedics', 'General Medicine'],
+    trim: true
+  },
+  takenBy: {
+    type: String,
+    trim: true
+  },
+  reason: {
+    type: String,
+    trim: true
+  },
+  takenAt: {
+    type: Date
+  },
+  // Billing fields
+  patientName: { type: String, trim: true },
+  patientId: { type: String, trim: true },
+  price: { type: Number, min: 0 },
+  billedAt: { type: Date },
+  billingStatus: {
+    type: String,
+    enum: ['unbilled', 'billed', 'paid'],
+    default: 'unbilled'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

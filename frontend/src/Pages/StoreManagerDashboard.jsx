@@ -78,7 +78,8 @@ export default function StoreManagerDashboard() {
   const [staffList, setStaffList] = useState([]); // Staff list for allocation
   const [showAllocateModal, setShowAllocateModal] = useState(false);
   const [allocatingItem, setAllocatingItem] = useState(null);
-  const [allocationForm, setAllocationForm] = useState({ userId: '', notes: '' });
+  const [allocationForm, setAllocationForm] = useState({ userId: '', notes: '', quantity: 1 });
+  const [allocatedInventory, setAllocatedInventory] = useState([]);
 
   useEffect(() => {
     fetchBloodBankDetails();
@@ -93,6 +94,9 @@ export default function StoreManagerDashboard() {
         break;
       case 'expiry':
         fetchExpiryAlerts();
+        break;
+      case 'allocations':
+        fetchAllocatedInventory();
         break;
       default:
         break;
@@ -164,6 +168,20 @@ export default function StoreManagerDashboard() {
     }
   };
 
+  const fetchAllocatedInventory = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/store-manager/inventory?status=reserved');
+      const allocated = response.data.data.filter(item => item.allocatedTo);
+      setAllocatedInventory(allocated || []);
+    } catch (error) {
+      console.error('Error fetching allocated inventory:', error);
+      showToast('Failed to fetch allocated inventory', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateInventoryItem = async (e) => {
     e.preventDefault();
     try {
@@ -225,6 +243,30 @@ export default function StoreManagerDashboard() {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
     });
+  };
+
+  const handleAllocateItem = async (e) => {
+    e.preventDefault();
+    try {
+      if (!allocatingItem) return;
+
+      const payload = {
+        userId: allocationForm.userId,
+        notes: allocationForm.notes
+      };
+
+      await api.put(`/store-manager/inventory/${allocatingItem._id}/allocate`, payload);
+      showToast('Inventory item allocated successfully', 'success');
+
+      setShowAllocateModal(false);
+      setAllocatingItem(null);
+      setAllocationForm({ userId: '', notes: '', quantity: 1 });
+      fetchInventory();
+      fetchAnalytics();
+    } catch (error) {
+      console.error('Error allocating inventory item:', error);
+      showToast(error.response?.data?.message || 'Failed to allocate inventory item', 'error');
+    }
   };
 
   const resetForm = () => {
@@ -295,6 +337,7 @@ export default function StoreManagerDashboard() {
   const tabs = [
     { id: 'overview', name: 'Overview', icon: ChartBarIcon },
     { id: 'inventory', name: 'Inventory', icon: BeakerIcon },
+    { id: 'allocations', name: 'Allocations', icon: UserGroupIcon },
     { id: 'expiry', name: 'Expiry Alerts', icon: ExclamationTriangleIcon },
     { id: 'reports', name: 'Reports', icon: DocumentArrowDownIcon }
   ];
@@ -492,7 +535,16 @@ export default function StoreManagerDashboard() {
                       {item.serialNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {item.unitsCount}
+                      <div className="flex items-center gap-2">
+                        <span className={item.unitsCount === 0 ? 'text-red-600 dark:text-red-400 font-bold' : ''}>
+                          {item.unitsCount}
+                        </span>
+                        {item.unitsCount === 0 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                            SOLD OUT
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {formatDate(item.collectionDate)}
@@ -576,7 +628,7 @@ export default function StoreManagerDashboard() {
           </table>
         </div>
       </div>
-    </div>
+    </div >
   );
 
   const renderContent = () => {
@@ -593,12 +645,103 @@ export default function StoreManagerDashboard() {
         return renderOverview();
       case 'inventory':
         return renderInventory();
+      case 'allocations':
+        return renderAllocations();
       case 'expiry':
         return renderExpiryAlerts();
       default:
         return renderOverview();
     }
   };
+
+  const renderAllocations = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Allocated Inventory</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Item Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Serial Number
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Units
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Allocated To
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Department/Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Allocated Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Notes
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {allocatedInventory.map((item) => (
+                <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {item.itemName || item.bloodGroup || 'General Item'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {item.serialNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {item.unitsCount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-8 w-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                        <span className="text-purple-600 dark:text-purple-400 font-semibold text-xs">
+                          {item.allocatedTo?.name?.charAt(0).toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {item.allocatedTo?.name || 'Unknown'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {item.allocatedTo?.email || ''}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 capitalize">
+                      {item.allocatedTo?.role?.replace('_', ' ') || 'N/A'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    {item.allocatedAt ? formatDate(item.allocatedAt) : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {item.allocationNotes || '-'}
+                  </td>
+                </tr>
+              ))}
+              {allocatedInventory.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No allocated inventory found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderExpiryAlerts = () => (
     <div className="space-y-6">
@@ -920,6 +1063,22 @@ export default function StoreManagerDashboard() {
                       </div>
 
                       <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity to Allocate</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={allocatingItem?.unitsCount || 1}
+                          required
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                          value={allocationForm.quantity}
+                          onChange={(e) => setAllocationForm({ ...allocationForm, quantity: e.target.value })}
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Available: {allocatingItem?.unitsCount || 0} units
+                        </p>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Allocation Notes</label>
                         <textarea
                           rows="3"
@@ -954,6 +1113,95 @@ export default function StoreManagerDashboard() {
         )}
 
         {/* Confirmation Modal */}
+        {/* Allocation Modal */}
+        {showAllocateModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowAllocateModal(false)}></div>
+
+              <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form onSubmit={handleAllocateItem}>
+                  <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                      Allocate Item to Staff
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md mb-4">
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          <strong>Item:</strong> {allocatingItem?.itemName || allocatingItem?.donationType}
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          <strong>Serial:</strong> {allocatingItem?.serialNumber}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Staff Member</label>
+                        <select
+                          required
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                          value={allocationForm.userId}
+                          onChange={(e) => setAllocationForm({ ...allocationForm, userId: e.target.value })}
+                        >
+                          <option value="">Select Staff...</option>
+                          {staffList.map(staff => (
+                            <option key={staff._id} value={staff._id}>
+                              {staff.name} ({staff.role})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Quantity to Allocate</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max={allocatingItem?.unitsCount || 1}
+                          required
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                          value={allocationForm.quantity}
+                          onChange={(e) => setAllocationForm({ ...allocationForm, quantity: e.target.value })}
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Available: {allocatingItem?.unitsCount || 0} units
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes (Optional)</label>
+                        <textarea
+                          rows="3"
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                          value={allocationForm.notes}
+                          onChange={(e) => setAllocationForm({ ...allocationForm, notes: e.target.value })}
+                          placeholder="Reason for allocation, instructions, etc."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm"
+                    >
+                      Allocate
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                      onClick={() => setShowAllocateModal(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         <ConfirmationModal
           isOpen={confirmModal.isOpen}
           title={confirmModal.title}

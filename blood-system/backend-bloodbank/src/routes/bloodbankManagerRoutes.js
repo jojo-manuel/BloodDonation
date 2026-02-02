@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { authMiddleware, requireBloodBankManager } = require('../middleware/auth');
+const { authMiddleware, requireBloodBankManager, requireRole } = require('../middleware/auth');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const Booking = require('../models/Booking');
 
 // Simple auth middleware (you should use your actual auth middleware)
 const requireAuth = [authMiddleware, requireBloodBankManager];
+const requireBookingAccess = [authMiddleware, requireRole(['bloodbank', 'BLOODBANK_ADMIN', 'store_manager', 'admin', 'bleeding_staff', 'doctor'])];
 
 /**
  * GET /api/bloodbank-manager/analytics
@@ -142,7 +143,7 @@ router.get('/analytics', requireAuth, async (req, res) => {
  * GET /api/bloodbank-manager/bookings
  * Get all bookings for the blood bank with filtering
  */
-router.get('/bookings', requireAuth, async (req, res) => {
+router.get('/bookings', requireBookingAccess, async (req, res) => {
   try {
     const { status, bloodGroup, search } = req.query;
     const hospital_id = req.user.hospital_id;
@@ -158,9 +159,21 @@ router.get('/bookings', requireAuth, async (req, res) => {
       query.bloodGroup = bloodGroup;
     }
 
+    if (req.query.date) {
+      const searchDate = new Date(req.query.date);
+      const nextDay = new Date(searchDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      query.date = {
+        $gte: searchDate,
+        $lt: nextDay
+      };
+    }
+
     if (search) {
       query.$or = [
         { donorName: { $regex: search, $options: 'i' } },
+        { tokenNumber: { $regex: search, $options: 'i' } }, // Added token search
         { patientName: { $regex: search, $options: 'i' } },
         { patientMRID: { $regex: search, $options: 'i' } },
         { bookingId: { $regex: search, $options: 'i' } }
@@ -798,26 +811,39 @@ router.get('/users', requireAuth, async (req, res) => {
       query.role = 'user';
     }
 
-    if (username) {
-      query.username = { $regex: username, $options: 'i' };
-    }
-
-    if (email) {
-      query.email = { $regex: email, $options: 'i' };
-    }
-
+    // Filter by date if provided
     if (date) {
-      const queryDate = new Date(date);
-      const nextDay = new Date(queryDate);
+      const searchDate = new Date(date);
+      const nextDay = new Date(searchDate);
       nextDay.setDate(nextDay.getDate() + 1);
-      query.createdAt = { $gte: queryDate, $lt: nextDay };
+
+      query.createdAt = {
+        $gte: searchDate,
+        $lt: nextDay
+      };
+    }
+
+    // Filter by name/email/username using regex
+    if (username) {
+      query.$or = [
+        { username: { $regex: username, $options: 'i' } },
+        { name: { $regex: username, $options: 'i' } },
+        { email: { $regex: username, $options: 'i' } }
+      ];
+    } else if (email) {
+      query.email = { $regex: email, $options: 'i' };
     }
 
     const users = await User.find(query).select('-password').sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      data: users
+      data: users,
+      pagination: {
+        current: 1,
+        pages: 1,
+        total: users.length
+      }
     });
   } catch (error) {
     console.error('Users fetch error:', error);
@@ -827,6 +853,42 @@ router.get('/users', requireAuth, async (req, res) => {
     });
   }
 });
+
+/**
+ * GET /api/bloodbank-manager/bookings/token/:tokenNumber
+ * Get booking by token number
+ */
+router.get('/bookings/token/:tokenNumber', requireBookingAccess, async (req, res) => {
+  try {
+    const { tokenNumber } = req.params;
+    const hospital_id = req.user.hospital_id;
+
+    const booking = await Booking.findOne({
+      tokenNumber: { $regex: new RegExp(`^${tokenNumber}$`, 'i') },
+      hospital_id
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: booking
+    });
+  } catch (error) {
+    console.error('Booking token lookup error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to find booking'
+    });
+  }
+});
+
+
 
 /**
  * POST /api/bloodbank-manager/users
