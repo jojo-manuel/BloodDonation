@@ -7,6 +7,10 @@ const BloodInventorySchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  itemName: {
+    type: String,
+    trim: true // General item name (e.g., "Syringes", "Blood Bags", etc.)
+  },
   bloodGroup: {
     type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
@@ -32,6 +36,10 @@ const BloodInventorySchema = new mongoose.Schema({
   unitsCount: {
     type: Number,
     required: true
+  },
+  initialUnitsCount: {
+    type: Number,
+    required: true // Track original quantity for 10% threshold alerts
   },
   collectionDate: {
     type: Date,
@@ -96,6 +104,18 @@ const BloodInventorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Patient'
   },
+  // Allocation tracking
+  allocatedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  allocatedAt: {
+    type: Date
+  },
+  allocationNotes: {
+    type: String,
+    trim: true
+  },
   // Quality control fields
   qualityCheck: {
     passed: {
@@ -113,8 +133,8 @@ const BloodInventorySchema = new mongoose.Schema({
       type: String
     }
   }
-}, { 
-  timestamps: true 
+}, {
+  timestamps: true
 });
 
 // Compound indexes for better query performance
@@ -125,7 +145,7 @@ BloodInventorySchema.index({ bloodBankId: 1, status: 1, expiryDate: 1 });
 BloodInventorySchema.index({ firstSerialNumber: 1, lastSerialNumber: 1 });
 
 // Pre-save middleware to calculate units count and validate serial numbers
-BloodInventorySchema.pre('save', function(next) {
+BloodInventorySchema.pre('save', function (next) {
   // Calculate units count
   if (this.firstSerialNumber && this.lastSerialNumber) {
     if (this.firstSerialNumber > this.lastSerialNumber) {
@@ -133,12 +153,25 @@ BloodInventorySchema.pre('save', function(next) {
     }
     this.unitsCount = this.lastSerialNumber - this.firstSerialNumber + 1;
   }
-  
+
+  // Set initial units count on first save (for 10% threshold tracking)
+  if (this.isNew && !this.initialUnitsCount) {
+    this.initialUnitsCount = this.unitsCount;
+  }
+
+  // Auto-mark as 'used' when units reach 0 (sold out)
+  if (this.unitsCount === 0 && this.status !== 'expired' && this.status !== 'used') {
+    this.status = 'used';
+    if (!this.usedAt) {
+      this.usedAt = new Date();
+    }
+  }
+
   // Auto-expire items past expiry date
   if (this.expiryDate && new Date() > this.expiryDate && this.status !== 'used') {
     this.status = 'expired';
   }
-  
+
   // Set reservation/usage timestamps
   if (this.isModified('status')) {
     if (this.status === 'reserved' && !this.reservedAt) {
@@ -147,12 +180,12 @@ BloodInventorySchema.pre('save', function(next) {
       this.usedAt = new Date();
     }
   }
-  
+
   next();
 });
 
 // Instance methods
-BloodInventorySchema.methods.getDaysUntilExpiry = function() {
+BloodInventorySchema.methods.getDaysUntilExpiry = function () {
   const today = new Date();
   const expiry = new Date(this.expiryDate);
   const diffTime = expiry - today;
@@ -160,81 +193,81 @@ BloodInventorySchema.methods.getDaysUntilExpiry = function() {
   return diffDays;
 };
 
-BloodInventorySchema.methods.isExpiringSoon = function(days = 14) {
+BloodInventorySchema.methods.isExpiringSoon = function (days = 14) {
   return this.getDaysUntilExpiry() <= days && this.getDaysUntilExpiry() > 0;
 };
 
-BloodInventorySchema.methods.isExpired = function() {
+BloodInventorySchema.methods.isExpired = function () {
   return this.getDaysUntilExpiry() <= 0;
 };
 
-BloodInventorySchema.methods.reserve = function(userId, patientId = null) {
+BloodInventorySchema.methods.reserve = function (userId, patientId = null) {
   if (this.status !== 'available') {
     throw new Error('Item is not available for reservation');
   }
-  
+
   this.status = 'reserved';
   this.reservedBy = userId;
   this.reservedAt = new Date();
   if (patientId) {
     this.patientId = patientId;
   }
-  
+
   return this.save();
 };
 
-BloodInventorySchema.methods.release = function() {
+BloodInventorySchema.methods.release = function () {
   if (this.status !== 'reserved') {
     throw new Error('Item is not reserved');
   }
-  
+
   this.status = 'available';
   this.reservedBy = undefined;
   this.reservedAt = undefined;
   this.patientId = undefined;
-  
+
   return this.save();
 };
 
-BloodInventorySchema.methods.markAsUsed = function(userId, patientId = null) {
+BloodInventorySchema.methods.markAsUsed = function (userId, patientId = null) {
   if (!['available', 'reserved'].includes(this.status)) {
     throw new Error('Item is not available for use');
   }
-  
+
   this.status = 'used';
   this.usedBy = userId;
   this.usedAt = new Date();
   if (patientId) {
     this.patientId = patientId;
   }
-  
+
   return this.save();
 };
 
 // Static methods
-BloodInventorySchema.statics.findBySerialNumber = function(serialNumber, bloodBankId = null) {
+BloodInventorySchema.statics.findBySerialNumber = function (serialNumber, bloodBankId = null) {
   const query = {
     firstSerialNumber: { $lte: serialNumber },
     lastSerialNumber: { $gte: serialNumber }
   };
-  
+
   if (bloodBankId) {
     query.bloodBankId = bloodBankId;
   }
-  
+
   return this.findOne(query);
 };
 
-BloodInventorySchema.statics.getAvailableUnits = function(bloodBankId, bloodGroup = null) {
+BloodInventorySchema.statics.getAvailableUnits = function (bloodBankId, bloodGroup = null) {
   const match = {
     bloodBankId,
     status: 'available'
   };
-  
+
   if (bloodGroup) {
     match.bloodGroup = bloodGroup;
   }
-  
+
   return this.aggregate([
     { $match: match },
     { $group: { _id: '$bloodGroup', totalUnits: { $sum: '$unitsCount' } } },
@@ -242,10 +275,10 @@ BloodInventorySchema.statics.getAvailableUnits = function(bloodBankId, bloodGrou
   ]);
 };
 
-BloodInventorySchema.statics.getExpiringItems = function(bloodBankId, days = 14) {
+BloodInventorySchema.statics.getExpiringItems = function (bloodBankId, days = 14) {
   const today = new Date();
   const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
-  
+
   return this.find({
     bloodBankId,
     status: { $in: ['available', 'reserved'] },
@@ -253,9 +286,9 @@ BloodInventorySchema.statics.getExpiringItems = function(bloodBankId, days = 14)
   }).sort({ expiryDate: 1 });
 };
 
-BloodInventorySchema.statics.getExpiredItems = function(bloodBankId) {
+BloodInventorySchema.statics.getExpiredItems = function (bloodBankId) {
   const today = new Date();
-  
+
   return this.find({
     bloodBankId,
     expiryDate: { $lte: today },
@@ -263,7 +296,7 @@ BloodInventorySchema.statics.getExpiredItems = function(bloodBankId) {
   }).sort({ expiryDate: 1 });
 };
 
-BloodInventorySchema.statics.checkSerialOverlap = function(bloodBankId, firstSerial, lastSerial, excludeId = null) {
+BloodInventorySchema.statics.checkSerialOverlap = function (bloodBankId, firstSerial, lastSerial, excludeId = null) {
   const query = {
     bloodBankId,
     $or: [
@@ -273,16 +306,47 @@ BloodInventorySchema.statics.checkSerialOverlap = function(bloodBankId, firstSer
       }
     ]
   };
-  
+
   if (excludeId) {
     query._id = { $ne: excludeId };
   }
-  
+
   return this.findOne(query);
 };
 
+// Get items at or below 10% of initial stock (low inventory alerts)
+BloodInventorySchema.statics.getLowStockItems = function (bloodBankId, thresholdPercent = 10) {
+  return this.aggregate([
+    {
+      $match: {
+        bloodBankId,
+        status: { $in: ['available', 'reserved'] },
+        initialUnitsCount: { $gt: 0 }
+      }
+    },
+    {
+      $addFields: {
+        stockPercentage: {
+          $multiply: [
+            { $divide: ['$unitsCount', '$initialUnitsCount'] },
+            100
+          ]
+        }
+      }
+    },
+    {
+      $match: {
+        stockPercentage: { $lte: thresholdPercent }
+      }
+    },
+    {
+      $sort: { stockPercentage: 1 }
+    }
+  ]);
+};
+
 // Virtual for serial range display
-BloodInventorySchema.virtual('serialRange').get(function() {
+BloodInventorySchema.virtual('serialRange').get(function () {
   if (this.firstSerialNumber === this.lastSerialNumber) {
     return this.firstSerialNumber.toString();
   }
@@ -290,7 +354,7 @@ BloodInventorySchema.virtual('serialRange').get(function() {
 });
 
 // Virtual for expiry status
-BloodInventorySchema.virtual('expiryStatus').get(function() {
+BloodInventorySchema.virtual('expiryStatus').get(function () {
   const days = this.getDaysUntilExpiry();
   if (days < 0) return 'expired';
   if (days <= 7) return 'critical';

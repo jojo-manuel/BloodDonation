@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Package, 
-  Plus, 
-  ArrowRight, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Package,
+  Plus,
+  ArrowRight,
+  CheckCircle,
+  AlertTriangle,
   Search,
   Filter,
   Calendar,
@@ -160,7 +160,7 @@ const CentrifugeStaffDashboard = () => {
       const response = await apiRequest(`/centrifuge-staff/blood-bags/${selectedBag._id}/separate`, 'POST', separationData);
       if (response.success) {
         // Update the blood bag status
-        setBloodBags(bloodBags.map(bag => 
+        setBloodBags(bloodBags.map(bag =>
           bag._id === selectedBag._id ? { ...bag, status: 'separated' } : bag
         ));
         // Add new components
@@ -254,11 +254,10 @@ const CentrifugeStaffDashboard = () => {
             <nav className="-mb-px flex">
               <button
                 onClick={() => setActiveTab('bags')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                  activeTab === 'bags'
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === 'bags'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4" />
@@ -267,11 +266,10 @@ const CentrifugeStaffDashboard = () => {
               </button>
               <button
                 onClick={() => setActiveTab('components')}
-                className={`py-4 px-6 text-sm font-medium border-b-2 ${
-                  activeTab === 'components'
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === 'components'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Beaker className="h-4 w-4" />
@@ -489,24 +487,24 @@ const CentrifugeStaffDashboard = () => {
         )}
 
         {/* Empty State */}
-        {((activeTab === 'bags' && filteredBags.length === 0) || 
+        {((activeTab === 'bags' && filteredBags.length === 0) ||
           (activeTab === 'components' && components.length === 0)) && (
-          <div className="text-center py-12">
-            {activeTab === 'bags' ? (
-              <>
-                <Package className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No blood bags</h3>
-                <p className="mt-1 text-sm text-gray-500">Get started by receiving a blood bag.</p>
-              </>
-            ) : (
-              <>
-                <Beaker className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No components</h3>
-                <p className="mt-1 text-sm text-gray-500">Separate blood bags to create components.</p>
-              </>
-            )}
-          </div>
-        )}
+            <div className="text-center py-12">
+              {activeTab === 'bags' ? (
+                <>
+                  <Package className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No blood bags</h3>
+                  <p className="mt-1 text-sm text-gray-500">Get started by receiving a blood bag.</p>
+                </>
+              ) : (
+                <>
+                  <Beaker className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No components</h3>
+                  <p className="mt-1 text-sm text-gray-500">Separate blood bags to create components.</p>
+                </>
+              )}
+            </div>
+          )}
       </div>
 
       {/* Receive Blood Bag Modal */}
@@ -522,7 +520,7 @@ const CentrifugeStaffDashboard = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
+
             <form onSubmit={handleReceiveBag} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -530,7 +528,7 @@ const CentrifugeStaffDashboard = () => {
                   <input
                     type="text"
                     value={receiveForm.serialNumber}
-                    onChange={(e) => setReceiveForm({...receiveForm, serialNumber: e.target.value})}
+                    onChange={(e) => setReceiveForm({ ...receiveForm, serialNumber: e.target.value })}
                     required
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -539,7 +537,7 @@ const CentrifugeStaffDashboard = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
                   <select
                     value={receiveForm.bloodGroup}
-                    onChange={(e) => setReceiveForm({...receiveForm, bloodGroup: e.target.value})}
+                    onChange={(e) => setReceiveForm({ ...receiveForm, bloodGroup: e.target.value })}
                     required
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
@@ -554,7 +552,7 @@ const CentrifugeStaffDashboard = () => {
                   <input
                     type="text"
                     value={receiveForm.donorName}
-                    onChange={(e) => setReceiveForm({...receiveForm, donorName: e.target.value})}
+                    onChange={(e) => setReceiveForm({ ...receiveForm, donorName: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -563,17 +561,19 @@ const CentrifugeStaffDashboard = () => {
                   <input
                     type="date"
                     value={receiveForm.collectionDate}
-                    onChange={(e) => setReceiveForm({...receiveForm, collectionDate: e.target.value})}
+                    onChange={(e) => setReceiveForm({ ...receiveForm, collectionDate: e.target.value })}
                     required
+                    min={new Date().toISOString().split('T')[0]}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <p className="mt-1 text-xs text-gray-500">Must be today or later</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Volume (ml)</label>
                   <input
                     type="number"
                     value={receiveForm.volume}
-                    onChange={(e) => setReceiveForm({...receiveForm, volume: parseInt(e.target.value)})}
+                    onChange={(e) => setReceiveForm({ ...receiveForm, volume: parseInt(e.target.value) })}
                     min="1"
                     required
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -584,7 +584,7 @@ const CentrifugeStaffDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <textarea
                   value={receiveForm.notes}
-                  onChange={(e) => setReceiveForm({...receiveForm, notes: e.target.value})}
+                  onChange={(e) => setReceiveForm({ ...receiveForm, notes: e.target.value })}
                   rows={3}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -622,7 +622,7 @@ const CentrifugeStaffDashboard = () => {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="mb-4 p-3 bg-gray-50 rounded-md">
               <p className="text-sm text-gray-600">
                 <strong>Original Bag:</strong> {selectedBag.bloodGroup} - Serial: {selectedBag.serialNumber} ({selectedBag.volume} ml)
@@ -637,7 +637,7 @@ const CentrifugeStaffDashboard = () => {
                   <input
                     type="date"
                     value={separationForm.separationDate}
-                    onChange={(e) => setSeparationForm({...separationForm, separationDate: e.target.value})}
+                    onChange={(e) => setSeparationForm({ ...separationForm, separationDate: e.target.value })}
                     required
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -647,7 +647,7 @@ const CentrifugeStaffDashboard = () => {
                   <input
                     type="text"
                     value={separationForm.technician}
-                    onChange={(e) => setSeparationForm({...separationForm, technician: e.target.value})}
+                    onChange={(e) => setSeparationForm({ ...separationForm, technician: e.target.value })}
                     required
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -656,7 +656,7 @@ const CentrifugeStaffDashboard = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Method</label>
                   <select
                     value={separationForm.method}
-                    onChange={(e) => setSeparationForm({...separationForm, method: e.target.value})}
+                    onChange={(e) => setSeparationForm({ ...separationForm, method: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {separationMethods.map(method => (
@@ -687,7 +687,7 @@ const CentrifugeStaffDashboard = () => {
                             onChange={(e) => {
                               const newComponents = [...separationForm.components];
                               newComponents[index].volume = e.target.value;
-                              setSeparationForm({...separationForm, components: newComponents});
+                              setSeparationForm({ ...separationForm, components: newComponents });
                             }}
                             min="1"
                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -701,7 +701,7 @@ const CentrifugeStaffDashboard = () => {
                             onChange={(e) => {
                               const newComponents = [...separationForm.components];
                               newComponents[index].serialNumber = e.target.value;
-                              setSeparationForm({...separationForm, components: newComponents});
+                              setSeparationForm({ ...separationForm, components: newComponents });
                             }}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
@@ -714,7 +714,7 @@ const CentrifugeStaffDashboard = () => {
                             onChange={(e) => {
                               const newComponents = [...separationForm.components];
                               newComponents[index].notes = e.target.value;
-                              setSeparationForm({...separationForm, components: newComponents});
+                              setSeparationForm({ ...separationForm, components: newComponents });
                             }}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
@@ -730,7 +730,7 @@ const CentrifugeStaffDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">General Notes</label>
                 <textarea
                   value={separationForm.notes}
-                  onChange={(e) => setSeparationForm({...separationForm, notes: e.target.value})}
+                  onChange={(e) => setSeparationForm({ ...separationForm, notes: e.target.value })}
                   rows={3}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

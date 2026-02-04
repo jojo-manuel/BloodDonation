@@ -16,8 +16,8 @@ const requireInventoryReadAccess = (req, res, next) => {
     });
   }
 
-  // Allow store_manager, bleeding_staff, store_staff, and bloodbank roles
-  const allowedRoles = ['store_manager', 'bleeding_staff', 'store_staff', 'bloodbank', 'BLOODBANK_ADMIN'];
+  // Allow store_manager, bleeding_staff, store_staff, bloodbank, doctor, and centrifuge_staff roles
+  const allowedRoles = ['store_manager', 'bleeding_staff', 'store_staff', 'bloodbank', 'BLOODBANK_ADMIN', 'doctor', 'centrifuge_staff'];
   if (!allowedRoles.includes(req.user.role)) {
     return res.status(403).json({
       success: false,
@@ -188,7 +188,8 @@ router.post('/inventory', requireAuth, async (req, res) => {
       status,
       location,
       temperature,
-      notes
+      notes,
+      price
     } = req.body;
 
     // Validate required fields
@@ -196,6 +197,32 @@ router.post('/inventory', requireAuth, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Item name OR Blood group, serial number, collection date, and expiry date are required'
+      });
+    }
+
+    // Validate collection date (cannot be before today)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+    const collection = new Date(collectionDate);
+    collection.setHours(0, 0, 0, 0);
+
+    if (collection < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Collection date cannot be before today'
+      });
+    }
+
+    // Validate expiry date (must be at least 6 months from today)
+    const expiry = new Date(expiryDate);
+    const minExpiryDate = new Date();
+    minExpiryDate.setHours(0, 0, 0, 0);
+    minExpiryDate.setMonth(minExpiryDate.getMonth() + 6); // Add 6 months
+
+    if (expiry < minExpiryDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Expiry date must be at least 6 months from today'
       });
     }
 
@@ -228,7 +255,10 @@ router.post('/inventory', requireAuth, async (req, res) => {
       status: status || 'available',
       location: location || '',
       temperature: temperature || '',
-      notes: notes || ''
+      notes: notes || '',
+      price: price || 0,
+      createdBy: req.user.id,
+      updatedBy: req.user.id
     });
 
     await newItem.save();
@@ -258,6 +288,48 @@ router.put('/inventory/:id', requireAuth, async (req, res) => {
     // Explicitly update only allowed fields to prevent overwriting critical ones if needed, or just standard update
     // For now, standard update using body
     const updateData = { ...req.body };
+
+    // Validate dates if being updated
+    if (updateData.collectionDate || updateData.expiryDate) {
+      // Get the current item to compare dates
+      const currentItem = await BloodInventory.findOne({ _id: id, hospital_id: req.user.hospital_id });
+
+      if (!currentItem) {
+        return res.status(404).json({
+          success: false,
+          message: 'Inventory item not found or unauthorized'
+        });
+      }
+
+      const collectionDate = updateData.collectionDate ? new Date(updateData.collectionDate) : currentItem.collectionDate;
+      const expiryDate = updateData.expiryDate ? new Date(updateData.expiryDate) : currentItem.expiryDate;
+
+      // Validate collection date (cannot be before today)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const collection = new Date(collectionDate);
+      collection.setHours(0, 0, 0, 0);
+
+      if (collection < today) {
+        return res.status(400).json({
+          success: false,
+          message: 'Collection date cannot be before today'
+        });
+      }
+
+      // Validate expiry date (must be at least 6 months from today)
+      const expiry = new Date(expiryDate);
+      const minExpiryDate = new Date();
+      minExpiryDate.setHours(0, 0, 0, 0);
+      minExpiryDate.setMonth(minExpiryDate.getMonth() + 6);
+
+      if (expiry < minExpiryDate) {
+        return res.status(400).json({
+          success: false,
+          message: 'Expiry date must be at least 6 months from today'
+        });
+      }
+    }
 
     // Auto-mark as 'used' if units count is 0
     if (updateData.unitsCount !== undefined && updateData.unitsCount <= 0) {
@@ -397,166 +469,106 @@ router.get('/expiry-alerts', requireAuth, async (req, res) => {
   }
 });
 
+
+
 /**
- * PUT /api/store-manager/inventory/:id/allocate
- * Allocate inventory item to a staff member
+ * POST /api/store-manager/inventory/:id/purchase
+ * Purchase inventory item by units
+ * Accessible by: doctor, bleeding_staff, centrifuge_staff, store_manager
  */
-router.put('/inventory/:id/allocate', requireAuth, async (req, res) => {
+router.post('/inventory/:id/purchase', [authMiddleware, requireInventoryReadAccess], async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, notes, quantity } = req.body;
-    let quantityToAllocate = parseInt(quantity);
+    const { units, patientName, patientId, notes } = req.body;
+    const hospital_id = req.user.hospital_id;
 
-    if (!quantityToAllocate || quantityToAllocate < 1) {
-      quantityToAllocate = 1;
-    }
-
-    console.log(`[Allocate] Request for item ${id}, user ${userId}, hospital ${req.user.hospital_id}, units: ${quantityToAllocate}`);
-
-    if (!userId) {
+    if (!units || units < 1) {
       return res.status(400).json({
         success: false,
-        message: 'User ID is required for allocation'
+        message: 'Valid unit count is required'
       });
     }
 
-    // Verify staff exists in the same hospital
-    const staffUser = await User.findOne({ _id: userId, hospital_id: req.user.hospital_id });
-    if (!staffUser) {
-      console.log(`[Allocate] Staff member not found: ${userId}`);
-      return res.status(404).json({
+    if (!patientName) {
+      return res.status(400).json({
         success: false,
-        message: 'Staff member not found'
+        message: 'Patient name is required'
       });
     }
 
-    console.log(`[Allocate] Staff found: ${staffUser.name}`);
-
-    // Find the inventory item
-    const item = await BloodInventory.findOne({ _id: id, hospital_id: req.user.hospital_id });
-
-    if (!item) {
-      console.log(`[Allocate] Inventory item not found: ${id}`);
+    const inventoryItem = await BloodInventory.findOne({ _id: id, hospital_id });
+    if (!inventoryItem) {
       return res.status(404).json({
         success: false,
         message: 'Inventory item not found'
       });
     }
 
-    // Check availability
-    if (quantityToAllocate > item.unitsCount) {
+    if (inventoryItem.status !== 'available') {
       return res.status(400).json({
         success: false,
-        message: `Cannot allocate ${quantityToAllocate} units. Only ${item.unitsCount} available.`
+        message: 'Item is not available for purchase'
       });
     }
 
-    // If multiple units AND partial allocation
-    if (item.unitsCount > quantityToAllocate) {
-      // 1. Create a new item for the allocated unit
-      const allocatedSerial = item.firstSerialNumber ? item.firstSerialNumber : item.serialNumber;
-
-      const newItem = new BloodInventory({
-        hospital_id: item.hospital_id,
-        itemName: item.itemName,
-        bloodGroup: item.bloodGroup,
-        donationType: item.donationType,
-        serialNumber: item.serialNumber, // Keep original batch string if exists
-        firstSerialNumber: item.firstSerialNumber ? allocatedSerial : undefined,
-        lastSerialNumber: item.firstSerialNumber ? (allocatedSerial + quantityToAllocate - 1) : undefined,
-        unitsCount: quantityToAllocate,
-        collectionDate: item.collectionDate,
-        expiryDate: item.expiryDate,
-        donorName: item.donorName,
-        status: 'reserved',
-        location: item.location,
-        temperature: item.temperature,
-        notes: item.notes,
-        allocatedTo: userId,
-        allocatedAt: new Date(),
-        allocationNotes: notes,
-        updatedBy: req.user.id,
-        createdBy: req.user.id // Allocated copy created by manager
-      });
-
-      await newItem.save();
-
-      // 2. Update the original item (reduce count, increment serial)
-      item.unitsCount -= quantityToAllocate;
-
-      if (item.firstSerialNumber) {
-        item.firstSerialNumber += quantityToAllocate;
-      }
-
-      // Mark as used if no units remain
-      if (item.unitsCount <= 0) {
-        item.unitsCount = 0;
-        item.status = 'used';
-      }
-
-      item.updatedBy = req.user.id;
-      await item.save();
-
-      console.log(`[Allocate] Split batch. Allocated ${quantityToAllocate} units. Remaining: ${item.unitsCount}`);
-
-      return res.json({
-        success: true,
-        message: `Allocated ${quantityToAllocate} units successfully`,
-        data: newItem
-      });
-
-    } else {
-      // Allocate the entire item (or remaining part matches request)
-      item.allocatedTo = userId;
-      item.allocatedAt = new Date();
-      item.allocationNotes = notes;
-      item.status = 'reserved';
-      item.updatedBy = req.user.id;
-
-      await item.save();
-
-      const populatedItem = await item.populate('allocatedTo', 'name email role');
-
-      console.log(`[Allocate] Success (Full/Remaining units)`);
-
-      return res.json({
-        success: true,
-        message: 'Item allocated successfully',
-        data: populatedItem
+    if (units > inventoryItem.unitsCount) {
+      return res.status(400).json({
+        success: false,
+        message: `Only ${inventoryItem.unitsCount} units available`
       });
     }
 
-  } catch (error) {
-    console.error('Allocation error detailed:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to allocate item',
-      error: error.message
-    });
-  }
-});
+    // Track the serial numbers being purchased
+    const purchasedSerialStart = inventoryItem.firstSerialNumber || inventoryItem.serialNumber;
+    const purchasedSerialEnd = purchasedSerialStart + units - 1;
 
-/**
- * GET /api/store-manager/staff
- * Get staff members for allocation
- */
-router.get('/staff', requireAuth, async (req, res) => {
-  try {
-    const hospital_id = req.user.hospital_id;
-    const staff = await User.find({
-      hospital_id,
-      role: { $in: ['doctor', 'bleeding_staff', 'store_staff', 'frontdesk', 'centrifuge_staff'] }
-    }).select('name email role');
+    // Deduct units and update serial number range
+    inventoryItem.unitsCount -= units;
+
+    // Update the first serial number to reflect remaining inventory
+    // The next available serial number starts after the purchased units
+    if (inventoryItem.unitsCount > 0 && inventoryItem.firstSerialNumber) {
+      inventoryItem.firstSerialNumber = purchasedSerialEnd + 1;
+    }
+
+    // If all units are consumed, mark as used
+    if (inventoryItem.unitsCount === 0) {
+      inventoryItem.status = 'used';
+      inventoryItem.usedBy = req.user.id;
+      inventoryItem.usedAt = new Date();
+    }
+
+    // Add purchase notes with serial number tracking
+    const serialInfo = units === 1
+      ? `Serial #${purchasedSerialStart}`
+      : `Serials #${purchasedSerialStart}-${purchasedSerialEnd}`;
+
+    const purchaseNote = `[${new Date().toISOString()}] Purchased ${units} unit(s) (${serialInfo}) for patient: ${patientName}${patientId ? ` (ID: ${patientId})` : ''}${notes ? `. Notes: ${notes}` : ''}. Purchased by: ${req.user.username || req.user.email || req.user.name || 'Staff'}`;
+
+    inventoryItem.notes = inventoryItem.notes
+      ? `${inventoryItem.notes}\n${purchaseNote}`
+      : purchaseNote;
+
+    inventoryItem.updatedBy = req.user.id;
+    await inventoryItem.save();
 
     res.json({
       success: true,
-      data: staff
+      message: `Successfully purchased ${units} unit(s) (${serialInfo})`,
+      data: {
+        ...inventoryItem.toObject(),
+        purchasedSerials: {
+          start: purchasedSerialStart,
+          end: purchasedSerialEnd,
+          count: units
+        }
+      }
     });
   } catch (error) {
-    console.error('Staff fetch error:', error);
+    console.error('Purchase error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch staff'
+      message: 'Failed to complete purchase'
     });
   }
 });

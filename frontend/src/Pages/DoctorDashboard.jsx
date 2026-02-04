@@ -16,6 +16,38 @@ export default function DoctorDashboard() {
     const [searchDoctorLoading, setSearchDoctorLoading] = useState(false);
     const [assessmentComments, setAssessmentComments] = useState('');
 
+    // --- INVENTORY STATE ---
+    const [inventory, setInventory] = useState([]);
+    const [loadingInventory, setLoadingInventory] = useState(false);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [purchaseForm, setPurchaseForm] = useState({
+        units: 1,
+        patientName: '',
+        patientId: '',
+        notes: ''
+    });
+
+    // Fetch inventory on mount
+    React.useEffect(() => {
+        fetchInventory();
+    }, []);
+
+    const fetchInventory = async () => {
+        try {
+            setLoadingInventory(true);
+            const res = await api.get('/store-manager/inventory?status=available');
+            if (res.data.success) {
+                setInventory(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching inventory:", err);
+            showToast("Failed to load inventory", "error");
+        } finally {
+            setLoadingInventory(false);
+        }
+    };
+
     const handleDoctorTokenSearch = async (e) => {
         e?.preventDefault();
         if (!doctorToken.trim()) return;
@@ -64,6 +96,37 @@ export default function DoctorDashboard() {
         }));
     };
 
+    const handlePurchaseItem = async (e) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+
+        if (purchaseForm.units > selectedItem.unitsCount) {
+            showToast(`Only ${selectedItem.unitsCount} units available`, 'error');
+            return;
+        }
+
+        try {
+            const response = await api.post(`/store-manager/inventory/${selectedItem._id}/purchase`, {
+                units: purchaseForm.units,
+                patientName: purchaseForm.patientName,
+                patientId: purchaseForm.patientId,
+                notes: purchaseForm.notes
+            });
+
+            if (response.data.success) {
+                const message = response.data.message || "Purchase completed successfully";
+                showToast(message, "success");
+                setShowPurchaseModal(false);
+                setSelectedItem(null);
+                setPurchaseForm({ units: 1, patientName: '', patientId: '', notes: '' });
+                fetchInventory(); // Refresh inventory
+            }
+        } catch (err) {
+            console.error('Purchase error:', err);
+            showToast(err.response?.data?.message || "Failed to complete purchase", 'error');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         navigate("/bloodbank-login");
@@ -82,7 +145,7 @@ export default function DoctorDashboard() {
                                 Doctor Dashboard
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                Medical Assessment & Donor Eligibility
+                                Medical Assessment & Inventory Management
                             </p>
                         </div>
 
@@ -94,11 +157,105 @@ export default function DoctorDashboard() {
                         </button>
                     </div>
 
+                    {/* Inventory Section */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <span className="text-2xl">📦</span>
+                                Available Inventory
+                            </h2>
+                            <button
+                                onClick={fetchInventory}
+                                className="text-sm text-blue-500 hover:text-blue-700 font-semibold"
+                            >
+                                🔄 Refresh
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {inventory.length > 0 ? (
+                                inventory.map(item => (
+                                    <div key={item._id} className="bg-gray-50 dark:bg-gray-900/30 p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                {item.itemName && (
+                                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">{item.itemName}</h4>
+                                                )}
+                                                <span className={`px-3 py-1 rounded-lg text-lg font-bold ${item.bloodGroup?.includes('+') ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                                                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                                    }`}>
+                                                    {item.bloodGroup}
+                                                </span>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 capitalize">
+                                                    {item.donationType?.replace('_', ' ')}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                            <div className="flex justify-between">
+                                                <span>Available Units:</span>
+                                                <span className="font-bold text-gray-900 dark:text-gray-200">{item.unitsCount}</span>
+                                            </div>
+                                            {item.status === 'available' && item.unitsCount > 0 ? (
+                                                <div className="flex justify-between">
+                                                    <span>Serial Range:</span>
+                                                    <span className="font-mono text-xs text-gray-900 dark:text-gray-200">
+                                                        {item.firstSerialNumber}-{item.lastSerialNumber}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-between">
+                                                    <span>Status:</span>
+                                                    <span className="font-bold text-orange-600 dark:text-orange-400">
+                                                        {item.status === 'used' ? 'Fully Purchased' : item.status}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between">
+                                                <span>Expiry:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-200">
+                                                    {new Date(item.expiryDate).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span>Location:</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-200">
+                                                    {item.location || 'Storage'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => {
+                                                setSelectedItem(item);
+                                                setPurchaseForm({
+                                                    units: 1,
+                                                    patientName: doctorBooking?.patientName || '',
+                                                    patientId: doctorBooking?.patientMRID || '',
+                                                    notes: ''
+                                                });
+                                                setShowPurchaseModal(true);
+                                            }}
+                                            className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg transition-all shadow-lg"
+                                        >
+                                            💳 Purchase by Unit
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-full py-8 text-center text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                    {loadingInventory ? 'Loading inventory...' : 'No available inventory items found.'}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Search Section */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                             <span className="text-2xl">🔍</span>
-                            Find Donor
+                            Find Donor for Assessment
                         </h2>
                         <form onSubmit={handleDoctorTokenSearch} className="flex gap-4 max-w-2xl">
                             <input
@@ -107,7 +264,6 @@ export default function DoctorDashboard() {
                                 className="flex-1 px-6 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-lg focus:ring-4 focus:ring-pink-500/20 focus:border-pink-500 outline-none transition"
                                 value={doctorToken}
                                 onChange={(e) => setDoctorToken(e.target.value)}
-                                autoFocus
                             />
                             <button
                                 type="submit"
@@ -295,6 +451,115 @@ export default function DoctorDashboard() {
                     )}
                 </div>
             </div>
+
+            {/* Purchase Modal */}
+            {showPurchaseModal && selectedItem && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn">
+                        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                💳 Purchase Inventory by Unit
+                            </h3>
+                            <button
+                                onClick={() => setShowPurchaseModal(false)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="p-6 bg-gray-50 dark:bg-gray-900/30">
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className={`px-3 py-1 rounded-lg text-sm font-bold ${selectedItem.bloodGroup?.includes('+') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
+                                    }`}>
+                                    {selectedItem.bloodGroup}
+                                </span>
+                                <span className="text-gray-600 dark:text-gray-300 text-sm">
+                                    {selectedItem.itemName || 'Blood Product'}
+                                </span>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                                <p>Available Units: <span className="font-bold text-gray-900 dark:text-white">{selectedItem.unitsCount}</span></p>
+                                <p>Serial Range: <span className="font-mono text-xs">{selectedItem.firstSerialNumber}-{selectedItem.lastSerialNumber}</span></p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handlePurchaseItem} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Number of Units <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    max={selectedItem.unitsCount}
+                                    value={purchaseForm.units}
+                                    onChange={(e) => setPurchaseForm({ ...purchaseForm, units: parseInt(e.target.value) || 1 })}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="1"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Patient Name <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={purchaseForm.patientName}
+                                    onChange={(e) => setPurchaseForm({ ...purchaseForm, patientName: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Patient name"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Patient ID / MRID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={purchaseForm.patientId}
+                                    onChange={(e) => setPurchaseForm({ ...purchaseForm, patientId: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Optional ID"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Notes
+                                </label>
+                                <textarea
+                                    rows="2"
+                                    value={purchaseForm.notes}
+                                    onChange={(e) => setPurchaseForm({ ...purchaseForm, notes: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Additional details..."
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPurchaseModal(false)}
+                                    className="px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-lg transition"
+                                >
+                                    Confirm Purchase
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }
