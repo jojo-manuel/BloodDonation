@@ -19,6 +19,10 @@ export default function BleedingStaffDashboard() {
     const [showBillModal, setShowBillModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [billBookingDetails, setBillBookingDetails] = useState(null);
+    const [issuedInventory, setIssuedInventory] = useState([]);
+    const [cart, setCart] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [showInventoryPicker, setShowInventoryPicker] = useState(false);
     const [billForm, setBillForm] = useState({
         tokenNumber: '',
         patientName: '',
@@ -32,9 +36,17 @@ export default function BleedingStaffDashboard() {
 
     // Fetch data on mount
     React.useEffect(() => {
+        fetchCurrentUser();
         fetchBookings();
         fetchInventory();
     }, []);
+
+    // Re-fetch inventory when user is loaded to get issued items
+    React.useEffect(() => {
+        if (currentUser) {
+            fetchIssuedInventory();
+        }
+    }, [currentUser]);
 
     // Refetch when filterDate changes
     React.useEffect(() => {
@@ -56,28 +68,48 @@ export default function BleedingStaffDashboard() {
         }
     };
 
+    const fetchCurrentUser = async () => {
+        try {
+            const res = await api.get('/users/me');
+            if (res.data.success) {
+                setCurrentUser(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching user:", err);
+        }
+    };
+
     const fetchInventory = async () => {
         try {
             setLoadingInventory(true);
-            // Fetch from store-manager endpoint to get all available inventory
             const res = await api.get('/store-manager/inventory?status=available');
             if (res.data.success) {
-                setInventory(res.data.data);
+                // Sort by serial number ascending (numeric aware)
+                const sorted = res.data.data.sort((a, b) => {
+                    const serialA = a.firstSerialNumber || a.serialNumber || '';
+                    const serialB = b.firstSerialNumber || b.serialNumber || '';
+                    return serialA.localeCompare(serialB, undefined, { numeric: true });
+                });
+                setInventory(sorted);
             }
         } catch (err) {
             console.error("Error fetching inventory:", err);
-            // Try fallback to store-staff endpoint
-            try {
-                const fallbackRes = await api.get('/store-staff/inventory?includeAllocated=true');
-                if (fallbackRes.data.success) {
-                    setInventory(fallbackRes.data.data);
-                }
-            } catch (fallbackErr) {
-                console.error("Fallback inventory fetch also failed:", fallbackErr);
-                showToast("Failed to load inventory", "error");
-            }
+            showToast("Failed to load inventory", "error");
         } finally {
             setLoadingInventory(false);
+        }
+    };
+
+    const fetchIssuedInventory = async () => {
+        if (!currentUser) return;
+        try {
+            // Fetch items reserved/issued to this user
+            const res = await api.get(`/store-manager/inventory?status=reserved&allocatedTo=${currentUser._id}`);
+            if (res.data.success) {
+                setIssuedInventory(res.data.data);
+            }
+        } catch (err) {
+            console.error("Error fetching issued inventory:", err);
         }
     };
 
@@ -110,23 +142,66 @@ export default function BleedingStaffDashboard() {
 
     const handleBleedingComplete = async () => {
         if (!searchedBooking) return;
-        if (!bleedingData.weight || !bleedingData.bagSerialNumber) {
-            showToast('Please enter both Weight and Bag Serial Number', 'warning');
+
+        let finalSerialNumber = bleedingData.bagSerialNumber;
+        let finalWeight = bleedingData.weight;
+
+        // If inventory item selected, consume it
+        if (bleedingData.selectedInventoryId) {
+            setUpdatingBleeding(true);
+            try {
+                const purchaseData = {
+                    units: 1,
+                    patientName: `Donor: ${searchedBooking.donorName}`,
+                    notes: `Donation Blood Bag for Token ${searchedBooking.tokenNumber}`
+                };
+
+                const res = await api.post(`/store-manager/inventory/${bleedingData.selectedInventoryId}/purchase`, purchaseData);
+                if (res.data.success) {
+                    // Get the generated serial
+                    const purchaseInfo = res.data.data;
+                    // Use firstSerialNumber if string, or create from range
+                    if (purchaseInfo.purchasedSerials && purchaseInfo.purchasedSerials.start) {
+                        // The route returns { start: X, end: Y, count: 1 }
+                        // If X is numeric, handled. If string (e.g. BAG-001), handled.
+                        // finalSerialNumber = purchaseInfo.purchasedSerials.start;
+                    } else {
+                        // Fallback logic if route changed
+                        // finalSerialNumber = purchaseInfo.serialNumber;
+                    }
+                    // Use the user's manual input if present, otherwise fall back to purchased one
+                    if (!bleedingData.bagSerialNumber) {
+                        finalSerialNumber = purchaseInfo.purchasedSerials?.start || purchaseInfo.serialNumber;
+                    }
+                    showToast(`Inventory updated. Used Serial: ${purchaseInfo.purchasedSerials?.start || purchaseInfo.serialNumber}`, 'success');
+                    showToast(`Allocated Bag Serial: ${finalSerialNumber}`, 'success');
+                }
+            } catch (err) {
+                console.error("Failed to allocate bag", err);
+                showToast("Failed to allocate bag from inventory. Please enter manually.", 'error');
+                setUpdatingBleeding(false);
+                return; // Stop here
+            }
+        }
+
+        if (!finalWeight || !finalSerialNumber) {
+            showToast('Please enter Weight and ensure Bag Serial Number is selected/entered', 'warning');
+            setUpdatingBleeding(false);
             return;
         }
 
-        setUpdatingBleeding(true);
         try {
             const res = await api.put(`/bloodbank/bookings/${searchedBooking._id}/status`, {
                 status: 'completed',
-                weight: bleedingData.weight,
-                bagSerialNumber: bleedingData.bagSerialNumber
+                weight: finalWeight,
+                bagSerialNumber: finalSerialNumber
             });
 
             if (res.data.success) {
-                setSearchedBooking(res.data.data); // Update view with new data
+                setSearchedBooking(res.data.data);
                 showToast('Donation completed and verified successfully! 🎉', 'success');
-                fetchBookings(); // Refresh bookings list
+                fetchBookings();
+                fetchInventory(); // Refresh stock
             }
         } catch (err) {
             console.error("Failed to complete bleeding", err);
@@ -135,6 +210,8 @@ export default function BleedingStaffDashboard() {
             setUpdatingBleeding(false);
         }
     };
+
+
 
     // Inventory Billing Functions
     const handleTokenSearchForBill = async (tokenOverride) => {
@@ -175,18 +252,94 @@ export default function BleedingStaffDashboard() {
         if (!selectedItem) return;
 
         try {
-            // Using store-staff endpoint
-            const response = await api.put(`/store-staff/inventory/${selectedItem._id}/bill`, billForm);
+            // Backend expects units, patientName, patientId, notes
+            const purchaseData = {
+                units: 1, // Defaulting to 1 for ad-hoc buy
+                patientName: billForm.patientName,
+                patientId: billForm.patientId,
+                notes: `${billForm.notes || ''} [Price: ${billForm.price}]`.trim()
+            };
+
+            const response = await api.post(`/store-manager/inventory/${selectedItem._id}/purchase`, purchaseData);
             if (response.data.success) {
                 showToast("Item billed successfully", "success");
                 setShowBillModal(false);
                 setSelectedItem(null);
                 setBillForm({ tokenNumber: '', patientName: '', patientId: '', price: '', notes: '' });
-                fetchInventory(); // Refresh inventory
+                fetchInventory();
+                fetchIssuedInventory();
             }
         } catch (err) {
             console.error('Bill item error:', err);
             showToast(err.response?.data?.message || "Failed to bill item", 'error');
+        }
+    };
+
+    const addToCart = (item) => {
+        setCart(prev => {
+            // Check if item already exists
+            const exists = prev.find(i => i._id === item._id);
+            if (exists) {
+                showToast("Item already in cart", "info");
+                return prev;
+            }
+            return [...prev, { ...item, unitsToBill: 1 }];
+        });
+        showToast("Added to donor's bill", "success");
+    };
+
+    const updateCartQuantity = (itemId, newQty) => {
+        setCart(prev => prev.map(item => {
+            if (item._id === itemId) {
+                // Validate against available stock
+                const max = item.unitsCount;
+                const qty = Math.max(1, Math.min(newQty, max));
+                return { ...item, unitsToBill: qty };
+            }
+            return item;
+        }));
+    };
+
+    const removeFromCart = (itemId) => {
+        setCart(prev => prev.filter(i => i._id !== itemId));
+    };
+
+    const handleBulkPurchase = async () => {
+        if (!searchedBooking || cart.length === 0) return;
+
+        const loadingToast = showToast("Processing billing...", "info");
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // Process sequentially to avoid overwhelming or race conditions
+        for (const item of cart) {
+            try {
+                const bestName = searchedBooking.patientName || searchedBooking.donorName || 'Unknown';
+                const purchaseData = {
+                    units: item.unitsToBill || 1,
+                    patientName: bestName,
+                    patientId: searchedBooking.patientMRID || '',
+                    notes: `Billed from Bleeding Dashboard for Token #${searchedBooking.tokenNumber}`
+                };
+
+                await api.post(`/store-manager/inventory/${item._id}/purchase`, purchaseData);
+                successCount++;
+            } catch (err) {
+                console.error(`Failed to bill item ${item.itemName}`, err);
+                failCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            showToast(`Successfully billed ${successCount} items!`, "success");
+            setCart([]); // Clear cart
+            fetchInventory();
+            fetchIssuedInventory();
+        }
+
+        if (failCount > 0) {
+            showToast(`Failed to bill ${failCount} items. check logs.`, "warning");
         }
     };
 
@@ -202,7 +355,7 @@ export default function BleedingStaffDashboard() {
 
     return (
         <Layout>
-            <div className="min-h-screen py-8">
+            <div className="min-h-screen w-full p-0">
                 <div className="flex justify-between items-center mb-8 bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -221,7 +374,7 @@ export default function BleedingStaffDashboard() {
                 </div>
 
                 {/* Search Section */}
-                <div className="max-w-4xl mx-auto mb-12">
+                <div className="w-full mx-auto mb-12">
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                             <span className="text-2xl">🔎</span>
@@ -248,9 +401,9 @@ export default function BleedingStaffDashboard() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
-                    {/* Today's Queue Section */}
-                    <div className="w-full">
+                <div className="w-full">
+                    {/* Today's Queue Section - Now Full Width */}
+                    <div className="w-full mb-12">
                         <div className="flex justify-between items-end mb-4 px-2">
                             <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Booked Slots</h3>
                             <div className="flex gap-3 items-center">
@@ -342,122 +495,6 @@ export default function BleedingStaffDashboard() {
                             )}
                         </div>
                     </div>
-
-
-                    {/* Inventory & Purchase Section */}
-                    <div className="w-full mb-12">
-                        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2 flex justify-between items-center">
-                            <span>Available Inventory for Purchase</span>
-                            <button onClick={fetchInventory} className="text-sm text-blue-500 hover:text-blue-700">Refresh</button>
-                        </h3>
-
-                        {/* Info Banner */}
-                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <div className="flex items-start gap-3">
-                                <span className="text-2xl">ℹ️</span>
-                                <div className="flex-1">
-                                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">How to Purchase Inventory</h4>
-                                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                                        <li><strong>🎫 With Booking:</strong> Search for a patient's token above, then click "Bill to Patient" to auto-fill their details</li>
-                                        <li><strong>💰 Direct Purchase:</strong> Click "Buy Now" and manually enter patient name and details</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {inventory.length > 0 ? (
-                                inventory.map(item => (
-                                    <div key={item._id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                {item.itemName && (
-                                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">{item.itemName}</h4>
-                                                )}
-                                                {item.bloodGroup ? (
-                                                    <span className={`px-2 py-1 rounded text-lg font-bold ${item.bloodGroup.includes('+') ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-                                                        }`}>
-                                                        {item.bloodGroup}
-                                                    </span>
-                                                ) : (
-                                                    <span className="px-2 py-1 rounded text-sm font-bold bg-gray-100 text-gray-700">
-                                                        General Item
-                                                    </span>
-                                                )}
-                                                <p className="text-xs text-gray-500 mt-1 capitalize">{item.donationType?.replace('_', ' ')}</p>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedItem(item);
-                                                        // Auto-fill from searched booking if available
-                                                        if (searchedBooking) {
-                                                            // Determine the best available name
-                                                            const bestName = searchedBooking.patientName ||
-                                                                (searchedBooking.meta && searchedBooking.meta.patientName) ||
-                                                                searchedBooking.requesterName ||
-                                                                (searchedBooking.meta && searchedBooking.meta.requesterName) ||
-                                                                searchedBooking.donorName ||
-                                                                (searchedBooking.donorId && searchedBooking.donorId.name) || '';
-
-                                                            setBillForm(prev => ({
-                                                                ...prev,
-                                                                tokenNumber: searchedBooking.tokenNumber || '',
-                                                                patientName: bestName,
-                                                                patientId: searchedBooking.patientMRID || ''
-                                                            }));
-
-                                                            // Fetch full details
-                                                            if (searchedBooking.tokenNumber) {
-                                                                handleTokenSearchForBill(searchedBooking.tokenNumber);
-                                                            }
-                                                        } else {
-                                                            // Clear form for direct purchase
-                                                            setBillForm({
-                                                                tokenNumber: '',
-                                                                patientName: '',
-                                                                patientId: '',
-                                                                price: '',
-                                                                notes: ''
-                                                            });
-                                                            setBillBookingDetails(null);
-                                                        }
-                                                        setShowBillModal(true);
-                                                    }}
-                                                    className="flex-1 px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
-                                                    title={searchedBooking ? "Bill to selected patient" : "Direct purchase - enter patient details"}
-                                                >
-                                                    {searchedBooking ? '🎫 Bill to Patient' : '💰 Buy Now'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                                            <div className="flex justify-between">
-                                                <span>Units:</span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-200">{item.unitsCount}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Expiry:</span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-200">
-                                                    {new Date(item.expiryDate).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Location:</span>
-                                                <span className="font-medium text-gray-900 dark:text-gray-200">{item.location || 'Storage'}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="col-span-full py-8 text-center text-gray-500 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                                    {loadingInventory ? 'Loading inventory...' : 'No available inventory items found.'}
-                                </div>
-                            )}
-                        </div>
-
-                    </div>
                 </div>
 
                 {/* Results Section */}
@@ -465,22 +502,24 @@ export default function BleedingStaffDashboard() {
                     <div className="w-full animate-fadeIn">
                         <div className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl border border-white/10">
                             {/* Header */}
-                            <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 flex justify-between items-center border-b border-gray-700">
-                                <div className="flex items-center gap-6">
-                                    <div className="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-mono font-bold text-2xl shadow-lg border border-yellow-200">
-                                        #{searchedBooking.tokenNumber}
+                            <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 border-b border-gray-700">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div className="flex items-center gap-6">
+                                        <div className="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-mono font-bold text-2xl shadow-lg border border-yellow-200">
+                                            #{searchedBooking.tokenNumber}
+                                        </div>
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-white mb-1">{searchedBooking.donorName}</h2>
+                                            <p className="text-gray-400 font-mono text-sm">ID: {searchedBooking.bookingId}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 className="text-3xl font-bold text-white mb-1">{searchedBooking.donorName}</h2>
-                                        <p className="text-gray-400 font-mono text-sm">ID: {searchedBooking.bookingId}</p>
+                                    <div className="text-right">
+                                        <div className={`text-4xl font-extrabold ${searchedBooking.bloodGroup.includes('+') ? 'text-red-500' : 'text-orange-500'
+                                            }`}>
+                                            {searchedBooking.bloodGroup}
+                                        </div>
+                                        <div className="text-gray-400 text-sm font-semibold uppercase tracking-wider mt-1">Blood Group</div>
                                     </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className={`text-4xl font-extrabold ${searchedBooking.bloodGroup.includes('+') ? 'text-red-500' : 'text-orange-500'
-                                        }`}>
-                                        {searchedBooking.bloodGroup}
-                                    </div>
-                                    <div className="text-gray-400 text-sm font-semibold uppercase tracking-wider mt-1">Blood Group</div>
                                 </div>
                             </div>
 
@@ -530,16 +569,160 @@ export default function BleedingStaffDashboard() {
 
                                             <div>
                                                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wider">
-                                                    👜 Bag Serial Number
+                                                    👜 Select Blood Bag (Inventory)
                                                 </label>
-                                                <input
-                                                    type="text"
-                                                    value={bleedingData.bagSerialNumber}
-                                                    onChange={(e) => setBleedingData({ ...bleedingData, bagSerialNumber: e.target.value })}
-                                                    disabled={searchedBooking.status === 'completed'}
-                                                    className="w-full px-5 py-4 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-2xl font-mono font-bold text-gray-900 dark:text-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all"
-                                                    placeholder="SCAN-BAG-001"
-                                                />
+                                                <div className="space-y-2">
+                                                    <select
+                                                        value={bleedingData.selectedInventoryId || ''}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const item = inventory.find(i => i._id === val);
+                                                            setBleedingData(prev => ({
+                                                                ...prev,
+                                                                selectedInventoryId: val,
+                                                                // Auto-fill with the next serial number
+                                                                bagSerialNumber: item ? (item.firstSerialNumber || item.serialNumber) : prev.bagSerialNumber
+                                                            }));
+                                                        }}
+                                                        disabled={searchedBooking.status === 'completed'}
+                                                        className="w-full px-5 py-3 rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-lg font-mono text-gray-900 dark:text-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all"
+                                                    >
+                                                        <option value="">-- Select Inventory Bag (Auto-Fill) --</option>
+                                                        {inventory.map(item => (
+                                                            <option key={item._id} value={item._id}>
+                                                                {item.itemName} (Next: {item.firstSerialNumber || item.serialNumber}) - {item.unitsCount} left
+                                                            </option>
+                                                        ))}
+                                                    </select>
+
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            value={bleedingData.bagSerialNumber}
+                                                            onChange={(e) => setBleedingData({ ...bleedingData, bagSerialNumber: e.target.value })}
+                                                            disabled={searchedBooking.status === 'completed'}
+                                                            className={`w-full px-5 py-3 rounded-xl border-2 ${bleedingData.selectedInventoryId ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'} text-lg font-mono text-gray-900 dark:text-white focus:border-red-500 transition-all`}
+                                                            placeholder="Scan or Enter Bag Serial Number..."
+                                                        />
+                                                        {bleedingData.selectedInventoryId && (
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 dark:text-green-400 text-xs font-bold bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm border border-green-200">
+                                                                Auto-Filled from Inventory
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Used Invenory / Cart Section */}
+                                        <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-800">
+                                            <h3 className="text-blue-800 dark:text-blue-200 font-bold uppercase text-xs tracking-wider mb-3 flex justify-between items-center">
+                                                <span>Used Inventory / Consumables</span>
+                                                <span className="bg-blue-200 text-blue-800 py-0.5 px-2 rounded-full text-[10px]">{cart.length} items</span>
+                                            </h3>
+
+                                            {cart.length > 0 ? (
+                                                <div className="space-y-3 mb-4">
+                                                    {cart.map((item) => (
+                                                        <div key={item._id} className="flex flex-col gap-3 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+                                                            <div className="flex justify-between items-start">
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-bold text-gray-900 dark:text-white">{item.itemName || item.bloodGroup || 'Item'}</span>
+                                                                        <span className="text-[10px] uppercase font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                                                                            {searchedBooking.patientName || searchedBooking.donorName}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-xs text-gray-500 mt-0.5">Serial: {item.firstSerialNumber === item.lastSerialNumber ? item.firstSerialNumber : `${item.firstSerialNumber}-...`}</p>
+                                                                    <p className="text-xs text-gray-400">Stock: {item.unitsCount}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => removeFromCart(item._id)}
+                                                                    className="text-gray-400 hover:text-red-500 transition"
+                                                                >
+                                                                    ✕
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+                                                                <span className="text-xs font-semibold text-gray-500 uppercase">Quantity</span>
+                                                                <div className="flex items-center gap-3">
+                                                                    <button
+                                                                        onClick={() => updateCartQuantity(item._id, (item.unitsToBill || 1) - 1)}
+                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-bold"
+                                                                    >
+                                                                        -
+                                                                    </button>
+                                                                    <span className="font-mono font-bold text-gray-900 dark:text-white w-8 text-center">
+                                                                        {item.unitsToBill || 1}
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => updateCartQuantity(item._id, (item.unitsToBill || 1) + 1)}
+                                                                        className="w-6 h-6 flex items-center justify-center rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 font-bold"
+                                                                    >
+                                                                        +
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        onClick={handleBulkPurchase}
+                                                        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors"
+                                                    >
+                                                        Confirm Usage & Bill All
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-4 text-gray-400 text-sm italic">
+                                                    No items added yet. Click "+ Add Consumable"
+                                                </div>
+                                            )}
+
+                                            <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                                                <label className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase mb-2 block">Quick Add Consumable</label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        className="flex-1 text-sm rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 p-2 focus:ring-2 focus:ring-blue-500"
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (!val) return;
+                                                            // Search in both arrays
+                                                            const item = issuedInventory.find(i => i._id === val) || inventory.find(i => i._id === val);
+                                                            if (item) {
+                                                                addToCart(item);
+                                                            }
+                                                            e.target.value = ""; // Reset
+                                                        }}
+                                                    >
+                                                        <option value="">Select item to add...</option>
+                                                        {issuedInventory.length > 0 && (
+                                                            <optgroup label="Issued to You">
+                                                                {issuedInventory.map(i => (
+                                                                    <option key={i._id} value={i._id}>
+                                                                        {i.itemName} (Issued: {i.unitsCount})
+                                                                    </option>
+                                                                ))}
+                                                            </optgroup>
+                                                        )}
+                                                        {inventory.length > 0 && (
+                                                            <optgroup label="Store Inventory">
+                                                                {inventory.map(i => (
+                                                                    <option key={i._id} value={i._id}>
+                                                                        {i.itemName} (Stock: {i.unitsCount})
+                                                                    </option>
+                                                                ))}
+                                                            </optgroup>
+                                                        )}
+                                                    </select>
+                                                    <button
+                                                        onClick={() => setShowInventoryPicker(true)}
+                                                        className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition"
+                                                        title="Open Full Inventory Grid"
+                                                    >
+                                                        Grid
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -781,6 +964,89 @@ export default function BleedingStaffDashboard() {
                                         </button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Inventory Picker Modal */}
+                {showInventoryPicker && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scaleUp">
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Inventory to Bill</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Adding to Donor: {searchedBooking?.donorName}</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowInventoryPicker(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="p-6 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-gray-900/50 flex-1">
+                                {/* Issued Inventory Section */}
+                                {issuedInventory.length > 0 && (
+                                    <div className="mb-8">
+                                        <h4 className="text-sm font-bold uppercase text-purple-600 dark:text-purple-400 mb-3 flex items-center gap-2">
+                                            📦 Issued to You
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {issuedInventory.map(item => (
+                                                <div key={item._id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800 flex justify-between items-center">
+                                                    <div>
+                                                        <p className="font-bold text-gray-900 dark:text-white">{item.itemName}</p>
+                                                        <p className="text-xs text-gray-500">Available: {item.unitsCount}</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => addToCart(item)}
+                                                        className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-lg transition active:scale-95"
+                                                    >
+                                                        Add +
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* General Inventory Section */}
+                                <div>
+                                    <h4 className="text-sm font-bold uppercase text-gray-500 dark:text-gray-400 mb-3 flex justify-between items-center">
+                                        <span>🏭 Store Inventory</span>
+                                        <button onClick={fetchInventory} className="text-blue-500 hover:text-blue-600 text-xs">Refresh</button>
+                                    </h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {inventory.map(item => (
+                                            <div key={item._id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:border-blue-400 transition">
+                                                <div className="mb-2">
+                                                    <p className="font-bold text-gray-900 dark:text-white truncate" title={item.itemName}>{item.itemName || 'Item'}</p>
+                                                    <p className="text-xs text-gray-500">Exp: {new Date(item.expiryDate).toLocaleDateString()}</p>
+                                                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Stock: {item.unitsCount}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => addToCart(item)}
+                                                    className="w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-600 hover:text-white text-gray-700 dark:text-gray-200 text-sm font-bold rounded-lg transition active:scale-95"
+                                                >
+                                                    Select to Add +
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {inventory.length === 0 && (
+                                        <p className="text-center text-gray-400 text-sm py-4">No available inventory found.</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-2xl flex justify-between items-center">
+                                <span className="text-sm text-gray-500">{cart.length} items in cart</span>
+                                <button
+                                    onClick={() => setShowInventoryPicker(false)}
+                                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg shadow-blue-500/30 transition"
+                                >
+                                    Done Selecting
+                                </button>
                             </div>
                         </div>
                     </div>

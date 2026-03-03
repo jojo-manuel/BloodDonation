@@ -222,8 +222,10 @@ export default function Login() {
 
           const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
           const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const currentPort = window.location.port;
+          const isStandardPort = ['3000', '3001', '3002', '3003'].includes(currentPort);
 
-          if (isLocalhost) {
+          if (isLocalhost && isStandardPort) {
             if (user?.role.toLowerCase() === 'admin') {
               window.location.href = `http://localhost:3001/auth/callback?${authParams}`;
             } else if (user?.role.toLowerCase() === 'bloodbank' || staffRoles.includes(user?.role)) {

@@ -56,7 +56,7 @@ function Navbar({ onLogout }) {
   };
 
   return (
-    <nav className="mx-auto flex w-full items-center justify-between px-4 py-5 md:px-6">
+    <nav className="mx-auto flex w-full items-center justify-between px-2 py-1 md:px-4">
       <Link to="/" className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg ring-1 ring-black/10 dark:ring-white/10">
           <span className="text-xl">🩸</span>
@@ -130,11 +130,11 @@ export default function Layout({ children }) {
       <div className="pointer-events-none absolute top-32 -right-16 h-80 w-80 rounded-full bg-red-500/30 blur-3xl dark:bg-amber-500/20" />
       <div className="pointer-events-none absolute -bottom-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-pink-400/20 blur-3xl dark:bg-fuchsia-600/20" />
 
-      <header className="relative z-10">
+      <header className="relative z-10 w-full">
         <Navbar />
       </header>
 
-      <main className="relative z-10 mx-auto w-full px-4 pb-16 md:px-6 md:pb-24">
+      <main className="relative z-10 mx-auto w-full pb-16 md:pb-24">
         {children}
       </main>
 

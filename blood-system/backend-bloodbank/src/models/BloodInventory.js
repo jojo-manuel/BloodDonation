@@ -12,9 +12,17 @@ const bloodInventorySchema = new mongoose.Schema({
   },
   donationType: {
     type: String,
-    enum: ['whole_blood', 'plasma', 'platelets', 'red_cells', 'white_cells'],
+    enum: ['whole_blood', 'plasma', 'platelets', 'red_cells', 'white_cells', 'empty_bag'],
     default: 'whole_blood',
     required: false
+  },
+  firstSerialNumber: {
+    type: String,
+    trim: true
+  },
+  lastSerialNumber: {
+    type: String,
+    trim: true
   },
   serialNumber: {
     type: String,

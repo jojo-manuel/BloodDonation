@@ -350,6 +350,63 @@ export default function StoreManagerDashboard() {
         </div>
       </div>
 
+
+
+      {/* Quick Actions */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 my-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={() => {
+              setActiveTab('inventory');
+              setIsBulkBagMode(true);
+              setInventoryForm(prev => ({
+                ...prev,
+                itemName: 'Empty Blood Bag',
+                donationType: 'empty_bag',
+                bloodGroup: '',
+                quantity: 50,
+                status: 'available',
+                serialNumber: '',
+                collectionDate: new Date().toISOString().split('T')[0],
+                expiryDate: (() => {
+                  const d = new Date();
+                  d.setMonth(d.getMonth() + 24); // 2 years expiry default for bags
+                  return d.toISOString().split('T')[0];
+                })()
+              }));
+              setShowInventoryModal(true);
+            }}
+            className="flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+            Add Bulk Blood Bags
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('inventory');
+              setIsBulkBagMode(false);
+              setInventoryForm(prev => ({
+                ...prev,
+                itemName: '',
+                donationType: 'whole_blood',
+                bloodGroup: '',
+                quantity: 1,
+                status: 'available',
+                collectionDate: new Date().toISOString().split('T')[0],
+                expiryDate: ''
+              }));
+              setShowInventoryModal(true);
+            }}
+            className="flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add Regular Inventory
+          </button>
+        </div>
+      </div>
+
       {/* Recent Expiry Alerts */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Expiry Alerts</h3>
@@ -383,71 +440,100 @@ export default function StoreManagerDashboard() {
       </div>
 
       {/* Low Stock Alerts (10% Threshold) */}
-      {analytics.lowStockAlerts && analytics.lowStockAlerts.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-orange-200 dark:border-orange-700">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Low Stock Alerts</h3>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-              {analytics.lowStockCount} items
-            </span>
-          </div>
-          <div className="space-y-3">
-            {analytics.lowStockAlerts.slice(0, 5).map((alert, index) => {
-              const stockPercentage = alert.stockPercentage || ((alert.unitsCount / alert.initialUnitsCount) * 100);
-              const isVeryLow = stockPercentage <= 5;
-              return (
-                <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${isVeryLow ? 'bg-red-50 dark:bg-red-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isVeryLow ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
-                        <ExclamationTriangleIcon className={`w-4 h-4 ${isVeryLow ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`} />
+      {
+        analytics.lowStockAlerts && analytics.lowStockAlerts.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-orange-200 dark:border-orange-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Low Stock Alerts</h3>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                {analytics.lowStockCount} items
+              </span>
+            </div>
+            <div className="space-y-3">
+              {analytics.lowStockAlerts.slice(0, 5).map((alert, index) => {
+                const stockPercentage = alert.stockPercentage || ((alert.unitsCount / alert.initialUnitsCount) * 100);
+                const isVeryLow = stockPercentage <= 5;
+                return (
+                  <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${isVeryLow ? 'bg-red-50 dark:bg-red-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isVeryLow ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
+                          <ExclamationTriangleIcon className={`w-4 h-4 ${isVeryLow ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`} />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {alert.itemName || alert.bloodGroup || 'Item'}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {alert.unitsCount} / {alert.initialUnitsCount} units remaining
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {alert.itemName || alert.bloodGroup || 'Item'}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {alert.unitsCount} / {alert.initialUnitsCount} units remaining
-                      </p>
+                    <div className="text-right">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isVeryLow ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'}`}>
+                        {stockPercentage.toFixed(1)}% left
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isVeryLow ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'}`}>
-                      {stockPercentage.toFixed(1)}% left
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {analytics.lowStockAlerts.length > 5 && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setActiveTab('inventory')}
-                className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
-              >
-                View all {analytics.lowStockCount} low stock items →
-              </button>
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
+            {
+              analytics.lowStockAlerts.length > 5 && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setActiveTab('inventory')}
+                    className="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
+                  >
+                    View all {analytics.lowStockCount} low stock items →
+                  </button>
+                </div>
+              )
+            }
+          </div>
+        )
+      }
     </div >
   );
+
+  const [isBulkBagMode, setIsBulkBagMode] = useState(false);
 
   const renderInventory = () => (
     <div className="space-y-6">
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Blood Inventory</h2>
-        <button
-          onClick={() => setShowInventoryModal(true)}
-          className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Add Inventory
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setIsBulkBagMode(true);
+              setInventoryForm(prev => ({
+                ...prev,
+                itemName: 'Empty Blood Bag',
+                donationType: 'empty_bag',
+                bloodGroup: '',
+                quantity: 50, // Default bulk
+                status: 'available'
+              }));
+              setShowInventoryModal(true);
+            }}
+            className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+            Add Bulk Bags
+          </button>
+          <button
+            onClick={() => {
+              setIsBulkBagMode(false);
+              setShowInventoryModal(true);
+            }}
+            className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Add Inventory
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -503,6 +589,7 @@ export default function StoreManagerDashboard() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Item Name
                 </th>
@@ -532,11 +619,15 @@ export default function StoreManagerDashboard() {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {inventory.map((item) => {
                 const expiryStatus = getExpiryStatus(item.expiryDate);
+                // Map donation type to readable label
+                const donationTypeLabel = donationTypes.find(t => t.value === item.donationType)?.label || item.donationType;
+
                 return (
                   <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.itemName || 'General Item'}
+                        {item.itemName || 'Blood Bag'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
@@ -762,7 +853,7 @@ export default function StoreManagerDashboard() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Store Manager Dashboard</h1>
@@ -785,7 +876,7 @@ export default function StoreManagerDashboard() {
 
         {/* Navigation Tabs */}
         <div className="bg-white dark:bg-gray-800 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <nav className="flex space-x-8 overflow-x-auto">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -808,7 +899,7 @@ export default function StoreManagerDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {renderContent()}
         </div>
 
@@ -846,7 +937,13 @@ export default function StoreManagerDashboard() {
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={inventoryForm.serialNumber}
                           onChange={(e) => setInventoryForm({ ...inventoryForm, serialNumber: e.target.value })}
+                          placeholder="e.g. BAG-001 (will auto-increment)"
                         />
+                        {inventoryForm.quantity > 1 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            System will generate range from {inventoryForm.serialNumber}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -903,80 +1000,117 @@ export default function StoreManagerDashboard() {
                         />
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Temperature (°C)</label>
-                        <input
-                          type="text"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
-                          value={inventoryForm.temperature}
-                          onChange={(e) => setInventoryForm({ ...inventoryForm, temperature: e.target.value })}
-                          placeholder="e.g., 2-6"
-                        />
-                      </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Price (₹)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
-                          value={inventoryForm.price}
-                          onChange={(e) => setInventoryForm({ ...inventoryForm, price: e.target.value })}
-                          placeholder="0"
-                        />
-                      </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                        <select
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
-                          value={inventoryForm.status}
-                          onChange={(e) => setInventoryForm({ ...inventoryForm, status: e.target.value })}
-                        >
-                          <option value="available">Available</option>
-                          <option value="reserved">Reserved</option>
-                          <option value="used">Used</option>
-                          <option value="expired">Expired</option>
-                        </select>
-                      </div>
+                      {!isBulkBagMode && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Blood Group</label>
+                            <select
+                              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                              value={inventoryForm.bloodGroup}
+                              onChange={(e) => setInventoryForm({ ...inventoryForm, bloodGroup: e.target.value })}
+                            >
+                              <option value="">Select Group</option>
+                              <option value="A+">A+</option>
+                              <option value="A-">A-</option>
+                              <option value="B+">B+</option>
+                              <option value="B-">B-</option>
+                              <option value="AB+">AB+</option>
+                              <option value="AB-">AB-</option>
+                              <option value="O+">O+</option>
+                              <option value="O-">O-</option>
+                            </select>
+                          </div>
 
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                        <textarea
-                          rows={3}
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
-                          value={inventoryForm.notes}
-                          onChange={(e) => setInventoryForm({ ...inventoryForm, notes: e.target.value })}
-                          placeholder="Additional notes..."
-                        />
-                      </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Component</label>
+                            <select
+                              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                              value={inventoryForm.donationType}
+                              onChange={(e) => setInventoryForm({ ...inventoryForm, donationType: e.target.value })}
+                            >
+                              {donationTypes.map(type => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      )}
+
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Temperature (°C)</label>
+                      <input
+                        type="text"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                        value={inventoryForm.temperature}
+                        onChange={(e) => setInventoryForm({ ...inventoryForm, temperature: e.target.value })}
+                        placeholder="e.g., 2-6"
+                      />
                     </div>
-                  </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                    >
-                      {loading ? 'Saving...' : (editingItem ? 'Update' : 'Create')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowInventoryModal(false);
-                        resetForm();
-                      }}
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                    >
-                      Cancel
-                    </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Price (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                        value={inventoryForm.price}
+                        onChange={(e) => setInventoryForm({ ...inventoryForm, price: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                      <select
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                        value={inventoryForm.status}
+                        onChange={(e) => setInventoryForm({ ...inventoryForm, status: e.target.value })}
+                      >
+                        <option value="available">Available</option>
+                        <option value="reserved">Reserved</option>
+                        <option value="used" disabled={inventoryForm.quantity > 0}>Used (Requires 0 units)</option>
+                        <option value="expired">Expired</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                      <textarea
+                        rows={3}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
+                        value={inventoryForm.notes}
+                        onChange={(e) => setInventoryForm({ ...inventoryForm, notes: e.target.value })}
+                        placeholder="Additional notes..."
+                      />
+                    </div>
+
+                    <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse -mx-6 -mb-6 mt-6">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                      >
+                        {loading ? 'Saving...' : (editingItem ? 'Update' : 'Create')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowInventoryModal(false);
+                          resetForm();
+                        }}
+                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 </form>
               </div>
             </div>
           </div>
-        )}
+        )
+        }
 
 
 
@@ -993,7 +1127,7 @@ export default function StoreManagerDashboard() {
           onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
           inputPlaceholder={confirmModal.inputPlaceholder}
         />
-      </div>
-    </Layout>
+      </div >
+    </Layout >
   );
 }

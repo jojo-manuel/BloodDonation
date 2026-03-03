@@ -58,6 +58,27 @@ const userSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  // fields for staff-as-donor functionality
+  isDonor: {
+    type: Boolean,
+    default: false
+  },
+  bloodGroup: {
+    type: String,
+    enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Ah+', 'Ah-', 'Oh+', 'Oh-'],
+    trim: true
+  },
+  donorInfo: {
+    availability: { type: Boolean, default: true },
+    lastDonatedDate: { type: Date },
+    weight: { type: Number },
+    address: {
+      houseName: String,
+      city: String,
+      state: String,
+      pincode: String
+    }
   }
 }, {
   timestamps: true
@@ -69,18 +90,18 @@ userSchema.index({ email: 1 });
 userSchema.index({ hospital_id: 1, role: 1 });
 
 // Compare password method (don't hash on save since existing passwords are already hashed)
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Hash password method for new users
-userSchema.methods.hashPassword = async function(password) {
+userSchema.methods.hashPassword = async function (password) {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 };
 
 // Remove password from JSON output
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const userObject = this.toObject();
   delete userObject.password;
   return userObject;

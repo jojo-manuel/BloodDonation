@@ -11,7 +11,7 @@ const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'bloodbank_refresh_secr
 function signAccessToken(user) {
     return jwt.sign(
         {
-            id: user._id,
+            user_id: user._id,
             role: user.role,
             username: user.username || user.email,
             hospital_id: user.hospital_id
@@ -24,7 +24,7 @@ function signAccessToken(user) {
 function signRefreshToken(user) {
     return jwt.sign(
         {
-            id: user._id,
+            user_id: user._id,
             role: user.role
         },
         REFRESH_SECRET,
@@ -55,6 +55,7 @@ router.post('/login', async (req, res) => {
         });
 
         if (!user) {
+            console.log(`[DEBUG] Login Failed: User not found for ${identifier}`);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
@@ -63,6 +64,7 @@ router.post('/login', async (req, res) => {
 
         // Check if user is active
         if (!user.isActive || user.isBlocked || user.isSuspended) {
+            console.log(`[DEBUG] Login Failed: Account status issue for ${identifier}`);
             return res.status(403).json({
                 success: false,
                 message: 'Account is inactive or blocked'
@@ -72,6 +74,7 @@ router.post('/login', async (req, res) => {
         // Check password
         const isValidPassword = await user.comparePassword(password);
         if (!isValidPassword) {
+            console.log(`[DEBUG] Login Failed: Password mismatch for ${identifier}`);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
@@ -138,7 +141,7 @@ router.post('/refresh', (req, res) => {
             }
 
             // Find user
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(decoded.user_id);
             if (!user) {
                 return res.status(404).json({
                     success: false,
@@ -203,7 +206,7 @@ router.get('/me', async (req, res) => {
                 });
             }
 
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(decoded.user_id);
             if (!user) {
                 return res.status(404).json({
                     success: false,

@@ -63,20 +63,9 @@ app.use('/api/centrifuge-staff', centrifugeStaffRoutes);
 const { authMiddleware, requireBloodBankManager } = require('./middleware/auth');
 const requireAuth = [authMiddleware, requireBloodBankManager];
 
-// Add missing user routes
-app.get('/api/users/me', authMiddleware, (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      id: req.user.id,
-      username: req.user.username,
-      email: req.user.email,
-      name: req.user.name,
-      role: req.user.role,
-      hospital_id: req.user.hospital_id
-    }
-  });
-});
+// User Routes
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
 
 // Mount bloodbank manager routes
 app.use('/api/bloodbank', bloodbankManagerRoutes);

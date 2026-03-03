@@ -242,12 +242,45 @@ router.post('/inventory', requireAuth, async (req, res) => {
       });
     }
 
+    // Calculate range if quantity > 1
+    let firstSerialNumber = undefined;
+    let lastSerialNumber = undefined;
+
+    if (quantity > 1) {
+      // Try to extract numeric part to handle ranges (e.g. BAG-001)
+      const match = serialNumber.match(/^(.*?)(\d+)$/);
+      if (match) {
+        const prefix = match[1];
+        const numberPart = match[2];
+        const startNum = parseInt(numberPart, 10);
+        const endNum = startNum + (quantity - 1);
+
+        // Pad with zeros to match original length
+        const padding = numberPart.length;
+        const startStr = startNum.toString().padStart(padding, '0');
+        const endStr = endNum.toString().padStart(padding, '0');
+
+        firstSerialNumber = `${prefix}${startStr}`;
+        lastSerialNumber = `${prefix}${endStr}`;
+      } else {
+        // Fallback if no numeric part found at end
+        firstSerialNumber = serialNumber;
+        lastSerialNumber = `${serialNumber}-${quantity}`;
+      }
+    } else {
+      // Quantity 1
+      firstSerialNumber = serialNumber;
+      lastSerialNumber = serialNumber;
+    }
+
     const newItem = new BloodInventory({
       hospital_id,
       itemName: finalItemName,
       bloodGroup: bloodGroup || undefined,
       donationType: donationType || 'whole_blood',
-      serialNumber,
+      serialNumber, // Keep base serial
+      firstSerialNumber, // Add range start
+      lastSerialNumber, // Add range end
       unitsCount: quantity || 1,
       collectionDate: new Date(collectionDate),
       expiryDate: new Date(expiryDate),

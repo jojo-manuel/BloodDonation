@@ -9,7 +9,7 @@ const User = require('../Models/User');
 const requireStoreManager = async (req, res, next) => {
   try {
     // Allow doctors, bleeding staff, and centrifuge staff to view and purchase inventory
-    const allowedRoles = ['store_manager', 'bloodbank', 'doctor', 'bleeding_staff', 'centrifuge_staff'];
+    const allowedRoles = ['store_manager', 'bloodbank', 'doctor', 'bleeding_staff', 'centrifuge_staff', 'store_staff'];
 
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
@@ -166,6 +166,10 @@ router.get('/inventory', async (req, res) => {
 
     if (status && status !== 'all') {
       filter.status = status;
+    }
+
+    if (req.query.allocatedTo) {
+      filter.allocatedTo = req.query.allocatedTo;
     }
 
     if (expiry && expiry !== 'all') {
@@ -425,6 +429,23 @@ router.put('/inventory/:id', async (req, res) => {
       }
     }
 
+    // Prevent setting status to 'used' if units remain
+    if (updates.status === 'used') {
+      let estimatedUnits = inventoryItem.unitsCount;
+      if (updates.firstSerialNumber || updates.lastSerialNumber) {
+        const f = parseInt(updates.firstSerialNumber || inventoryItem.firstSerialNumber);
+        const l = parseInt(updates.lastSerialNumber || inventoryItem.lastSerialNumber);
+        estimatedUnits = l - f + 1;
+      }
+
+      if (estimatedUnits > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot set status to Used while units remain.'
+        });
+      }
+    }
+
     // Validate dates if being updated
     if (updates.collectionDate || updates.expiryDate) {
       const collectionDate = updates.collectionDate ? new Date(updates.collectionDate) : inventoryItem.collectionDate;
@@ -474,6 +495,7 @@ router.put('/inventory/:id', async (req, res) => {
   }
 });
 
+
 /**
  * PUT /api/store-manager/inventory/:id/status
  * Update inventory item status
@@ -497,6 +519,14 @@ router.put('/inventory/:id/status', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Inventory item not found'
+      });
+    }
+
+    // Prevent marking as used if units remain
+    if (status === 'used' && inventoryItem.unitsCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot mark as Used while units remain. Please update quantity or use Purchase.'
       });
     }
 
@@ -778,10 +808,17 @@ router.post('/inventory/:id/purchase', async (req, res) => {
     }
 
     if (inventoryItem.status !== 'available') {
-      return res.status(400).json({
-        success: false,
-        message: 'Item is not available for purchase'
-      });
+      // Allow purchasing reserved items if they are allocated to the current user
+      const isAllocatedToUser = inventoryItem.status === 'reserved' &&
+        inventoryItem.allocatedTo &&
+        inventoryItem.allocatedTo.toString() === req.user.id;
+
+      if (!isAllocatedToUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Item is not available for purchase (reserved or used)'
+        });
+      }
     }
 
     if (units > inventoryItem.unitsCount) {

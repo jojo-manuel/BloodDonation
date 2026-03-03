@@ -89,7 +89,11 @@ api.interceptors.response.use(
       return Promise.reject(new Error('Redirecting to login'));
     }
 
-    if (error.response?.status === 401 && !original._retry) {
+    // Check for 401 or 403 with specific expiration message (handling backend returning 403 for expired tokens)
+    const isTokenExpired = error.response?.status === 401 ||
+      (error.response?.status === 403 && (error.response?.data?.error === 'jwt expired' || error.response?.data?.message === 'Invalid or expired token'));
+
+    if (isTokenExpired && !original._retry) {
       original._retry = true;
 
       // Check if we have a refresh token

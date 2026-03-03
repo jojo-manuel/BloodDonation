@@ -6,9 +6,29 @@ const User = require('../models/User');
 const Patient = require('../models/Patient');
 const Booking = require('../models/Booking');
 
-// Simple auth middleware (you should use your actual auth middleware)
+// Simple auth middleware
 const requireAuth = [authMiddleware, requireBloodBankManager];
 const requireBookingAccess = [authMiddleware, requireRole(['bloodbank', 'BLOODBANK_ADMIN', 'store_manager', 'admin', 'bleeding_staff', 'doctor'])];
+
+/**
+ * GET /api/bloodbank/all
+ * Get all blood banks (accessible to all authenticated users)
+ */
+router.get('/all', authMiddleware, async (req, res) => {
+  try {
+    const bloodBanks = await User.find({ role: 'bloodbank' })
+      .select('name email phone address hospital_id isSuspended warningMessage')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: bloodBanks
+    });
+  } catch (error) {
+    console.error('Fetch all bloodbanks error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 /**
  * GET /api/bloodbank-manager/analytics
@@ -206,10 +226,10 @@ router.get('/bookings', requireBookingAccess, async (req, res) => {
  * PUT /api/bloodbank-manager/bookings/:id/status
  * Update booking status
  */
-router.put('/bookings/:id/status', requireAuth, async (req, res) => {
+router.put('/bookings/:id/status', requireBookingAccess, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, weight, bagSerialNumber } = req.body;
 
     const validStatuses = ['pending', 'confirmed', 'completed', 'rejected', 'cancelled'];
     if (!validStatuses.includes(status)) {
@@ -226,15 +246,62 @@ router.put('/bookings/:id/status', requireAuth, async (req, res) => {
 
     if (status === 'completed') {
       updateData.completedAt = new Date();
+      if (weight) updateData.weight = weight;
+      if (bagSerialNumber) updateData.bagSerialNumber = bagSerialNumber;
     }
 
-    const booking = await Booking.findByIdAndUpdate(id, updateData, { new: true });
+    const booking = await Booking.findByIdAndUpdate(id, updateData, { new: true }).populate('donorId');
 
     if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
       });
+    }
+
+    // AUTO-CREATE BLOOD BAG LOGIC
+    if (status === 'completed' && bagSerialNumber) {
+      try {
+        const BloodBag = require('../models/BloodBag'); // Lazy load model
+        // Check for existing bag
+        const existingBag = await BloodBag.findOne({ serialNumber: bagSerialNumber });
+
+        if (!existingBag) {
+          // Determine blood group: from donor or patient or fallback
+          let bloodGroup = booking.bloodGroup;
+          if (!bloodGroup && booking.donorId && booking.donorId.bloodGroup) {
+            bloodGroup = booking.donorId.bloodGroup;
+          }
+
+          // Create the Blood Bag
+          if (bloodGroup) {
+            const newBag = new BloodBag({
+              serialNumber: bagSerialNumber.toUpperCase(),
+              bloodGroup: bloodGroup,
+              donorName: booking.donorName || (booking.donorId ? booking.donorId.name : 'Unknown Donor'),
+              donorId: booking.donorId ? booking.donorId._id : undefined,
+              collectionDate: new Date(),
+              volume: weight ? parseInt(weight) : 450, // Assuming weight ~= volume for now, or standard 450
+              weight: weight ? parseInt(weight) : undefined,
+              status: 'received', // Ready for centrifuge
+              hospital_id: req.user.hospital_id,
+              receivedBy: req.user.id,
+              receivedAt: new Date(),
+              createdBy: req.user.id,
+              notes: `Collected from Booking ID: ${booking.bookingId || booking._id}`
+            });
+            await newBag.save();
+            console.log(`[Auto-Create] BloodBag ${bagSerialNumber} created from Booking ${id}`);
+          } else {
+            console.warn(`[Auto-Create] Skipped BloodBag creation for Booking ${id}: Missing Blood Group`);
+          }
+        } else {
+          console.warn(`[Auto-Create] BloodBag ${bagSerialNumber} already exists. Skipping creation.`);
+        }
+      } catch (bagError) {
+        console.error('[Auto-Create] Error creating BloodBag:', bagError);
+        // Do not fail the booking update request, just log the error
+      }
     }
 
     res.json({
@@ -686,7 +753,10 @@ router.get('/donors', requireAuth, async (req, res) => {
 
     const donors = await User.find({
       hospital_id,
-      role: { $in: ['DONOR', 'user'] }
+      $or: [
+        { role: { $in: ['DONOR', 'user'] } },
+        { isDonor: true }
+      ]
     }).select('-password').sort({ createdAt: -1 });
 
     res.json({

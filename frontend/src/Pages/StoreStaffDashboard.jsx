@@ -54,18 +54,12 @@ const StoreStaffDashboard = () => {
     notes: ''
   });
 
-  const [showAllocateModal, setShowAllocateModal] = useState(false);
-  const [allocateForm, setAllocateForm] = useState({
-    department: '',
-    userId: '',
-    notes: ''
-  });
-
   const [showBillModal, setShowBillModal] = useState(false);
   const [billForm, setBillForm] = useState({
     tokenNumber: '',
     patientName: '',
     patientId: '',
+    units: 1,
     price: '',
     notes: ''
   });
@@ -89,7 +83,7 @@ const StoreStaffDashboard = () => {
   const fetchInventory = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest('/store-staff/inventory', 'GET');
+      const response = await apiRequest('/store-manager/inventory', 'GET');
       setInventory(response.data || []);
     } catch (err) {
       setError('Failed to fetch inventory');
@@ -101,7 +95,7 @@ const StoreStaffDashboard = () => {
 
   const fetchStaff = async () => {
     try {
-      const response = await apiRequest('/store-staff/staff', 'GET');
+      const response = await apiRequest('/store-manager/staff', 'GET');
       setStaffList(response.data || []);
     } catch (err) {
       console.error('Staff fetch error:', err);
@@ -135,7 +129,7 @@ const StoreStaffDashboard = () => {
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
-      const response = await apiRequest('/store-staff/inventory', 'POST', newItem);
+      const response = await apiRequest('/store-manager/inventory', 'POST', newItem);
       if (response.success) {
         setInventory([response.data, ...inventory]);
         setShowAddModal(false);
@@ -170,7 +164,7 @@ const StoreStaffDashboard = () => {
         notes: `${selectedItem.notes || ''}\nTaken by ${takeForm.takenBy} for ${takeForm.department} - ${takeForm.reason}`.trim()
       };
 
-      const response = await apiRequest(`/store-staff/inventory/${selectedItem._id}`, 'PUT', updateData);
+      const response = await apiRequest('/store-manager/inventory/${selectedItem._id}/status', 'PUT', updateData);
       if (response.success) {
         setInventory(inventory.map(item =>
           item._id === selectedItem._id ? response.data : item
@@ -191,28 +185,13 @@ const StoreStaffDashboard = () => {
     }
   };
 
-  const handleAllocateItem = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await apiRequest(`/store-staff/inventory/${selectedItem._id}/allocate`, 'PUT', allocateForm);
-      if (response.success) {
-        setInventory(inventory.map(item =>
-          item._id === selectedItem._id ? response.data : item
-        ));
-        setShowAllocateModal(false);
-        setSelectedItem(null);
-        setAllocateForm({ department: '', userId: '', notes: '' });
-      }
-    } catch (err) {
-      setError('Failed to allocate item');
-    }
-  };
+
 
   const handleTokenSearch = async () => {
     if (!billForm.tokenNumber) return;
 
     try {
-      const response = await apiRequest(`/store-staff/bookings/token/${billForm.tokenNumber}`, 'GET');
+      const response = await apiRequest(`/bloodbank-manager/bookings/token/${billForm.tokenNumber}`, 'GET');
       if (response.success) {
         setBillForm(prev => ({
           ...prev,
@@ -227,16 +206,24 @@ const StoreStaffDashboard = () => {
   };
 
   const handleBillItem = async (e) => {
-    e.preventDefault();
     try {
-      const response = await apiRequest(`/store-staff/inventory/${selectedItem._id}/bill`, 'PUT', billForm);
+      // Backend expects units, patientName, patientId, possibly notes. 
+      // We map price to notes as backend purchase endpoint doesn't explicitly store price history yet except in notes.
+      const purchaseData = {
+        units: parseInt(billForm.units) || 1,
+        patientName: billForm.patientName,
+        patientId: billForm.patientId,
+        notes: `${billForm.notes || ''} [Price: ${billForm.price}]`.trim()
+      };
+
+      const response = await apiRequest(`/store-manager/inventory/${selectedItem._id}/purchase`, 'POST', purchaseData);
       if (response.success) {
         setInventory(inventory.map(item =>
           item._id === selectedItem._id ? response.data : item
         ));
         setShowBillModal(false);
         setSelectedItem(null);
-        setBillForm({ tokenNumber: '', patientName: '', patientId: '', price: '', notes: '' });
+        setBillForm({ tokenNumber: '', patientName: '', patientId: '', units: 1, price: '', notes: '' });
       }
     } catch (err) {
       setError('Failed to bill item');
@@ -246,7 +233,7 @@ const StoreStaffDashboard = () => {
 
   const handleUpdateItem = async (itemId, updates) => {
     try {
-      const response = await apiRequest(`/store-staff/inventory/${itemId}`, 'PUT', updates);
+      const response = await apiRequest(`/store-manager/inventory/${itemId}`, 'PUT', updates);
       if (response.success) {
         setInventory(inventory.map(item =>
           item._id === itemId ? response.data : item
@@ -263,7 +250,7 @@ const StoreStaffDashboard = () => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
 
     try {
-      await apiRequest(`/store-staff/inventory/${itemId}`, 'DELETE');
+      await apiRequest(`/store-manager/inventory/${itemId}`, 'DELETE');
       setInventory(inventory.filter(item => item._id !== itemId));
     } catch (err) {
       setError('Failed to delete item');
@@ -420,18 +407,7 @@ const StoreStaffDashboard = () => {
                         <Minus className="h-4 w-4" />
                       </button>
                     )}
-                    {item.status === 'available' && (
-                      <button
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setShowAllocateModal(true);
-                        }}
-                        className="text-purple-600 hover:text-purple-800"
-                        title="Allocate to Department"
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </button>
-                    )}
+
                     {['available', 'reserved'].includes(item.status) && (
                       <button
                         onClick={() => {
@@ -751,85 +727,7 @@ const StoreStaffDashboard = () => {
       )}
 
 
-      {/* Allocate Item Modal */}
-      {showAllocateModal && selectedItem && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">Allocate Item to Department</h3>
-              <button
-                onClick={() => setShowAllocateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
 
-            <div className="mb-4 p-3 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-600">
-                <strong>{selectedItem.bloodGroup}</strong> - Serial: {selectedItem.firstSerialNumber}-{selectedItem.lastSerialNumber} ({selectedItem.unitsCount} units)
-              </p>
-            </div>
-
-            <form onSubmit={handleAllocateItem} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Staff Member</label>
-                <select
-                  value={allocateForm.userId}
-                  onChange={(e) => setAllocateForm({ ...allocateForm, userId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Staff...</option>
-                  {staffList.map(staff => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.name} ({staff.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                <select
-                  value={allocateForm.department}
-                  onChange={(e) => setAllocateForm({ ...allocateForm, department: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Department</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Allocation Notes</label>
-                <textarea
-                  value={allocateForm.notes}
-                  onChange={(e) => setAllocateForm({ ...allocateForm, notes: e.target.value })}
-                  rows={2}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Reason for allocation or instructions..."
-                />
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAllocateModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
-                >
-                  Allocate
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
 
       {/* Bill Item Modal */}

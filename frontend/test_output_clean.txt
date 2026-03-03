@@ -1,0 +1,113 @@
+﻿  console.log
+    Logging in as jeevan@gmail.com...
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:28:17)
+
+  console.log
+    Navigating to donor search page...
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:47:17)
+
+  console.log
+    Γ£à Page loaded successfully
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:53:17)
+
+  console.log
+    Starting search by MRID 402...
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:57:17)
+
+  console.log
+    Waiting for results...
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:65:17)
+
+  console.log
+    Γ£à Found matching donors in results
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:77:17)
+
+  console.log
+    Searching by Blood Group B+...
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:81:17)
+
+  console.log
+    Γ£à Search by Blood Group B+ completed
+
+      at Object.<anonymous> (tests/donor-search-functional.test.js:97:17)
+
+node.exe : FAIL tests/donor-
+search-functional.test.js 
+(8.553 s)
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (FAIL   
+  tests/dono...st.js (8.5   
+ 53 s):String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+  Donor Search Functional 
+Test
+    ├ù should login as 
+blood bank admin (1542 ms)
+    ΓêÜ should load the 
+donor search page (377 ms)
+    ΓêÜ should search for 
+donors using patient MRID 
+402 (3187 ms)
+    ΓêÜ should search by 
+Blood Group B+ (2355 ms)
+
+  ΓùÅ Donor Search 
+Functional Test ΓÇ║ should 
+login as blood bank admin
+
+    
+UnexpectedAlertOpenError: 
+unexpected alert open: 
+{Alert text : Login Failed: 
+Login failed
+
+    ≡ƒÆí Tip: Make sure 
+you're using your EMAIL 
+ADDRESS (not username)
+    Example: 
+test@example.com}
+      (Session info: 
+chrome=145.0.7632.110)
+
+      at 
+Object.throwDecodedError (no
+de_modules/selenium-webdrive
+r/lib/error.js:523:15)
+      at parseHttpResponse (
+node_modules/selenium-webdri
+ver/lib/http.js:524:13)
+      at Executor.execute (n
+ode_modules/selenium-webdriv
+er/lib/http.js:456:28)
+      at Driver.execute (nod
+e_modules/selenium-webdriver
+/lib/webdriver.js:745:17)
+
+Test Suites: 1 failed, 1 
+total
+Tests:       1 failed, 3 
+passed, 4 total
+Snapshots:   0 total
+Time:        8.606 s, 
+estimated 10 s
+Ran all test suites 
+matching tests/donor-search-
+functional.test.js.

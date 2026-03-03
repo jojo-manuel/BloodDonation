@@ -93,11 +93,33 @@ router.post('/login', loginValidation, async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
         const token = generateToken(user);
+        // Create a separate refresh token or reuse the same strategy if needed
+        // For consistency with other backends, we should ideally sign a refresh token.
+        // However, backend-login uses generateToken for access_token. 
+        // Let's modify generateToken or create another one. 
+        // For now, let's just assume we need to align with frontend expectations which look for { accessToken, refreshToken }.
+        // But backend-login currently returns { token: ... }. 
+        // Let's update response to match expected structure { accessToken, refreshToken } IF possible,
+        // OR update frontend to handle { token } if that's what backend-login provided.
+        // Looking at frontend api.js, it expects `data.data.accessToken`.
+
+        // Let's align response to standard structure:
+        const payload = {
+            user_id: user._id,
+            email: user.email,
+            role: user.role,
+            hospital_id: user.hospital_id
+        };
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET || 'bloodbank_refresh_secret_2024', { expiresIn: '7d' });
 
         res.json({
             success: true,
             message: 'Login successful',
-            data: { user: user.toJSON(), token }
+            data: {
+                accessToken: token,
+                refreshToken: refreshToken,
+                user: user.toJSON()
+            }
         });
     } catch (error) {
         console.error('Login error:', error);

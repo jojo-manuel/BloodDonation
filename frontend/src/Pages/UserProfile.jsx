@@ -17,6 +17,15 @@ export default function UserProfile() {
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
   const navigate = useNavigate();
 
+  // Password update state
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
   useEffect(() => {
     fetchUserProfile();
   }, []);
@@ -97,6 +106,38 @@ export default function UserProfile() {
       alert('Error updating availability: ' + (error.response?.data?.message || error.message));
     } finally {
       setUpdatingAvailability(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert("New passwords do not match!");
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+
+    try {
+      setUpdatingPassword(true);
+      const response = await api.put('/users/password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+
+      if (response.data.success) {
+        alert("Password updated successfully!");
+        setShowPasswordChange(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        alert("Failed to update password: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating password:", error);
+      alert("Error updating password: " + (error.response?.data?.message || error.message));
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -281,13 +322,21 @@ export default function UserProfile() {
                   {editMode ? 'Cancel Edit' : 'Edit Profile'}
                 </button>
 
+                <button
+                  onClick={() => setShowPasswordChange(!showPasswordChange)}
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+                >
+                  <span className="mr-2">🔒</span>
+                  Change Password
+                </button>
+
                 {isDonor && (
                   <button
                     onClick={handleToggleAvailability}
                     disabled={updatingAvailability}
                     className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] ${donorInfo?.availability
-                        ? 'bg-gradient-to-r from-green-500 to-green-600'
-                        : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                      ? 'bg-gradient-to-r from-green-500 to-green-600'
+                      : 'bg-gradient-to-r from-gray-500 to-gray-600'
                       } ${updatingAvailability ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <span className="mr-2">{donorInfo?.availability ? '✅' : '⏸️'}</span>
@@ -307,211 +356,277 @@ export default function UserProfile() {
           </div>
         </div>
 
+
+        {/* Change Password Section (Toggle) */}
+        {
+          showPasswordChange && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8 animate-fadeIn">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🔒 Change Password</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Current Password</label>
+                  <input
+                    type="password"
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+                  <input
+                    type="password"
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={updatingPassword}
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updatingPassword ? 'Updating...' : 'Set New Password'}
+                </button>
+                <button
+                  onClick={() => setShowPasswordChange(false)}
+                  className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )
+        }
+
         {/* Edit Profile Form - Glassmorphic */}
-        {editMode && (
-          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">✏️ Edit Profile</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editData.name}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
-                  placeholder="Enter your full name"
-                />
+        {
+          editMode && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">✏️ Edit Profile</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editData.name}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editData.phone}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={editData.phone}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300/50 dark:border-gray-600 bg-white/80 backdrop-blur-sm dark:bg-gray-800/80 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:bg-white transition-all shadow-sm hover:shadow-md"
-                  placeholder="Enter your phone number"
-                />
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={updating}
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating ? 'Updating...' : '💾 Save Changes'}
+                </button>
               </div>
             </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleUpdateProfile}
-                disabled={updating}
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-green-500 to-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {updating ? 'Updating...' : '💾 Save Changes'}
-              </button>
-            </div>
-          </div>
-        )}
+          )
+        }
 
         {/* Donor Statistics (Only for Donors) */}
-        {isDonor && (
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📊 Donation Statistics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="rounded-3xl border border-red-200/60 bg-gradient-to-br from-red-100/60 to-pink-100/60 backdrop-blur-lg dark:from-red-500/20 dark:to-pink-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
-                <div className="text-5xl font-bold bg-gradient-to-br from-red-600 to-pink-600 bg-clip-text text-transparent dark:from-red-400 dark:to-pink-400 mb-2 group-hover:scale-110 transition-transform">{totalDonations}</div>
-                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Total Donations</div>
-              </div>
-
-              <div className="rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-100/60 to-cyan-100/60 backdrop-blur-lg dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
-                <div className="text-5xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400 mb-2 group-hover:scale-110 transition-transform">{patientsHelped.length}</div>
-                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Patients Helped</div>
-              </div>
-
-              <div className="rounded-3xl border border-purple-200/60 bg-gradient-to-br from-purple-100/60 to-indigo-100/60 backdrop-blur-lg dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
-                <div className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400 mb-2 group-hover:scale-110 transition-transform">
-                  {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
+        {
+          isDonor && (
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📊 Donation Statistics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="rounded-3xl border border-red-200/60 bg-gradient-to-br from-red-100/60 to-pink-100/60 backdrop-blur-lg dark:from-red-500/20 dark:to-pink-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                  <div className="text-5xl font-bold bg-gradient-to-br from-red-600 to-pink-600 bg-clip-text text-transparent dark:from-red-400 dark:to-pink-400 mb-2 group-hover:scale-110 transition-transform">{totalDonations}</div>
+                  <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Total Donations</div>
                 </div>
-                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Last Donation</div>
-              </div>
 
-              <div className="rounded-3xl border border-green-200/60 bg-gradient-to-br from-green-100/60 to-emerald-100/60 backdrop-blur-lg dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
-                <div className="text-2xl font-bold bg-gradient-to-br from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400 mb-2 group-hover:scale-110 transition-transform">
-                  {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}
+                <div className="rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-100/60 to-cyan-100/60 backdrop-blur-lg dark:from-blue-500/20 dark:to-cyan-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                  <div className="text-5xl font-bold bg-gradient-to-br from-blue-600 to-cyan-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400 mb-2 group-hover:scale-110 transition-transform">{patientsHelped.length}</div>
+                  <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Patients Helped</div>
                 </div>
-                <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Next Eligible Date</div>
-              </div>
-            </div>
 
-            {/* Next Donation Info */}
-            {nextDonationDate && (
-              <div className="mt-4 rounded-xl bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-4">
-                <p className="text-blue-800 dark:text-blue-200 font-medium">
-                  ℹ️ You can donate again after <strong>{formatDate(nextDonationDate)}</strong> (3 months after your last donation)
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Donation History (Only for Donors) - Glassmorphic */}
-        {isDonor && donations.length > 0 && (
-          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donation History</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50">
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Booking ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Blood Bank</th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Patient</th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Completed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {donations.map((donation, index) => (
-                    <tr key={donation.id} className={`border-b border-gray-200 dark:border-gray-800 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/20' : 'bg-white dark:bg-transparent'} hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors`}>
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{donation.bookingId || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{formatDate(donation.date)}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{donation.bloodBankName || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
-                        {donation.patientName || 'N/A'}
-                        {donation.patientMRID && (
-                          <div className="text-xs text-gray-500">MRID: {donation.patientMRID}</div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">{getStatusBadge(donation.status)}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
-                        {donation.completedAt ? formatDateTime(donation.completedAt) : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Patients Helped (Only for Donors) - Glassmorphic */}
-        {isDonor && patientsHelped.length > 0 && (
-          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💝 Patients You Helped</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {patientsHelped.map((patient, index) => (
-                <div key={index} className="bg-gradient-to-br from-pink-100/60 to-purple-100/60 backdrop-blur-lg dark:from-pink-500/10 dark:to-purple-500/10 rounded-2xl p-5 border border-pink-200/60 dark:border-pink-800 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{patient.patientName}</h4>
-                  {patient.patientMRID && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      <strong>MRID:</strong> {patient.patientMRID}
-                    </p>
-                  )}
-                  {patient.bloodGroup && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      <strong>Blood Group:</strong> {patient.bloodGroup}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong>Donation Date:</strong> {formatDate(patient.donationDate)}
-                  </p>
+                <div className="rounded-3xl border border-purple-200/60 bg-gradient-to-br from-purple-100/60 to-indigo-100/60 backdrop-blur-lg dark:from-purple-500/20 dark:to-indigo-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                  <div className="text-2xl font-bold bg-gradient-to-br from-purple-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400 mb-2 group-hover:scale-110 transition-transform">
+                    {donorInfo?.lastDonatedDate ? formatDate(donorInfo.lastDonatedDate) : 'Never'}
+                  </div>
+                  <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Last Donation</div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* No Donation History Message - Glassmorphic */}
-        {isDonor && donations.length === 0 && (
-          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-8 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 text-center">
-            <div className="text-6xl mb-4">🩸</div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Donation History Yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              You haven't completed any donations yet. Start saving lives today!
-            </p>
-            <Link
-              to="/user-dashboard"
-              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
-            >
-              Find Donation Opportunities
-            </Link>
-          </div>
-        )}
+                <div className="rounded-3xl border border-green-200/60 bg-gradient-to-br from-green-100/60 to-emerald-100/60 backdrop-blur-lg dark:from-green-500/20 dark:to-emerald-500/20 dark:border-white/30 p-6 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                  <div className="text-2xl font-bold bg-gradient-to-br from-green-600 to-emerald-600 bg-clip-text text-transparent dark:from-green-400 dark:to-emerald-400 mb-2 group-hover:scale-110 transition-transform">
+                    {nextDonationDate ? formatDate(nextDonationDate) : 'Ready'}
+                  </div>
+                  <div className="text-sm font-bold text-gray-800 dark:text-gray-300">Next Eligible Date</div>
+                </div>
+              </div>
 
-        {/* Donor Info Card (Only for Donors) - Glassmorphic */}
-        {isDonor && donorInfo && (
-          <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donor Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
-                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Blood Group</label>
-                <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
-              </div>
-              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
-                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Weight</label>
-                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.weight} kg</p>
-              </div>
-              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
-                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Contact Number</label>
-                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.contactNumber}</p>
-              </div>
-              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
-                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Priority Points</label>
-                <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.priorityPoints || 0}</p>
-              </div>
-              <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
-                <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Availability Status</label>
-                <p className={`font-bold text-lg ${donorInfo.availability ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                  {donorInfo.availability ? '✅ Available' : '⏸️ Not Available'}
-                </p>
-              </div>
-              {donorInfo.address && (
-                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all md:col-span-2 lg:col-span-1 group">
-                  <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Address</label>
-                  <p className="text-gray-900 dark:text-white font-medium text-sm">
-                    {donorInfo.address.houseName && `${donorInfo.address.houseName}, `}
-                    {donorInfo.address.city && `${donorInfo.address.city}, `}
-                    {donorInfo.address.pincode}
+              {/* Next Donation Info */}
+              {nextDonationDate && (
+                <div className="mt-4 rounded-xl bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-4">
+                  <p className="text-blue-800 dark:text-blue-200 font-medium">
+                    ℹ️ You can donate again after <strong>{formatDate(nextDonationDate)}</strong> (3 months after your last donation)
                   </p>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )
+        }
+
+        {/* Donation History (Only for Donors) - Glassmorphic */}
+        {
+          isDonor && donations.length > 0 && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donation History</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50">
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Booking ID</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Date</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Blood Bank</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Patient</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Status</th>
+                      <th className="text-left py-3 px-4 text-sm font-bold text-gray-800 dark:text-gray-300">Completed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {donations.map((donation, index) => (
+                      <tr key={donation.id} className={`border-b border-gray-200 dark:border-gray-800 ${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/20' : 'bg-white dark:bg-transparent'} hover:bg-gray-100 dark:hover:bg-gray-800/30 transition-colors`}>
+                        <td className="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{donation.bookingId || 'N/A'}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{formatDate(donation.date)}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{donation.bloodBankName || 'N/A'}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          {donation.patientName || 'N/A'}
+                          {donation.patientMRID && (
+                            <div className="text-xs text-gray-500">MRID: {donation.patientMRID}</div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">{getStatusBadge(donation.status)}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">
+                          {donation.completedAt ? formatDateTime(donation.completedAt) : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Patients Helped (Only for Donors) - Glassmorphic */}
+        {
+          isDonor && patientsHelped.length > 0 && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">💝 Patients You Helped</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {patientsHelped.map((patient, index) => (
+                  <div key={index} className="bg-gradient-to-br from-pink-100/60 to-purple-100/60 backdrop-blur-lg dark:from-pink-500/10 dark:to-purple-500/10 rounded-2xl p-5 border border-pink-200/60 dark:border-pink-800 shadow-xl hover:shadow-2xl hover:scale-105 transition-all group">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{patient.patientName}</h4>
+                    {patient.patientMRID && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        <strong>MRID:</strong> {patient.patientMRID}
+                      </p>
+                    )}
+                    {patient.bloodGroup && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        <strong>Blood Group:</strong> {patient.bloodGroup}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>Donation Date:</strong> {formatDate(patient.donationDate)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        }
+
+        {/* No Donation History Message - Glassmorphic */}
+        {
+          isDonor && donations.length === 0 && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-8 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 text-center">
+              <div className="text-6xl mb-4">🩸</div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No Donation History Yet</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                You haven't completed any donations yet. Start saving lives today!
+              </p>
+              <Link
+                to="/user-dashboard"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-500 to-rose-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:scale-[1.02] active:scale-[0.99]"
+              >
+                Find Donation Opportunities
+              </Link>
+            </div>
+          )
+        }
+
+        {/* Donor Info Card (Only for Donors) - Glassmorphic */}
+        {
+          isDonor && donorInfo && (
+            <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🩸 Donor Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                  <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Blood Group</label>
+                  <p className="text-gray-900 dark:text-white font-bold text-2xl">{donorInfo.bloodGroup}</p>
+                </div>
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                  <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Weight</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.weight} kg</p>
+                </div>
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                  <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Contact Number</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.contactNumber}</p>
+                </div>
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                  <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Priority Points</label>
+                  <p className="text-gray-900 dark:text-white font-medium text-lg">{donorInfo.priorityPoints || 0}</p>
+                </div>
+                <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all group">
+                  <label className="block text-sm font-bold text-gray-600 dark:text-gray-400 mb-1 group-hover:text-gray-800 transition-colors">Availability Status</label>
+                  <p className={`font-bold text-lg ${donorInfo.availability ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                    {donorInfo.availability ? '✅ Available' : '⏸️ Not Available'}
+                  </p>
+                </div>
+                {donorInfo.address && (
+                  <div className="bg-white/70 backdrop-blur-lg border border-white/60 dark:bg-gray-800/50 dark:border-gray-700 rounded-2xl p-5 shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all md:col-span-2 lg:col-span-1 group">
+                    <label className="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1">Address</label>
+                    <p className="text-gray-900 dark:text-white font-medium text-sm">
+                      {donorInfo.address.houseName && `${donorInfo.address.houseName}, `}
+                      {donorInfo.address.city && `${donorInfo.address.city}, `}
+                      {donorInfo.address.pincode}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
 
         {/* Account Actions - Glassmorphic */}
         <div className="mb-8 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-6 shadow-2xl transition-all dark:border-white/10 dark:bg-white/5 md:p-8">
@@ -535,7 +650,7 @@ export default function UserProfile() {
             </button>
           </div>
         </div>
-      </div>
-    </Layout>
+      </div >
+    </Layout >
   );
 }

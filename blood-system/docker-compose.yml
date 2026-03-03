@@ -74,6 +74,7 @@ services:
       - PORT=3000
       - MONGODB_URI=mongodb://blood-db:27017/blood-monolith
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-bloodbank_refresh_secret_2024}
       - JWT_EXPIRES_IN=24h
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -151,7 +152,7 @@ services:
     ports:
       - "3003:80"
     environment:
-      - VITE_API_URL=http://localhost:5004
+      - VITE_API_URL=http://localhost:5004/api
     volumes:
       - ./nginx-configs/nginx-bloodbank.conf:/etc/nginx/conf.d/default.conf
     depends_on:
@@ -165,6 +166,8 @@ services:
   blood-db:
     image: mongo:6
     container_name: blood-db
+    ports:
+      - "27017:27017"
     volumes:
       - blood-data:/data/db
     networks:

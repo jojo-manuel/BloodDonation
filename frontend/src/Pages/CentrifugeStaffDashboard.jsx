@@ -255,8 +255,8 @@ const CentrifugeStaffDashboard = () => {
               <button
                 onClick={() => setActiveTab('bags')}
                 className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === 'bags'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -267,8 +267,8 @@ const CentrifugeStaffDashboard = () => {
               <button
                 onClick={() => setActiveTab('components')}
                 className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === 'components'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -381,12 +381,29 @@ const CentrifugeStaffDashboard = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-500">Donor:</span>
-                      <span className="font-medium">{bag.donorName || 'N/A'}</span>
+                      <div className="text-right">
+                        <span className="font-medium block">
+                          {bag.donorId?.name || bag.donorName || 'N/A'}
+                        </span>
+                        {bag.donorId && (
+                          <span className="text-xs text-gray-500 block">
+                            {bag.donorId.phone && <span>{bag.donorId.phone}</span>}
+                            {bag.donorId.gender && <span> • {bag.donorId.gender}</span>}
+                            {bag.donorId.age && <span> • {bag.donorId.age}y</span>}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Volume:</span>
                       <span className="font-medium">{bag.volume} ml</span>
                     </div>
+                    {bag.weight && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Weight:</span>
+                        <span className="font-medium">{bag.weight} g</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-500">Collection Date:</span>
                       <span className="font-medium">

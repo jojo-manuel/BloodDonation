@@ -31,6 +31,10 @@ const bloodBagSchema = new mongoose.Schema({
     min: 1,
     default: 450 // Standard blood bag volume in ml
   },
+  weight: {
+    type: Number, // Weight in grams
+    min: 0
+  },
   status: {
     type: String,
     required: true,
@@ -120,7 +124,7 @@ bloodBagSchema.index({ receivedAt: -1 });
 bloodBagSchema.index({ expiryDate: 1 });
 
 // Calculate expiry date before saving (35 days from collection for whole blood)
-bloodBagSchema.pre('save', function(next) {
+bloodBagSchema.pre('save', function (next) {
   if (!this.expiryDate && this.collectionDate) {
     this.expiryDate = new Date(this.collectionDate.getTime() + (35 * 24 * 60 * 60 * 1000));
   }
@@ -128,12 +132,12 @@ bloodBagSchema.pre('save', function(next) {
 });
 
 // Virtual for checking if bag is expired
-bloodBagSchema.virtual('isExpired').get(function() {
+bloodBagSchema.virtual('isExpired').get(function () {
   return this.expiryDate && new Date() > this.expiryDate;
 });
 
 // Virtual for checking if bag is expiring soon (within 7 days)
-bloodBagSchema.virtual('isExpiringSoon').get(function() {
+bloodBagSchema.virtual('isExpiringSoon').get(function () {
   if (!this.expiryDate) return false;
   const sevenDaysFromNow = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
   return this.expiryDate <= sevenDaysFromNow && this.expiryDate > new Date();

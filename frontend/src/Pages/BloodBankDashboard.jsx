@@ -137,6 +137,71 @@ export default function BloodBankDashboard() {
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [newStaffData, setNewStaffData] = useState({ name: '', role: 'frontdesk', email: '', phone: '' });
   const [createdStaffCredentials, setCreatedStaffCredentials] = useState(null);
+  // Staff Become Donor State
+  const [showBecomeDonorModal, setShowBecomeDonorModal] = useState(false);
+  const [donorRegistrationData, setDonorRegistrationData] = useState({
+    bloodGroup: '',
+    weight: '',
+    houseName: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
+  const [registeringDonor, setRegisteringDonor] = useState(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState(null);
+
+  // Fetch current user full profile to check donor status
+  const fetchCurrentUserProfile = async () => {
+    try {
+      const res = await api.get('/users/me/comprehensive');
+      if (res.data.success) {
+        setCurrentUserProfile(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user profile", err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'my_donor_status') {
+      fetchCurrentUserProfile();
+    }
+  }, [activeTab]);
+
+  const handleBecomeDonor = async (e) => {
+    e.preventDefault();
+    if (!donorRegistrationData.bloodGroup) {
+      showToast('Blood Group is required!', 'warning');
+      return;
+    }
+
+    setRegisteringDonor(true);
+    try {
+      const payload = {
+        bloodGroup: donorRegistrationData.bloodGroup,
+        weight: donorRegistrationData.weight,
+        address: {
+          houseName: donorRegistrationData.houseName,
+          city: donorRegistrationData.city,
+          state: donorRegistrationData.state,
+          pincode: donorRegistrationData.pincode
+        }
+      };
+
+      const res = await api.post('/users/become-donor', payload);
+
+      if (res.data.success) {
+        showToast('🎉 Congratulations! You are now a donor.', 'success');
+        fetchCurrentUserProfile();
+      }
+    } catch (err) {
+      console.error("Failed to register as donor", err);
+      showToast(err.response?.data?.message || 'Failed to register', 'error');
+    } finally {
+      setRegisteringDonor(false);
+    }
+  };
+
   const [formData, setFormData] = useState({
     patientName: "",
     address: {
@@ -1392,14 +1457,15 @@ export default function BloodBankDashboard() {
               { id: 'frontdesk', label: 'Frontdesk', icon: '🖥️' },
               { id: 'bleeding', label: 'Bleeding Room', icon: '💉' },
               { id: 'reviews', label: 'Reviews', icon: '⭐' },
+              { id: 'my_donor_status', label: 'My Donor Status', icon: '❤️' },
             ]
               .filter(item => {
                 // Role-based filtering
                 if (role === 'bleeding_staff') {
-                  return item.id === 'bleeding';
+                  return ['bleeding', 'my_donor_status'].includes(item.id);
                 }
                 if (role === 'frontdesk') {
-                  const allowed = ['overview', 'frontdesk', 'bookings', 'patients', 'donors', 'received', 'users'];
+                  const allowed = ['overview', 'frontdesk', 'bookings', 'patients', 'donors', 'received', 'users', 'my_donor_status'];
                   return allowed.includes(item.id);
                 }
                 if (role === 'bloodbank') {
@@ -1635,6 +1701,133 @@ export default function BloodBankDashboard() {
                 </>
               )}
 
+
+              {activeTab === 'my_donor_status' && (
+                <div className="rounded-2xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl transition dark:border-white/10 dark:bg-white/5 md:p-8 animate-fadeIn">
+                  <div className="mb-6 text-center">
+                    <h2 className="mb-2 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white md:text-3xl">
+                      🩸 My Donor Status
+                    </h2>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Manage your participation as a blood donor.
+                    </p>
+                  </div>
+
+                  {!currentUserProfile ? (
+                    <div className="text-center py-12">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+                      <p className="mt-4 text-gray-600 dark:text-gray-400">Loading profile...</p>
+                    </div>
+                  ) : currentUserProfile.isDonor ? (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-3xl p-8 border border-green-200 dark:border-green-800 text-center shadow-lg transform hover:scale-[1.01] transition-all">
+                      <div className="w-24 h-24 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                        <span className="text-5xl">❤️</span>
+                      </div>
+                      <h3 className="text-3xl font-bold text-green-800 dark:text-green-300 mb-2">You are a Registered Donor!</h3>
+                      <p className="text-green-700 dark:text-green-400 text-lg mb-8 max-w-lg mx-auto">
+                        Thank you for being a part of our life-saving community. Your commitment makes a difference.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto text-left bg-white/60 dark:bg-black/20 p-6 rounded-2xl backdrop-blur-sm">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Blood Group</label>
+                          <p className="text-4xl font-black text-rose-600 dark:text-rose-400">{currentUserProfile.user?.bloodGroup || currentUserProfile.donorInfo?.bloodGroup || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Donor ID</label>
+                          <p className="text-xl font-mono text-gray-800 dark:text-gray-200 truncate" title={currentUserProfile.user?.id}>#{currentUserProfile.user?.id?.substring(0, 8)}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Status</label>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            Active & Available
+                          </span>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Profile Action</label>
+                          <Link to="/user-profile" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium underline">
+                            View Full Profile →
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-700">
+                      <div className="grid md:grid-cols-2">
+                        <div className="p-8 md:p-12 bg-gradient-to-br from-rose-500 to-pink-600 text-white flex flex-col justify-center">
+                          <h3 className="text-3xl font-bold mb-4">Join Our Hero Community</h3>
+                          <p className="text-pink-100 text-lg mb-8 leading-relaxed">
+                            As a staff member, you know the critical need for blood. Lead by example and become a donor today. It only takes a minute to register.
+                          </p>
+                          <ul className="space-y-3 mb-8">
+                            <li className="flex items-center gap-3">
+                              <span className="bg-white/20 p-1 rounded-full">✓</span> Priority scheduling
+                            </li>
+                            <li className="flex items-center gap-3">
+                              <span className="bg-white/20 p-1 rounded-full">✓</span> Health monitoring
+                            </li>
+                            <li className="flex items-center gap-3">
+                              <span className="bg-white/20 p-1 rounded-full">✓</span> Save up to 3 lives per donation
+                            </li>
+                          </ul>
+                        </div>
+                        <div className="p-8 md:p-12">
+                          <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Donor Registration</h4>
+                          <form onSubmit={handleBecomeDonor} className="space-y-5">
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Blood Group *</label>
+                              <select
+                                required
+                                value={donorRegistrationData.bloodGroup}
+                                onChange={(e) => setDonorRegistrationData({ ...donorRegistrationData, bloodGroup: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-rose-500 transition-all font-medium text-gray-900 dark:text-white"
+                              >
+                                <option value="">Select Blood Group</option>
+                                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Ah+', 'Ah-', 'Oh+', 'Oh-'].map(bg => (
+                                  <option key={bg} value={bg}>{bg}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Weight (kg)</label>
+                                <input
+                                  type="number"
+                                  placeholder="e.g. 70"
+                                  value={donorRegistrationData.weight}
+                                  onChange={(e) => setDonorRegistrationData({ ...donorRegistrationData, weight: e.target.value })}
+                                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">City</label>
+                                <input
+                                  type="text"
+                                  placeholder="City"
+                                  value={donorRegistrationData.city}
+                                  onChange={(e) => setDonorRegistrationData({ ...donorRegistrationData, city: e.target.value })}
+                                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={registeringDonor}
+                              className="w-full py-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg hover:shadow-rose-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                              {registeringDonor ? (
+                                <><span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span> Registering...</>
+                              ) : (
+                                <>Register as Donor</>
+                              )}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {activeTab === 'patients' && (
                 <>

@@ -6,11 +6,11 @@ const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function DonorSearch() {
   const [filters, setFilters] = useState({
+    mrid: "",
     bloodGroup: "",
     city: "",
     state: "",
     pincode: "",
-    mrnumber: "",
     page: 1,
     limit: 10,
   });
@@ -23,7 +23,7 @@ export default function DonorSearch() {
     setLoading(true);
     try {
       let response;
-      if (filters.mrnumber && filters.mrnumber.trim() !== "") {
+      if (filters.mrid && filters.mrid.trim() !== "") {
         // Search donors by MR number
         const params = {
           city: filters.city || undefined,
@@ -32,7 +32,7 @@ export default function DonorSearch() {
           page: filters.page,
           limit: filters.limit,
         };
-        response = await api.get(`/donors/searchByMrid/${filters.mrnumber}`, { params });
+        response = await api.get(`/donors/searchByMrid/${filters.mrid}`, { params });
       } else {
         // Normal donor search
         const params = {
@@ -95,11 +95,11 @@ export default function DonorSearch() {
         >
           <input
             type="text"
-            name="mrnumber"
+            name="mrid"
             placeholder="Patient MRID"
-            value={filters.mrnumber}
+            value={filters.mrid}
             onChange={handleInputChange}
-            className="rounded border px-3 py-2 md:col-span-2"
+            className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2 focus:ring-2 focus:ring-rose-500 outline-none text-white placeholder-white/50"
           />
           <select
             name="bloodGroup"

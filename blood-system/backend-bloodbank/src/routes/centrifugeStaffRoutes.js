@@ -13,10 +13,16 @@ const requireCentrifugeStaff = (req, res, next) => {
     });
   }
 
-  if (!['centrifuge_staff', 'store_manager', 'bloodbank', 'BLOODBANK_ADMIN'].includes(req.user.role)) {
+  // Allow multiple roles to access centrifuge data
+  const allowedRoles = ['centrifuge_staff', 'store_manager', 'bloodbank', 'BLOODBANK_ADMIN', 'admin'];
+
+  // Case-insensitive check
+  const hasRole = allowedRoles.some(role => role.toLowerCase() === req.user.role.toLowerCase());
+
+  if (!hasRole) {
     return res.status(403).json({
       success: false,
-      message: 'Access denied. Centrifuge staff role required.'
+      message: `Access denied. Authorized role required. (Current: ${req.user.role})`
     });
   }
 
@@ -32,25 +38,25 @@ const requireAuth = [authMiddleware, requireCentrifugeStaff];
 router.get('/blood-bags', requireAuth, async (req, res) => {
   try {
     const hospital_id = req.user.hospital_id;
-    const { 
-      search, 
-      bloodGroup, 
-      status, 
+    const {
+      search,
+      bloodGroup,
+      status,
       sortBy = 'receivedAt',
       sortOrder = 'desc'
     } = req.query;
 
     // Build query
     let query = { hospital_id };
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       query.bloodGroup = bloodGroup;
     }
-    
+
     if (status && status !== 'all') {
       query.status = status;
     }
-    
+
     if (search) {
       query.$or = [
         { serialNumber: { $regex: search, $options: 'i' } },
@@ -67,7 +73,8 @@ router.get('/blood-bags', requireAuth, async (req, res) => {
     const bloodBags = await BloodBag.find(query)
       .sort(sort)
       .populate('receivedBy', 'name')
-      .populate('separatedBy', 'name');
+      .populate('separatedBy', 'name')
+      .populate('donorId', 'name email phone bloodGroup gender age');
 
     // Add components count for each bag
     const bagsWithComponentCount = await Promise.all(
@@ -196,8 +203,8 @@ router.put('/blood-bags/:id', requireAuth, async (req, res) => {
     updates.updatedBy = req.user.id;
 
     const updatedBag = await BloodBag.findByIdAndUpdate(
-      id, 
-      updates, 
+      id,
+      updates,
       { new: true, runValidators: true }
     ).populate('receivedBy separatedBy', 'name');
 
@@ -224,7 +231,7 @@ router.post('/blood-bags/:id/separate', requireAuth, async (req, res) => {
   console.log('Request params:', req.params);
   console.log('Request body:', JSON.stringify(req.body, null, 2));
   console.log('User:', req.user);
-  
+
   try {
     const { id } = req.params;
     const {
@@ -351,7 +358,7 @@ router.post('/blood-bags/:id/separate', requireAuth, async (req, res) => {
         default:
           expiryDays = 35; // Default
       }
-      
+
       const expiryDate = new Date(separationDateObj.getTime() + (expiryDays * 24 * 60 * 60 * 1000));
 
       console.log('Creating component with data:', {
@@ -404,7 +411,7 @@ router.post('/blood-bags/:id/separate', requireAuth, async (req, res) => {
     // Add separation notes
     const separationNote = `Separated into ${createdComponents.length} components by ${technician} using ${method}`;
     bagUpdateData.notes = bloodBag.notes ? `${bloodBag.notes}\n${separationNote}` : separationNote;
-    
+
     if (notes) {
       bagUpdateData.notes += `\nSeparation notes: ${notes}`;
     }
@@ -442,9 +449,9 @@ router.post('/blood-bags/:id/separate', requireAuth, async (req, res) => {
 router.get('/components', requireAuth, async (req, res) => {
   try {
     const hospital_id = req.user.hospital_id;
-    const { 
-      search, 
-      bloodGroup, 
+    const {
+      search,
+      bloodGroup,
       type,
       status,
       sortBy = 'separationDate',
@@ -453,19 +460,19 @@ router.get('/components', requireAuth, async (req, res) => {
 
     // Build query
     let query = { hospital_id };
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       query.bloodGroup = bloodGroup;
     }
-    
+
     if (type && type !== 'all') {
       query.type = type;
     }
-    
+
     if (status && status !== 'all') {
       query.status = status;
     }
-    
+
     if (search) {
       query.$or = [
         { serialNumber: { $regex: search, $options: 'i' } },
@@ -525,8 +532,8 @@ router.put('/components/:id', requireAuth, async (req, res) => {
     updates.updatedBy = req.user.id;
 
     const updatedComponent = await BloodComponent.findByIdAndUpdate(
-      id, 
-      updates, 
+      id,
+      updates,
       { new: true, runValidators: true }
     ).populate('separatedBy originalBagId', 'name serialNumber');
 

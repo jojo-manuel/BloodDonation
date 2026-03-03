@@ -11,24 +11,24 @@ const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'bloodbank_refresh_secr
 // Helper functions
 function signAccessToken(user) {
   return jwt.sign(
-    { 
-      id: user._id, 
-      role: user.role, 
+    {
+      id: user._id,
+      role: user.role,
       username: user.username || user.email,
-      hospital_id: user.hospital_id 
-    }, 
-    ACCESS_SECRET, 
+      hospital_id: user.hospital_id
+    },
+    ACCESS_SECRET,
     { expiresIn: '15m' }
   );
 }
 
 function signRefreshToken(user) {
   return jwt.sign(
-    { 
-      id: user._id, 
-      role: user.role 
-    }, 
-    REFRESH_SECRET, 
+    {
+      id: user._id,
+      role: user.role
+    },
+    REFRESH_SECRET,
     { expiresIn: '7d' }
   );
 }
@@ -56,6 +56,7 @@ router.post('/login', async (req, res) => {
     });
 
     if (!user) {
+      console.log(`[Login Failed] User not found: ${identifier}`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -64,6 +65,7 @@ router.post('/login', async (req, res) => {
 
     // Check if user is active
     if (!user.isActive || user.isBlocked || user.isSuspended) {
+      console.log(`[Login Failed] User inactive/blocked: ${identifier}`);
       return res.status(403).json({
         success: false,
         message: 'Account is inactive or blocked'
@@ -73,6 +75,7 @@ router.post('/login', async (req, res) => {
     // Check password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
+      console.log(`[Login Failed] Password mismatch for user: ${identifier}`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -196,7 +199,7 @@ router.get('/me', async (req, res) => {
     }
 
     const token = authHeader.substring(7);
-    
+
     jwt.verify(token, ACCESS_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(403).json({
