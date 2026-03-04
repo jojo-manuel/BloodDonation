@@ -20,6 +20,7 @@ import BleedingStaffDashboard from "./Pages/BleedingStaffDashboard";
 import StoreManagerDashboard from "./Pages/StoreManagerDashboard";
 import StoreStaffDashboard from "./Pages/StoreStaffDashboard";
 import CentrifugeStaffDashboard from "./Pages/CentrifugeStaffDashboard";
+import LabDashboard from "./Pages/LabDashboard";
 import BloodBankPendingApproval from "./Pages/BloodBankPendingApproval";
 import UserDashboard from "./Pages/UserDashboard";
 import UserProfile from "./Pages/UserProfile";
@@ -47,7 +48,7 @@ function App() {
     const token = localStorage.getItem('accessToken');
 
     if (isLocalhost && isStandardPort && role && token && !window.location.pathname.includes('/auth/callback')) {
-      const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+      const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
 
       if (role === 'bloodbank' || staffRoles.includes(role)) {
         if (currentPort !== '3003') {
@@ -98,8 +99,8 @@ function App() {
             {/* User/Donor Dashboard - Restricted to users and donors */}
             <Route path="/dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
             <Route path="/user-dashboard" element={<RequireRole allowedRoles={['user', 'donor']}><UserDashboard /></RequireRole>} />
-            <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank', 'store_manager', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'doctor']}><UserProfile /></RequireRole>} />
-            <Route path="/user-settings" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank']}><UserSettings /></RequireRole>} />
+            <Route path="/user-profile" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank', 'store_manager', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'doctor', 'lab']}><UserProfile /></RequireRole>} />
+            <Route path="/user-settings" element={<RequireRole allowedRoles={['user', 'donor', 'admin', 'bloodbank', 'lab']}><UserSettings /></RequireRole>} />
 
             {/* Admin Dashboard - Restricted to admins */}
             <Route path="/admin-dashboard" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
@@ -124,6 +125,9 @@ function App() {
 
             {/* Dedicated Centrifuge Staff Dashboard */}
             <Route path="/bloodbank/centrifuge-staff" element={<RequireRole allowedRoles={['centrifuge_staff', 'bloodbank']}><CentrifugeStaffDashboard /></RequireRole>} />
+
+            {/* Dedicated Laboratory Dashboard */}
+            <Route path="/bloodbank/lab" element={<RequireRole allowedRoles={['lab', 'bloodbank']}><LabDashboard /></RequireRole>} />
 
             <Route path="/bloodbank-login" element={<BloodBankLogin />} />
             <Route path="/staff-login" element={<StaffLogin />} />

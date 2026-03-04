@@ -21,6 +21,7 @@ import {
   Link
 } from 'lucide-react';
 import { apiRequest } from '../lib/api';
+import AIAnalysisModule from '../components/AIAnalysisModule';
 
 const CentrifugeStaffDashboard = () => {
   const [bloodBags, setBloodBags] = useState([]);
@@ -224,8 +225,8 @@ const CentrifugeStaffDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Centrifuge Staff Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-500">Receive blood bags and separate into components</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-900">Centrifuge Staff Dashboard</h1>
+              <p className="mt-1 text-sm text-gray-500">Receive blood bags, perform AI screening, and separate into components</p>
             </div>
             <button
               onClick={() => setShowReceiveModal(true)}
@@ -274,6 +275,18 @@ const CentrifugeStaffDashboard = () => {
                 <div className="flex items-center gap-2">
                   <Beaker className="h-4 w-4" />
                   Components ({components.length})
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('ai_analysis')}
+                className={`py-4 px-6 text-sm font-medium border-b-2 ${activeTab === 'ai_analysis'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  AI Analysis Center
                 </div>
               </button>
             </nav>
@@ -440,7 +453,7 @@ const CentrifugeStaffDashboard = () => {
               </div>
             ))}
           </div>
-        ) : (
+        ) : activeTab === 'components' ? (
           /* Components Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {components.map((component) => (
@@ -501,7 +514,11 @@ const CentrifugeStaffDashboard = () => {
               </div>
             ))}
           </div>
-        )}
+        ) : activeTab === 'ai_analysis' ? (
+          <div className="w-full">
+            <AIAnalysisModule patientId="" patientName="" />
+          </div>
+        ) : null}
 
         {/* Empty State */}
         {((activeTab === 'bags' && filteredBags.length === 0) ||

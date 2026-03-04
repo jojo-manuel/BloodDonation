@@ -4,6 +4,7 @@ import api from "../lib/api";
 import Layout from "../components/Layout";
 import { useToast } from "../context/ToastContext";
 import { doctorSelectionCriteria } from "../data/DoctorChecklist";
+import AIAnalysisModule from "../components/AIAnalysisModule";
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
@@ -351,6 +352,14 @@ export default function DoctorDashboard() {
                                         #{doctorBooking.tokenNumber || '---'}
                                     </p>
                                 </div>
+                            </div>
+
+                            {/* --- EXPERIMENTAL AI MODULE INSERTION --- */}
+                            <div className="w-full">
+                                <AIAnalysisModule
+                                    patientId={doctorBooking.patientMrid || doctorBooking.patientMRID || doctorBooking.patientId?.mrid}
+                                    patientName={doctorBooking.patientName || doctorBooking.patientId?.patientName}
+                                />
                             </div>
 
                             {/* Two Column Layout for Action */}

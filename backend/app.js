@@ -127,6 +127,7 @@ app.use('/api/store-manager', require('./Route/storeManagerRoutes'));
 app.use('/api/chat', require('./Route/chatRoutes'));
 // Taxi booking feature removed
 app.use('/api/notifications', require('./Route/notificationRoutes'));
+app.use('/api/analysis', require('./Route/analysisRoutes'));
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

@@ -1,5 +1,5 @@
-  // models/User.js
-  // User authentication model: username, password (hashed), role.
+// models/User.js
+// User authentication model: username, password (hashed), role.
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
+    required: function () {
       // Password is required only for local users
       return this.provider === 'local';
     },
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "donor", "bloodbank", "admin", "frontdesk", "doctor", "bleeding_staff", "store_staff", "store_manager", "centrifuge_staff", "other_staff"], // Extended roles for blood bank staff
+    enum: ["user", "donor", "bloodbank", "admin", "frontdesk", "doctor", "bleeding_staff", "store_staff", "store_manager", "centrifuge_staff", "other_staff", "lab"], // Extended roles for blood bank staff
     required: [true, "Role is required"],
   },
   // Reference to the Blood Bank this user belongs to (for staff members)

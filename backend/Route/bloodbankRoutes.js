@@ -132,7 +132,7 @@ router.get('/all', async (req, res) => {
  */
 router.get('/details', authMiddleware, async (req, res) => {
   try {
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -176,7 +176,7 @@ router.get('/donors', authMiddleware, async (req, res) => {
   try {
     // Verify user is a bloodbank
     // Verify user is a bloodbank or staff
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -227,7 +227,7 @@ router.get('/visited-donors', authMiddleware, async (req, res) => {
   try {
     // Verify user is a bloodbank
     // Verify user is a bloodbank or staff
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -318,7 +318,7 @@ router.get('/visited-donors', authMiddleware, async (req, res) => {
  */
 router.get('/bookings', authMiddleware, async (req, res) => {
   try {
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -383,7 +383,7 @@ router.get('/bookings', authMiddleware, async (req, res) => {
  */
 router.get('/users', authMiddleware, async (req, res) => {
   try {
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -418,7 +418,7 @@ router.get('/users', authMiddleware, async (req, res) => {
  */
 router.get('/donation-requests', authMiddleware, async (req, res) => {
   try {
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -470,7 +470,7 @@ router.get('/donation-requests', authMiddleware, async (req, res) => {
  */
 router.get('/analytics', authMiddleware, async (req, res) => {
   try {
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (req.user.role !== 'bloodbank' && !staffRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
@@ -673,7 +673,7 @@ router.get('/staff', authMiddleware, async (req, res) => {
 
     // Find all users with bloodBankId matching this blood bank
     // and exclude standard users/donors/admins (fetch only staff roles)
-    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
 
     const staff = await User.find({
       bloodBankId: bloodBank._id,
@@ -713,7 +713,7 @@ router.post('/staff', authMiddleware, async (req, res) => {
     const { name, role, email, phone } = req.body;
 
     // Validate role
-    const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+    const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({
         success: false,
@@ -864,7 +864,7 @@ router.put('/bookings/:id/status', authMiddleware, async (req, res) => {
     const { status, weight, bagSerialNumber } = req.body;
 
     // Check for allowed roles
-    const allowedRoles = ['bloodbank', 'bleeding_staff', 'doctor', 'frontdesk'];
+    const allowedRoles = ['bloodbank', 'bleeding_staff', 'doctor', 'frontdesk', 'lab'];
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,

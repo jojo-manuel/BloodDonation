@@ -106,6 +106,33 @@ router.get('/analytics', requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/store-manager/staff
+ * Get staff list
+ */
+router.get('/staff', requireAuth, async (req, res) => {
+  try {
+    const hospital_id = req.user.hospital_id;
+
+    // Get all users associated with this hospital
+    const staff = await User.find({
+      hospital_id,
+      role: { $in: ['store_staff', 'bleeding_staff', 'doctor', 'lab', 'centrifuge_staff'] }
+    }).select('name email role');
+
+    res.json({
+      success: true,
+      data: staff
+    });
+  } catch (error) {
+    console.error('Staff fetch error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch staff list'
+    });
+  }
+});
+
+/**
  * GET /api/store-manager/inventory
  * Get blood inventory with filtering and sorting
  * Accessible by: store_manager, bleeding_staff, store_staff, bloodbank

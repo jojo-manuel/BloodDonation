@@ -1224,6 +1224,7 @@ export default function AdminDashboard() {
                               <option value="frontdesk">Front Desk</option>
                               <option value="store">Store</option>
                               <option value="bleeding">Bleeding Unit</option>
+                              <option value="lab">Lab Technician</option>
                             </select>
                           </div>
                           <div>
@@ -1324,7 +1325,8 @@ export default function AdminDashboard() {
                                     {user.section === 'centrifuge' ? '🔄 Centrifuge' :
                                       user.section === 'frontdesk' ? '🖥️ Front Desk' :
                                         user.section === 'store' ? '📦 Store' :
-                                          '🩸 Bleeding Unit'}
+                                          user.section === 'lab' ? '🧬 Lab Technician' :
+                                            '🩸 Bleeding Unit'}
                                   </span>
                                 </TableCell>
                                 <TableCell>{user.username}</TableCell>

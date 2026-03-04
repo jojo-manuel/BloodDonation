@@ -26,11 +26,11 @@ import {
 export default function BloodBankManagerDashboard() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [bloodBankDetails, setBloodBankDetails] = useState(null);
-  
+
   // Dashboard data states
   const [analytics, setAnalytics] = useState({
     overview: {
@@ -45,27 +45,27 @@ export default function BloodBankManagerDashboard() {
     monthlyTrend: [],
     recentActivity: []
   });
-  
+
   const [bookings, setBookings] = useState([]);
   const [patients, setPatients] = useState([]);
   const [donationRequests, setDonationRequests] = useState([]);
   const [staff, setStaff] = useState([]);
   const [inventory, setInventory] = useState([]);
-  
+
   // Modal states
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
     message: '',
     type: 'confirm',
-    onConfirm: () => {},
+    onConfirm: () => { },
     inputPlaceholder: ''
   });
-  
+
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  
+
   // Form states
   const [patientForm, setPatientForm] = useState({
     name: '',
@@ -84,7 +84,7 @@ export default function BloodBankManagerDashboard() {
       pincode: ''
     }
   });
-  
+
   const [staffForm, setStaffForm] = useState({
     name: '',
     role: 'frontdesk',
@@ -263,7 +263,7 @@ export default function BloodBankManagerDashboard() {
         phone: ''
       });
       fetchStaff();
-      
+
       // Show credentials modal if credentials are returned
       if (response.data.credentials) {
         setConfirmModal({
@@ -303,7 +303,7 @@ export default function BloodBankManagerDashboard() {
         try {
           await api.delete(`/api/bloodbank-manager/${type}/${id}`);
           showToast(`${type} deleted successfully`, 'success');
-          
+
           // Refresh the appropriate data
           switch (type) {
             case 'patient':
@@ -351,7 +351,7 @@ export default function BloodBankManagerDashboard() {
   const formatAddress = (address) => {
     if (typeof address === 'string') return address;
     if (!address) return 'N/A';
-    
+
     const { houseName, houseAddress, localBody, city, district, state, pincode } = address;
     return [houseName, houseAddress, localBody, city, district, state, pincode]
       .filter(Boolean)
@@ -364,7 +364,8 @@ export default function BloodBankManagerDashboard() {
     { value: 'doctor', label: 'Doctor' },
     { value: 'bleeding_staff', label: 'Bleeding Staff' },
     { value: 'store_staff', label: 'Store Staff' },
-    { value: 'centrifuge_staff', label: 'Centrifuge Staff' }
+    { value: 'centrifuge_staff', label: 'Centrifuge Staff' },
+    { value: 'lab', label: 'Lab Technician' }
   ];
 
   const tabs = [
@@ -390,7 +391,7 @@ export default function BloodBankManagerDashboard() {
             <CalendarDaysIcon className="h-12 w-12 text-blue-500" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -400,7 +401,7 @@ export default function BloodBankManagerDashboard() {
             <CheckCircleIcon className="h-12 w-12 text-green-500" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -410,7 +411,7 @@ export default function BloodBankManagerDashboard() {
             <UserGroupIcon className="h-12 w-12 text-purple-500" />
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
@@ -477,7 +478,7 @@ export default function BloodBankManagerDashboard() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <select
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
             value={filterStatus}
@@ -489,7 +490,7 @@ export default function BloodBankManagerDashboard() {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          
+
           <select
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
             value={filterBloodGroup}
@@ -500,7 +501,7 @@ export default function BloodBankManagerDashboard() {
               <option key={group} value={group}>{group}</option>
             ))}
           </select>
-          
+
           <button
             onClick={() => {
               setSearchTerm('');
@@ -630,13 +631,12 @@ export default function BloodBankManagerDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{patient.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">MRID: {patient.mrid}</p>
               </div>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                patient.isFulfilled ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-              }`}>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${patient.isFulfilled ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                }`}>
                 {patient.isFulfilled ? 'Fulfilled' : 'Pending'}
               </span>
             </div>
-            
+
             <div className="space-y-2 mb-4">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Blood Group:</span>
@@ -655,12 +655,12 @@ export default function BloodBankManagerDashboard() {
                 <span className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(patient.dateNeeded)}</span>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Address:</p>
               <p className="text-sm text-gray-900 dark:text-white">{formatAddress(patient.address)}</p>
             </div>
-            
+
             <div className="flex space-x-2">
               <button
                 onClick={() => {
@@ -742,9 +742,8 @@ export default function BloodBankManagerDashboard() {
                     {member.phone || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      member.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${member.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}>
                       {member.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
@@ -833,11 +832,10 @@ export default function BloodBankManagerDashboard() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center px-3 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
-                      activeTab === tab.id
+                    className={`flex items-center px-3 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${activeTab === tab.id
                         ? 'border-red-500 text-red-600 dark:text-red-400'
                         : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                    }`}
+                      }`}
                   >
                     <Icon className="h-5 w-5 mr-2" />
                     {tab.name}
@@ -858,14 +856,14 @@ export default function BloodBankManagerDashboard() {
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowPatientModal(false)}></div>
-              
+
               <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form onSubmit={handleCreatePatient}>
                   <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
                       {editingItem ? 'Edit Patient' : 'Add New Patient'}
                     </h3>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
@@ -874,10 +872,10 @@ export default function BloodBankManagerDashboard() {
                           required
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={patientForm.name}
-                          onChange={(e) => setPatientForm({...patientForm, name: e.target.value})}
+                          onChange={(e) => setPatientForm({ ...patientForm, name: e.target.value })}
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Blood Group</label>
@@ -885,7 +883,7 @@ export default function BloodBankManagerDashboard() {
                             required
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                             value={patientForm.bloodGroup}
-                            onChange={(e) => setPatientForm({...patientForm, bloodGroup: e.target.value})}
+                            onChange={(e) => setPatientForm({ ...patientForm, bloodGroup: e.target.value })}
                           >
                             <option value="">Select Blood Group</option>
                             {bloodGroups.map(group => (
@@ -893,7 +891,7 @@ export default function BloodBankManagerDashboard() {
                             ))}
                           </select>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">MRID</label>
                           <input
@@ -901,11 +899,11 @@ export default function BloodBankManagerDashboard() {
                             required
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                             value={patientForm.mrid}
-                            onChange={(e) => setPatientForm({...patientForm, mrid: e.target.value})}
+                            onChange={(e) => setPatientForm({ ...patientForm, mrid: e.target.value })}
                           />
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
@@ -914,10 +912,10 @@ export default function BloodBankManagerDashboard() {
                             required
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                             value={patientForm.phoneNumber}
-                            onChange={(e) => setPatientForm({...patientForm, phoneNumber: e.target.value})}
+                            onChange={(e) => setPatientForm({ ...patientForm, phoneNumber: e.target.value })}
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Units Required</label>
                           <input
@@ -926,11 +924,11 @@ export default function BloodBankManagerDashboard() {
                             required
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                             value={patientForm.unitsRequired}
-                            onChange={(e) => setPatientForm({...patientForm, unitsRequired: e.target.value})}
+                            onChange={(e) => setPatientForm({ ...patientForm, unitsRequired: e.target.value })}
                           />
                         </div>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Needed</label>
                         <input
@@ -938,12 +936,12 @@ export default function BloodBankManagerDashboard() {
                           required
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={patientForm.dateNeeded}
-                          onChange={(e) => setPatientForm({...patientForm, dateNeeded: e.target.value})}
+                          onChange={(e) => setPatientForm({ ...patientForm, dateNeeded: e.target.value })}
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <button
                       type="submit"
@@ -974,14 +972,14 @@ export default function BloodBankManagerDashboard() {
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowStaffModal(false)}></div>
-              
+
               <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form onSubmit={handleCreateStaff}>
                   <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
                       {editingItem ? 'Edit Staff Member' : 'Add New Staff Member'}
                     </h3>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
@@ -990,46 +988,46 @@ export default function BloodBankManagerDashboard() {
                           required
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={staffForm.name}
-                          onChange={(e) => setStaffForm({...staffForm, name: e.target.value})}
+                          onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
                         <select
                           required
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={staffForm.role}
-                          onChange={(e) => setStaffForm({...staffForm, role: e.target.value})}
+                          onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
                         >
                           {staffRoles.map(role => (
                             <option key={role.value} value={role.value}>{role.label}</option>
                           ))}
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                         <input
                           type="email"
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={staffForm.email}
-                          onChange={(e) => setStaffForm({...staffForm, email: e.target.value})}
+                          onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })}
                         />
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
                         <input
                           type="tel"
                           className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-red-500 focus:border-red-500"
                           value={staffForm.phone}
-                          onChange={(e) => setStaffForm({...staffForm, phone: e.target.value})}
+                          onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <button
                       type="submit"

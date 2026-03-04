@@ -1447,7 +1447,10 @@ export default function BloodBankDashboard() {
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             {[
               { id: 'overview', label: 'Dashboard', icon: '📊' },
-              ...(role === 'bloodbank' ? [{ id: 'manager', label: 'Manager Dashboard', icon: '🏢', isLink: true, href: '/bloodbank/manager' }] : []),
+              ...(role === 'bloodbank' ? [
+                { id: 'manager', label: 'Manager Dashboard', icon: '🏢', isLink: true, href: '/bloodbank/manager' },
+                { id: 'lab', label: 'Laboratory Dashboard', icon: '🔬', isLink: true, href: '/bloodbank/lab' }
+              ] : []),
               { id: 'patients', label: 'Manage Patients', icon: '🏥' },
               { id: 'bookings', label: 'Booked Slots', icon: '📅' },
               { id: 'donors', label: 'Manage Donors', icon: '🩸' },
@@ -2949,6 +2952,7 @@ export default function BloodBankDashboard() {
                               <option value="store_manager">Store Manager</option>
                               <option value="centrifuge_staff">Centrifuge Staff</option>
                               <option value="other_staff">Other Staff</option>
+                              <option value="lab">Lab Technician</option>
                             </select>
                           </div>
 
@@ -3247,6 +3251,7 @@ export default function BloodBankDashboard() {
                               >
                                 <option value="user">User</option>
                                 <option value="donor">Donor</option>
+                                <option value="lab">Lab Technician</option>
                               </select>
                             </div>
                             <div>

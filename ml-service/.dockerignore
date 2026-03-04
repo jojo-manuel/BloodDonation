@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+kaggle_hybrid_data/
+mock_data/
+kaggle_data/
+.git/
+.env
+*.pyc
+.ipynb_checkpoints/

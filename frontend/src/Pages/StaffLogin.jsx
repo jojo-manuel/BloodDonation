@@ -73,7 +73,7 @@ export default function StaffLogin() {
                 }
 
                 // Validate Role
-                const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'bloodbank'];
+                const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'bloodbank', 'lab'];
 
                 if (allowedRoles.includes(res.data.data.user.role)) {
                     // Redirect to Blood Bank App (Port 3003)
@@ -111,6 +111,8 @@ export default function StaffLogin() {
                         targetPath = '/bloodbank/centrifuge-staff';
                     } else if (res.data.data.user.role === 'doctor') {
                         targetPath = '/bloodbank/doctor';
+                    } else if (res.data.data.user.role === 'lab') {
+                        targetPath = '/bloodbank/lab';
                     }
 
                     // Append target path to callback params so AuthCallback knows where to go next

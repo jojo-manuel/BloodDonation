@@ -22,7 +22,7 @@ router.get('/staff', authMiddleware, async (req, res) => {
 
         // Find all users with bloodBankId matching this blood bank
         // and exclude standard users/donors/admins (fetch only staff roles)
-        const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+        const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
 
         const staff = await User.find({
             bloodBankId: bloodBank._id,
@@ -62,7 +62,7 @@ router.post('/staff', authMiddleware, async (req, res) => {
         const { name, role, email, phone } = req.body;
 
         // Validate role
-        const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+        const allowedRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
         if (!allowedRoles.includes(role)) {
             return res.status(400).json({
                 success: false,

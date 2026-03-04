@@ -76,7 +76,7 @@ export default function AuthCallback() {
           const authParams = searchParams.toString();
           const isLocalhost = currentHostname === 'localhost' || currentHostname === '127.0.0.1';
 
-          const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff'];
+          const staffRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'store_manager', 'centrifuge_staff', 'other_staff', 'lab'];
 
           if (isLocalhost) {
             // Localhost Logic: Enforce specific ports
@@ -116,6 +116,8 @@ export default function AuthCallback() {
               redirectPath = '/bloodbank/store-staff';
             } else if (role === 'centrifuge_staff') {
               redirectPath = '/bloodbank/centrifuge-staff';
+            } else if (role === 'lab') {
+              redirectPath = '/bloodbank/lab';
             } else {
               redirectPath = '/bloodbank/dashboard';
             }

@@ -68,8 +68,8 @@ router.get('/analytics', async (req, res) => {
       Patient.countDocuments({ bloodBankId, isDeleted: false }),
       Patient.countDocuments({ bloodBankId, isFulfilled: true, isDeleted: false }),
       DonationRequest.countDocuments({ bloodBankId, status: 'pending' }),
-      Booking.countDocuments({ 
-        bloodBankId, 
+      Booking.countDocuments({
+        bloodBankId,
         date: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000) }
       })
     ]);
@@ -164,15 +164,15 @@ router.get('/bookings', async (req, res) => {
 
     // Build filter query
     const filter = { bloodBankId };
-    
+
     if (status && status !== 'all') {
       filter.status = status;
     }
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       filter.bloodGroup = bloodGroup;
     }
-    
+
     if (search) {
       filter.$or = [
         { donorName: { $regex: search, $options: 'i' } },
@@ -181,7 +181,7 @@ router.get('/bookings', async (req, res) => {
         { bookingId: { $regex: search, $options: 'i' } }
       ];
     }
-    
+
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) filter.date.$gte = new Date(startDate);
@@ -273,15 +273,15 @@ router.get('/patients', async (req, res) => {
 
     // Build filter query
     const filter = { bloodBankId, isDeleted: false };
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       filter.bloodGroup = bloodGroup;
     }
-    
+
     if (fulfilled !== undefined) {
       filter.isFulfilled = fulfilled === 'true';
     }
-    
+
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -323,7 +323,7 @@ router.post('/patients', async (req, res) => {
   try {
     const bloodBankId = req.bloodBank._id;
     const bloodBankName = req.bloodBank.name;
-    
+
     const {
       name,
       address,
@@ -396,7 +396,7 @@ router.put('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const bloodBankId = req.bloodBank._id;
-    
+
     const patient = await Patient.findOne({ _id: id, bloodBankId, isDeleted: false });
     if (!patient) {
       return res.status(404).json({
@@ -408,7 +408,7 @@ router.put('/patients/:id', async (req, res) => {
     // Update allowed fields
     const allowedUpdates = ['name', 'address', 'bloodGroup', 'phoneNumber', 'unitsRequired', 'dateNeeded', 'unitsReceived'];
     const updates = {};
-    
+
     for (const field of allowedUpdates) {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
@@ -440,7 +440,7 @@ router.delete('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const bloodBankId = req.bloodBank._id;
-    
+
     const patient = await Patient.findOne({ _id: id, bloodBankId, isDeleted: false });
     if (!patient) {
       return res.status(404).json({
@@ -473,9 +473,9 @@ router.get('/staff', async (req, res) => {
   try {
     const bloodBankId = req.bloodBank._id;
 
-    const staff = await User.find({ 
+    const staff = await User.find({
       bloodBankId,
-      role: { $in: ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'store_manager'] }
+      role: { $in: ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'store_manager', 'lab'] }
     }).select('-password -resetPasswordToken -resetPasswordExpires');
 
     res.json({
@@ -509,7 +509,7 @@ router.post('/staff', async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'store_manager'];
+    const validRoles = ['frontdesk', 'doctor', 'bleeding_staff', 'store_staff', 'centrifuge_staff', 'store_manager', 'lab'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
@@ -521,7 +521,7 @@ router.post('/staff', async (req, res) => {
     const baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 8);
     let username = baseUsername;
     let counter = 1;
-    
+
     // Ensure unique username
     while (await User.findOne({ username })) {
       username = `${baseUsername}${counter}`;
@@ -576,7 +576,7 @@ router.put('/staff/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const bloodBankId = req.bloodBank._id;
-    
+
     const staff = await User.findOne({ _id: id, bloodBankId });
     if (!staff) {
       return res.status(404).json({
@@ -588,7 +588,7 @@ router.put('/staff/:id', async (req, res) => {
     // Update allowed fields
     const allowedUpdates = ['name', 'email', 'phone', 'role'];
     const updates = {};
-    
+
     for (const field of allowedUpdates) {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
@@ -627,7 +627,7 @@ router.delete('/staff/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const bloodBankId = req.bloodBank._id;
-    
+
     const staff = await User.findOne({ _id: id, bloodBankId });
     if (!staff) {
       return res.status(404).json({
@@ -662,11 +662,11 @@ router.get('/donation-requests', async (req, res) => {
 
     // Build filter query
     const filter = { bloodBankId };
-    
+
     if (status && status !== 'all') {
       filter.status = status;
     }
-    
+
     if (bloodGroup && bloodGroup !== 'all') {
       filter.bloodGroup = bloodGroup;
     }
@@ -743,7 +743,7 @@ router.get('/inventory', async (req, res) => {
 router.get('/details', async (req, res) => {
   try {
     const bloodBank = req.bloodBank;
-    
+
     res.json({
       success: true,
       data: {
