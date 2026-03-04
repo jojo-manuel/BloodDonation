@@ -81,6 +81,7 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - FRONTEND_URL=http://localhost:3003
+      - GEMINI_API_KEY=AIzaSyDLcoXezM7OBJbcWiGXCY2AbIbPjCUeh3s
     depends_on:
       - blood-db
     networks:

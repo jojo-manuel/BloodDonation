@@ -174,8 +174,8 @@ export default function AIAnalysisModule({ patientId, patientName, onComplete })
                             onClick={handleAnalyze}
                             disabled={isAnalyzing || !selectedFile || !hbCount}
                             className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-lg ${isAnalyzing || !selectedFile || !hbCount
-                                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed shadow-none'
-                                    : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-indigo-500/30 hover:scale-[1.02]'
+                                ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed shadow-none'
+                                : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-indigo-500/30 hover:scale-[1.02]'
                                 }`}
                         >
                             {isAnalyzing ? (
@@ -199,8 +199,8 @@ export default function AIAnalysisModule({ patientId, patientName, onComplete })
 
                         {/* Overall Result Banner */}
                         <div className={`col-span-1 md:col-span-3 rounded-2xl p-6 border-2 flex items-center justify-between ${results.infectionDetected
-                                ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800/50'
-                                : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50'
+                            ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800/50'
+                            : 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50'
                             }`}>
                             <div className="flex items-center gap-4">
                                 {results.infectionDetected ? (
@@ -234,41 +234,91 @@ export default function AIAnalysisModule({ patientId, patientName, onComplete })
                         <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex flex-col">
                             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3">Analyzed Image</p>
                             <img src={previewUrl} alt="Analyzed Sample" className="w-full h-40 object-cover rounded-lg shadow-sm" />
+                            {results.metrics && (
+                                <div className="mt-4 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-2">Morphology Metrics</p>
+                                    <div className="grid grid-cols-2 gap-2 text-sm text-gray-800 dark:text-gray-200">
+                                        <div><span className="text-gray-500 text-xs block">Shape</span>{results.metrics.morphology.predominantShape}</div>
+                                        <div><span className="text-gray-500 text-xs block">RDW Dist</span>{results.metrics.morphology.rdw}</div>
+                                        <div><span className="text-gray-500 text-xs block">Mean Area</span>{results.metrics.morphology.meanCellArea}</div>
+                                        <div><span className="text-gray-500 text-xs block">Circularity</span>{results.metrics.morphology.circularity}</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Tabular Data Block */}
-                        <div className="col-span-1 md:col-span-2 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-                            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4">Diagnostics Reasoning</p>
+                        <div className="col-span-1 md:col-span-2 space-y-4">
+                            <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-4">Diagnostics Reasoning & Counts</p>
 
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-100 dark:border-gray-600/50 shadow-sm">
-                                    <p className="text-xs text-gray-500 mb-1">Provided Hb Count</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-white font-mono">{results.hbCount} <span className="text-sm font-normal text-gray-400">g/dL</span></p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 mt-4">
-                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">Algorithm Flags:</p>
-                                {results.anomalies?.length > 0 ? (
-                                    results.anomalies.map((anomaly, idx) => (
-                                        <div key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                                            <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                                            {anomaly}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                        No specific metric anomalies flagged.
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-100 dark:border-gray-600/50 shadow-sm">
+                                        <p className="text-xs text-gray-500 mb-1">Hb Count</p>
+                                        <p className="text-xl font-bold text-gray-900 dark:text-white font-mono">{results.hbCount} <span className="text-sm font-normal text-gray-400">g/dL</span></p>
                                     </div>
+                                    {results.metrics && (
+                                        <>
+                                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-100 dark:border-gray-600/50 shadow-sm hover:border-indigo-300 transition-colors">
+                                                <p className="text-xs text-gray-500 mb-1">Total RBC Estim.</p>
+                                                <p className="text-lg font-bold text-gray-900 dark:text-white font-mono">{results.metrics.cellCounts.perMicroLitre.rbc}</p>
+                                            </div>
+                                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-100 dark:border-gray-600/50 shadow-sm hover:border-indigo-300 transition-colors">
+                                                <p className="text-xs text-gray-500 mb-1">Total WBC Estim.</p>
+                                                <p className="text-lg font-bold text-gray-900 dark:text-white font-mono">{results.metrics.cellCounts.perMicroLitre.wbc}</p>
+                                            </div>
+                                            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-100 dark:border-gray-600/50 shadow-sm hover:border-indigo-300 transition-colors">
+                                                <p className="text-xs text-gray-500 mb-1">Platelets Estim.</p>
+                                                <p className="text-lg font-bold text-gray-900 dark:text-white font-mono">{results.metrics.cellCounts.perMicroLitre.platelets}</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {results.metrics && (
+                                    <>
+                                        <div className="mb-4">
+                                            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">5-Part WBC Differential</p>
+                                            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden text-sm flex font-medium text-center shadow-sm">
+                                                <div className="flex-1 py-2 px-1 border-r border-gray-100 dark:border-gray-700 bg-blue-50/50 dark:bg-blue-900/10"><span className="block text-xs text-gray-500 font-normal">NEU</span>{results.metrics.wbcDifferential.neutrophils}</div>
+                                                <div className="flex-1 py-2 px-1 border-r border-gray-100 dark:border-gray-700 bg-purple-50/50 dark:bg-purple-900/10"><span className="block text-xs text-gray-500 font-normal">LYM</span>{results.metrics.wbcDifferential.lymphocytes}</div>
+                                                <div className="flex-1 py-2 px-1 border-r border-gray-100 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10"><span className="block text-xs text-gray-500 font-normal">MON</span>{results.metrics.wbcDifferential.monocytes}</div>
+                                                <div className="flex-1 py-2 px-1 border-r border-gray-100 dark:border-gray-700 bg-rose-50/50 dark:bg-rose-900/10"><span className="block text-xs text-gray-500 font-normal">EOS</span>{results.metrics.wbcDifferential.eosinophils}</div>
+                                                <div className="flex-1 py-2 px-1 bg-amber-50/50 dark:bg-amber-900/10"><span className="block text-xs text-gray-500 font-normal">BAS</span>{results.metrics.wbcDifferential.basophils}</div>
+                                            </div>
+                                        </div>
+                                        {results.infectionDetected && (
+                                            <div className="mb-4 bg-red-50/50 dark:bg-red-900/10 px-4 py-2 flex items-center justify-between border-l-4 border-red-500 rounded-r-lg">
+                                                <span className="text-xs uppercase font-bold text-red-700 dark:text-red-400">Parasitemia Rate (Infected RBCs)</span>
+                                                <span className="font-bold font-mono text-red-600 dark:text-red-300">{results.metrics.parasitemia}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div className="space-y-2 mt-4">
+                                    <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-2">Algorithm Flags:</p>
+                                    {results.anomalies?.length > 0 ? (
+                                        results.anomalies.map((anomaly, idx) => (
+                                            <div key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                                                {anomaly}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                            No specific metric anomalies flagged.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {results.warning && (
+                                    <p className="text-xs text-orange-500 mt-4 italic font-medium opacity-80 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                        * {results.warning}
+                                    </p>
                                 )}
                             </div>
-
-                            {results.warning && (
-                                <p className="text-xs text-orange-500 mt-4 italic font-medium opacity-80 border-t border-gray-200 dark:border-gray-700 pt-4">
-                                    * {results.warning}
-                                </p>
-                            )}
                         </div>
 
                     </div>
